@@ -1,0 +1,3 @@
+---
+:concurrency: 8
+:pidfile: /tmp/gc-autofit.sidekiq.pid

@@ -1,0 +1,91 @@
+.navbar-brand {
+  padding: 7px 15px;
+}
+
+.intro {
+  // Allows the height of the div to be calculated 
+  // by the height of the float elements
+  overflow: hidden;
+  font-size: 17px;
+}
+
+.intro h2 {
+  margin-top: 10px;
+}
+
+.btn-spaced {
+  margin: 0 5px;
+}
+
+.form-help {
+  color: #737373;
+  display: inline;
+}
+
+.form-label {
+  clear: both;
+
+}
+.form-input {
+  clear: both;
+  padding-left: 0px;
+  margin: 5px 0 15px 0;
+}
+
+
+.form-list li {
+  clear: both;
+  margin-bottom: 15px;
+}
+
+.form-list label {
+  padding: 0 15px 0 0;
+}
+
+.radio-label {
+  margin: 0 10px 0 5px;
+  font-size: smaller;
+}
+
+.radio-div {
+  float: left;
+  display: inline;
+}
+
+.button-clear {
+  clear: both;
+  margin-bottom: 20px;
+}
+
+.example-button {
+  float: left;
+  width: 100px;
+  text-align: center;
+  .btn {
+    width: 80px;
+  }
+}
+
+.submit-button {
+  float: left;
+  margin-left: 40px;
+}
+
+.float-text {
+  float: left;
+}
+
+.clear {
+  clear: both;
+}
+
+/* Style for required attributes in form */
+.required {
+  color: rgb(0, 0, 150);
+  font-weight: bold;
+  &:after {
+    content: "*";
+  }
+}
+
+

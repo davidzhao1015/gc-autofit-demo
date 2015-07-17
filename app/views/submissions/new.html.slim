@@ -1,0 +1,102 @@
+h1 Welcome to GC-AutoFit
+
+.well-content.intro
+  p
+    | GC-AutoFit is a web application that automatically identifies and
+      quantifies metabolites using Gas Chromatography Mass Spectrometry (GC-MS)
+      spectra. For optimal GC-AutoFit performance, the query GC-MS spectra should
+      be prepared according to the instructions (**How to collect GC-MS Spectra for
+      GC-AutoFit). GC-AutoFit currently accepts .CDF and .mzXML file formats. It
+      uses alkane standards to calculate the retention index (RI) of each peak in
+      the sample. The extracted EI-MS spectra from each peak, along with the RIs,
+      are then compared to reference spectra (RIs and EI-MS) in the specified
+      library to identify and quantify the compounds. The inclusion of blank
+      spectra is optional, however, it is useful for removing noise effects from
+      the query spectra. Extensive testing shows that GC-AutoFit meets or exceeds
+      the performance of highly trained human experts.
+
+
+h1 GC-AutoFit Analysis
+
+= form_for(@submission, multipart: true) do |f|
+
+  .well-content.intro
+    h2 Instructions
+    p 
+      | To analyze GC-MS spectra with GC-AutoFit you must 
+        provide information on the biofluid being analyzed and the spectral files in
+        <em>.CDF</em> or <em>.mzXML</em> format. Upto 33 spectra can be analyzed in one submission.
+
+    .example-section[data-no-turbolink]
+      .float-text Run one of our examples:
+
+      .example-button
+        = link_to 'Serum', '#', class: 'btn btn-info btn-spaced'
+        /= link_to 'Serum', example_submissions_path(example_num: 1), class: 'btn btn-info btn-spaced'
+      .example-button
+        = link_to 'Urine', '#', class: 'btn btn-info btn-spaced'
+        /= link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
+
+    p.clear Or submit your own mixture:
+
+    = render_form_errors(@submission)
+
+    ol.form-list
+      li
+        .form-group
+          .form-label
+            = f.label :biofluid_type, 'Select Biofluid:', class: "control-label required"
+            span.form-help
+              | GC-AutoFit  works with serum and urine.
+                For other biofluids use <em>Custom</em> to define a spectral library for profiling.
+                You can also upload your own library.
+          .col-sm-12.form-input
+            - Submission::DATABASES.each do |key, name|
+              .radio-div
+                = f.radio_button :database, key, id: "radio-database-#{key}"
+                label.radio-label id='label-database-#{key}' for='submission_database_type'
+                  | #{name} 
+                  - if key == 'custom'
+                    -  style = @submission.custom_database.empty? ? 'display:none' : ''
+                    a#custom-database-edit href='#' style="#{style}"
+                      | (metabolites: <span class='custom-database-count'>#{@submission.custom_database.length}</span>)
+      li
+        .form-group
+          .form-label
+            = f.label :internal_standard, 'Select internal standard:', class: "control-label required"
+          .col-sm-9.form-input
+            - Submission::INTERNAL_STANDARDS.each do |standard|
+              .radio-div
+                = f.radio_button :internal_standard, standard
+                = f.label :internal_standard, standard, class: 'radio-label'
+      li
+        .form-group
+          .form-label
+            = f.label :input_file, 'Upload Spectra:', class: 'control-label required'
+            .form-help
+              | The uploaded file must be a ZIP compressed FID folder.
+        .form-horizontal
+          .form-group
+            .form-label
+              = f.label :input_file, 'Alkane Standards', class: 'control-label required col-sm-3'
+            .col-sm-9
+              = f.file_field :standards
+          .form-group
+            .form-label
+              = f.label :input_file, 'Blank', class: 'control-label col-sm-3'
+            .col-sm-9
+              = f.file_field :blank
+          .form-group
+            .form-label
+              = f.label :input_file, 'Samples', class: 'control-label required col-sm-3'
+            .col-sm-9
+              = f.file_field :samples, multiple: true
+
+    .button-clear
+
+    .submit-button
+      = f.submit 'Submit', class: 'btn btn-primary btn-submit'
+
+  /= render 'custom_filter_dialog'
+
+

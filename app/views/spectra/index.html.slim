@@ -1,0 +1,21 @@
+h1 Listing spectra
+
+table
+  thead
+    tr
+      th Runtime
+      th
+      th
+      th
+
+  tbody
+    - @spectra.each do |spectrum|
+      tr
+        td = spectrum.runtime
+        td = link_to 'Show', spectrum
+        td = link_to 'Edit', edit_spectrum_path(spectrum)
+        td = link_to 'Destroy', spectrum, data: {:confirm => 'Are you sure?'}, :method => :delete
+
+br
+
+= link_to 'New Spectrum', new_spectrum_path
