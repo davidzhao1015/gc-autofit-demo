@@ -16,6 +16,8 @@ class SubmissionsController < ApplicationController
   # GET /submissions/new
   def new
     @submission = Submission.new
+    @submission.build_standards
+    @submission.build_blank
   end
 
   # GET /submissions/1/edit
@@ -29,10 +31,18 @@ class SubmissionsController < ApplicationController
 
     respond_to do |format|
       if @submission.save
+        if params[:submission][:input_zip]
+          # Process zip file and ignore aother files
+        else
+        end
         format.html { redirect_to @submission, notice: 'Submission was successfully created.' }
         format.json { render :show, status: :created, location: @submission }
       else
-        format.html { render :new }
+        format.html do
+          @submission.build_standards
+          @submission.build_blank
+          render :new
+        end
         format.json { render json: @submission.errors, status: :unprocessable_entity }
       end
     end
@@ -65,11 +75,16 @@ class SubmissionsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_submission
-      @submission = Submission.find(params[:id])
+      @submission = Submission.find_by_secret_id(params[:id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def submission_params
-      params.require(:submission).permit(:database)
+      params.require(:submission).permit(:database, :internal_standard,
+                                         standards_attributes: [:id, :spectrum_data, :category],
+                                         blank_attributes: [:id, :spectrum_data, :category],
+                                         samples_attributes: [ :spectrum_data ])
+                                         # samples_attributes: [ spectrum_data: [] ])
+                                         # samples_attributes: [ :id, :spectrum_data, :category ])
     end
 end

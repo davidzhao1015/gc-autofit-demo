@@ -18,6 +18,7 @@ gem 'paperclip'
 gem 'rubyzip'
 gem 'whenever', :require => false
 gem 'google-analytics-rails'
+gem 'systemu'
 
 # Wishart gems
 gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart'

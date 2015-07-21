@@ -76,21 +76,23 @@ h1 GC-AutoFit Analysis
             .form-help
               | The uploaded file must be a ZIP compressed FID folder.
         .form-horizontal
+          = f.fields_for :standards do |standards_fields|
+            .form-group
+              .form-label
+                = standards_fields.label :input_file, 'Alkane Standards', class: 'control-label required col-sm-3'
+              .col-sm-9
+                = standards_fields.file_field :spectrum_data
+          = f.fields_for :blank do |blank_fields|
+            .form-group
+              .form-label
+                = blank_fields.label :input_file, 'Blank', class: 'control-label col-sm-3'
+              .col-sm-9
+                = blank_fields.file_field :spectrum_data
           .form-group
             .form-label
-              = f.label :input_file, 'Alkane Standards', class: 'control-label required col-sm-3'
+              = label :input_file, 'Samples', class: 'control-label required col-sm-3'
             .col-sm-9
-              = f.file_field :standards
-          .form-group
-            .form-label
-              = f.label :input_file, 'Blank', class: 'control-label col-sm-3'
-            .col-sm-9
-              = f.file_field :blank
-          .form-group
-            .form-label
-              = f.label :input_file, 'Samples', class: 'control-label required col-sm-3'
-            .col-sm-9
-              = f.file_field :samples, multiple: true
+              = file_field_tag :spectrum_data, multiple: true, name: 'submission[samples_attributes][][spectrum_data]'
 
     .button-clear
 

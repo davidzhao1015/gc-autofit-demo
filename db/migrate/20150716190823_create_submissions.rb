@@ -5,10 +5,8 @@ class CreateSubmissions < ActiveRecord::Migration
       t.string :job_id
       t.string :secret_id
       t.text :error
+      t.string :status
       t.string :internal_standard
-      t.attachment :standards
-      t.attachment :blank
-      t.attachment :samples
       t.attachment :input_zip
       t.attachment :profile_library
       t.attachment :calibration

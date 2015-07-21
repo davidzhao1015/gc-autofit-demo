@@ -14,9 +14,15 @@
 ActiveRecord::Schema.define(version: 20150716192428) do
 
   create_table "spectra", force: :cascade do |t|
-    t.integer  "runtime",    limit: 4
-    t.datetime "created_at",           null: false
-    t.datetime "updated_at",           null: false
+    t.string   "category",                   limit: 255
+    t.integer  "runtime",                    limit: 4
+    t.integer  "submission_id",              limit: 4
+    t.string   "spectrum_data_file_name",    limit: 255
+    t.string   "spectrum_data_content_type", limit: 255
+    t.integer  "spectrum_data_file_size",    limit: 4
+    t.datetime "spectrum_data_updated_at"
+    t.datetime "created_at",                             null: false
+    t.datetime "updated_at",                             null: false
   end
 
   create_table "submissions", force: :cascade do |t|
@@ -25,18 +31,6 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.string   "secret_id",                    limit: 255
     t.text     "error",                        limit: 65535
     t.string   "internal_standard",            limit: 255
-    t.string   "standards_file_name",          limit: 255
-    t.string   "standards_content_type",       limit: 255
-    t.integer  "standards_file_size",          limit: 4
-    t.datetime "standards_updated_at"
-    t.string   "blank_file_name",              limit: 255
-    t.string   "blank_content_type",           limit: 255
-    t.integer  "blank_file_size",              limit: 4
-    t.datetime "blank_updated_at"
-    t.string   "samples_file_name",            limit: 255
-    t.string   "samples_content_type",         limit: 255
-    t.integer  "samples_file_size",            limit: 4
-    t.datetime "samples_updated_at"
     t.string   "input_zip_file_name",          limit: 255
     t.string   "input_zip_content_type",       limit: 255
     t.integer  "input_zip_file_size",          limit: 4
