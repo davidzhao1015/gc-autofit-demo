@@ -16,7 +16,8 @@ suppressMessages(require(xcms));
 # Generate Spectrum Plots
 # fname.list <- fileList$sampleFiles
 # isPlotOnly=TRUE
-generateSpectrumPlot <- function(fname.list, isPlotOnly=TRUE) {      
+# generateSpectrumPlot <- function(fname.list, isPlotOnly=TRUE) {      
+generateSpectrumPlot <- function(fname.list) {      
   if(DEBUG) cat("# Generate Spectrum Plots\n")
   
   for (i in 1:length(fname.list)) {   ## running per each sample         
@@ -30,7 +31,8 @@ generateSpectrumPlot <- function(fname.list, isPlotOnly=TRUE) {
     
     ## peak picking for samples using TIC or EIC (peak's RT & Intensity)
     cat("\t >> Extracting peak list \n")
-    peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, isPlotOnly)
+    # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, isPlotOnly)
+    peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5)
   }
   
   # To check the process is done or not
@@ -42,15 +44,18 @@ generateSpectrumPlot <- function(fname.list, isPlotOnly=TRUE) {
 ###  Updated May20, 2015
 ###
 ## for uning multiple cores 
-extractFunc <- function(f.sample, opt.plotonly=TRUE) {
+# extractFunc <- function(f.sample, opt.plotonly=TRUE) {
+extractFunc <- function(f.sample) {
    xset.asample <- extractSampleInfo2(f.sample)
-   peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, opt.plotonly)
+   # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, opt.plotonly)
+   peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5)
 }
  
 ### 
 ###  Updated May20, 2015
 ###
-generateSpectrumPlot.multicore <- function(nCluster, fnames, isPlotOnly=TRUE) {      
+# generateSpectrumPlot.multicore <- function(nCluster, fnames, isPlotOnly=TRUE) {      
+generateSpectrumPlot.multicore <- function(nCluster, fnames) {
    if(DEBUG) cat("# Generate Spectrum Plots with Multiple Core\n")
    #print(fname.list)
    
@@ -60,7 +65,8 @@ generateSpectrumPlot.multicore <- function(nCluster, fnames, isPlotOnly=TRUE) {
    clusterExport(ncl, list("extractFunc", "extractSampleInfo2", "xcmsRaw", "extract_peak_list_samples2",
                            "getEIC", "plotEIC","extract_RT_forEachPeak", "DEBUG","get_RTofeachPeak"))
    
-   clusterApply(ncl, fnames, extractFunc, opt.plotonly=isPlotOnly)
+   # clusterApply(ncl, fnames, extractFunc, opt.plotonly=isPlotOnly)
+   clusterApply(ncl, fnames, extractFunc)
    # parLapply(ncl, fname.list, extractFunc, opt.plotonly=isPlotOnly)
    stopCluster(ncl)
    
@@ -77,12 +83,13 @@ generateSpectrumPlot.multicore <- function(nCluster, fnames, isPlotOnly=TRUE) {
 ## print.on : multicore does not support this cat/print because it doesn't make sense 
 quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.matchFactor, internalStd, lib.calicurv, cmpdlist, final_PeakProfile_blank) 
 {
-      RunPlotOnly <- FALSE
+      # RunPlotOnly <- FALSE
       not_PRINT_MZINT4DB <- FALSE 
   
       f.sample.basename <- basename(f.sample)
       if(print.on) {
-          cat(paste("\n", i, ") Compound Profiling and Quantifying:", sep=''), f.sample.basename, "\n")
+          # cat(paste("\n", i, ") Compound Profiling and Quantifying:", sep=''), f.sample.basename, "\n")
+          cat("\n Compound Profiling and Quantifying:", f.sample.basename, "\n")
       }
       
       ## should be updated (remove peakFind function; data structure because it doesnot use anymore)  
@@ -91,7 +98,8 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       
       ## peak picking for samples using TIC or EIC (peak's RT & Intensity)
       if( print.on & DEBUG ) {  cat("\t >> Extracting peak list \n")  }
-      peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, RunPlotOnly)
+      # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, RunPlotOnly)
+      peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5)
       # cat("peaks.sample:\n"); print(peaks.sample/60)
       
       ## to check missing peak
@@ -324,13 +332,11 @@ mergeConcTable <- function( conc.list )
       return (conc.all)
 }
 
-### 
-###  Updated May21, 2015
-###
 quantification.multicore <- function(nCluster, fnames, use.blank, threshold.matchFactor, internalStd, lib.calicurv, cmpdlist, final_PeakProfile_blank) {      
-  # if(DEBUG) 
-    cat("\n# Quantifying spectrum peaks with Multiple Core (nCores:", nCluster, ")\n")
-  #print(fname.list)
+  if(DEBUG) {
+      cat("\n# Quantifying spectrum peaks with Multiple Core (nCores:", nCluster, ")\n")
+      #print(fname.list)
+  }
   
   # Calculate the number of cores
   ncl <- makeCluster(nCluster)  
@@ -339,7 +345,7 @@ quantification.multicore <- function(nCluster, fnames, use.blank, threshold.matc
                           "get_RI_for_samples2","calc_RI","peak_alkane_std", "compoundIdentify3", "getMZIntensityofEachPeak2", "getPeakRange2","getPeakArea3",
                           "getScan","getPeakArea2","RI.Variation","lib.peak","find_similar_peaks","calcMFscore","arrangeProfiledPeaks2","xset.blank",
                           "create_json_file","spectrumToJSON.fullSpectrum","spectrumToJSON.profile","existInternalStd","screeningWithMatchFactor",
-                          "quantification","getSamePeakArea", "calibration","calcConcentration","genFinalReport","check.Concentration","alkaneInfo"))
+                          "quantification","getSamePeakArea", "calibration","calcConcentration","genFinalReport","check.Concentration","alkaneInfo", "plotEIC"))
   
   conc.set <- clusterApply(ncl, fnames, quantifictionFunc, print.on=FALSE, use.blank=use.blank, threshold.matchFactor=threshold.matchFactor, 
                            internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)
@@ -528,7 +534,8 @@ extractSampleInfo2 <- function(aSampleFile) {
 
 
 # xset <- xset.asample
-extract_peak_list_blank <- function(xset, ctype="EIC", offset=1.5, plotFile=TRUE)  {
+# extract_peak_list_blank <- function(xset, ctype="EIC", offset=1.5, plotFile=TRUE)  {
+extract_peak_list_blank <- function(xset, ctype="EIC", offset=1.5)  {
   mzrange <- t(xset@mzrange)
   rtrange <- t(range(xset@scantime))
   ## Generate multiple extracted ion chromatograms for m/z values of interest. 
@@ -538,12 +545,12 @@ extract_peak_list_blank <- function(xset, ctype="EIC", offset=1.5, plotFile=TRUE
   # eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange, sampleidx=i, rt="corrected")
   
   # plot EIC generation
-  if (plotFile) {
+  # if (plotFile) {
     sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath[1]), ignore.case=TRUE)
     png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
         plotEIC(xset, mzrange=mzrange, rtrange=rtrange); # same as plotTIC when it uses all m/zs
     dev.off()
-  }
+  # }
   
   ## get the RT and Intensity from EIC object
   rt_int_matrix <- eic_obj@eic[1][[1]][[1]]         
