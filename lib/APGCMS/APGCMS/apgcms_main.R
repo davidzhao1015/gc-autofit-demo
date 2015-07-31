@@ -26,21 +26,21 @@
 # threshold for each compound? or use different with respond to intensities
 library(parallel)
 
-
 #!/usr/bin/Rscript
 options(echo=FALSE) # if you want see commands in output file
 options("width"=120)
 
 library(parallel) # for using multiple cores
 
-ISDEBUG <- TRUE
+ISDEBUG <- FALSE
 IS_PRINT_MZINT4DB <- FALSE
 IS_AlkanePeakCnAdjust <- TRUE 
 ## sample type and library --> will be gone
 RI.VARIATION.DEFAULT <- 0.03 # 0.03 default
 
 ## R Script program directory
-Version <- "1.0 released 20150521"
+# Version <- "1.0 released 20150521"
+Version <- "1.0 released 20150731"
 CREATE_JSON_FILE <- TRUE
 # USE_BLANK_SPECTRUM <- FALSE
 MF_THRESHOLD_DEFAULT <- 500 
@@ -132,11 +132,20 @@ if ("--help" %in% args) {  helpMessage()  }
     internalStd <- argsL$internalstd
   }
   
-  if(is.null(argsL$plotonly)) {
-    showErrMessage("  Warning in argument:\n\t plot only option is not assigned")
-    helpMessage()
+  ### changed this option to support new platform 
+  # 
+  # if(is.null(argsL$plotonly)) {
+  #  showErrMessage("  Warning in argument:\n\t plot only option is not assigned")
+  #  helpMessage()
+  #} else {
+  #  RunPlotOnly <- as.logical(argsL$plotonly)
+  #}
+  
+  if(argsL$process %in% c('PREPROCESSING','PROFILING')) {
+      processOption <- argsL$process;
   } else {
-    RunPlotOnly <- as.logical(argsL$plotonly)
+      showErrMessage("  Error in argument:\n\t see the help to correctly use the process option")
+      helpMessage()
   }
   
   # optional arguments
@@ -192,30 +201,6 @@ source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and 
 source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
 # cat("RProgram_dir:"); print(RProgram_dir)
 
-
-## for testing/developing, Initiate variable and environment
-##===========================================================================================
-if(FALSE) {
-  RProgram_dir <- "~/gcmsProfiling/APGCMS_developing"; 
-  setwd(RProgram_dir); getwd()
-  lib_dir <- file.path(RProgram_dir, "lib")
-  source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and definitions    
-  source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
-  
-  sampleFileDir <- "~/gcmsProfiling/_data_spectrum/newSerumLib_Harding_20150225//Mix2_mzXML"
-  
-  SpectrumFile_list <- list.files(path = sampleFileDir);
-  if (length(SpectrumFile_list) == 0) stop("No input CDF file exists")
-  USE_INTERNAL_LIBRARY <- "SERUM"
-  # set plottingStatus 
-  plottingStatus <- 0 # 1 - plotting only; 0 - profiling
-  RunPlotOnly <- ifelse (plottingStatus == 1, TRUE, FALSE) 
-  MF_THRESHOLD <- MF_THRESHOLD_DEFAULT
-  internalStd <- "Ribitol"
-  user.AlkaneRT <-  NULL
-  SampleType <- 1    
-}
-
 ## set Debug Mode (TRUE / FALSE)
 setDebugMode(ISDEBUG);  
 
@@ -223,7 +208,6 @@ setDebugMode(ISDEBUG);
 ## return: infile.alkane/blank/samples
 fileList <- get_file_list(sampleFileDir)
 if (DEBUG) { cat("Input Files:\n"); print(fileList) }
-# stop()
 
 ## create and set working directory (save output/result files) 
 ## may be changed: upload_user_temp_dir \data, \Result
@@ -243,12 +227,14 @@ source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, librarie
 # Alkane Peak Profiling
 fname.lib.alkane <- file.path(lib_dir, LibFile.Alkane)
 
+######  ?????????????????????????????????
+######  Once time read but use all the time
+######
 # peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT==TRUE) 
 peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=FALSE) 
 
 if(DEBUG) {cat("final alkane profiled:\n"); print(peak_alkane_std) }
 alkaneInfo <- check_alkane_std(peak_alkane_std)
-
 
 ## =======================================================================================
 ## Blank Sample Handling
@@ -256,13 +242,17 @@ alkaneInfo <- check_alkane_std(peak_alkane_std)
 
 ## @@ blank has something serious noise; so if we substract it from sample the result may be wrong
 if( USE_BLANK_SPECTRUM & length(fileList$blankFile) > 0 ) {
+    ###### make a single function as Alkane
+    ######
+    
     xset.blank <- extractBlankInfo(fileList$blankFile)  
     
     cat("\n## Extracting peak list for Blank sample:", basename(fileList$blankFile), "\n")
     ## peak picking for samples using EIC(extracted ion chromatograms) for m/z values of interest. 
-    peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5, RunPlotOnly)
+    # peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5, RunPlotOnly)
+    peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5)
 
-    if ( ! RunPlotOnly ) {        
+    # if ( ! RunPlotOnly ) {        
         ## RI calculation using Alkane Std
         peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
         profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
@@ -302,14 +292,13 @@ if( USE_BLANK_SPECTRUM & length(fileList$blankFile) > 0 ) {
             xset.blank <- NULL
             USE_BLANK_SPECTRUM <- FALSE
         }
-    }
+    # }
 } else {
     cat("\n## Blank Sample is not found/used\n")
     xset.blank <- NULL
     USE_BLANK_SPECTRUM <- FALSE
     final_PeakProfile_blank <- NULL
 }
-
 
 ## =======================================================================================
 ## peak identifying for samples
@@ -324,42 +313,56 @@ cmpdlist <- as.data.frame( lib.peak[, c("SeqIndex","HMDB_ID","Compound",'Compoun
 final.Concentration <- NULL
 nCores <- detectCores() - 1  # get the number of cores, -1 for other use
 
-if ( RunPlotOnly ) {
+## with Preprocessing Option
+## Alkane & Blank & Plots
+if ( processOption == "PREPROCESSING" ) {
+    ## ALKANE
+    ## BLANK
+  
     ## Image Plot generation      
     cat("\n## Spectrum plot generation only ...\n")
-    generateSpectrumPlot(fileList$sampleFiles, RunPlotOnly) 
 
     # Multi Core or Single Core
-    if (TRUE) {
+    if (nCores >= 2) {
+        if (DEBUG) cat("\t# N Core:", nCores, "\n")
         # beg = Sys.time()
-        generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles, RunPlotOnly)
+        # generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles, RunPlotOnly)
+        generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles)
         # td = as.numeric(Sys.time() - beg, "secs")
         # cat("\n\n## Time - Multi Core:", td,"\n")
     } else { 
         # beg = Sys.time()
-        generateSpectrumPlot(fileList$sampleFiles, RunPlotOnly)
+        # generateSpectrumPlot(fileList$sampleFiles, RunPlotOnly)
+        generateSpectrumPlot(fileList$sampleFiles)
         # td = as.numeric(Sys.time() - beg, "secs")
         # cat("\n\n## Time - Single Core:", td,"\n")
     }
 
 } else {
+    ## PROFILING & Quantification as optional
+  
+    ## Loading the Generated Alkane & Blank Profile Information in PREPROCESSING 
     cat("\n## Profiling and quantifying for each sample...\n")
 
     checkInternalStd <- FALSE
     
-    beg = Sys.time() 
+    if (DEBUG) { beg = Sys.time() }
    
-    if (TRUE) {
+    if (nCores >= 1) {
+        if(DEBUG) cat("## Using multi cores\n")
         flag.blank_spectrum <- ifelse( USE_BLANK_SPECTRUM, TRUE, FALSE)
         conc.each <- quantification.multicore(nCores, fileList$sampleFiles, use.blank=flag.blank_spectrum, threshold.matchFactor=MF_THRESHOLD, 
                                       internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)  
     } else {
+        if(DEBUG) cat("## Using single core\n")
         conc.each <- lapply(fileList$sampleFiles, quantifictionFunc, print.on=TRUE)
     }
    
-    if (DEBUG) { cat("Each concentration table:\n"); print(conc.each) }
-    td = as.numeric(Sys.time() - beg, "secs")
-    cat("## Running Time with multiple Cores (", nCores,") :", td,"\n")
+    if (DEBUG) { 
+        cat("Each concentration table:\n"); print(conc.each) 
+        td = as.numeric(Sys.time() - beg, "secs")
+        cat("## Running Time with multiple Cores (", nCores,") :", td,"\n")
+    }
     
     ## merge concentration for all samples
     final.Concentration <- mergeConcTable( conc.each )
@@ -390,16 +393,11 @@ if ( RunPlotOnly ) {
         cat("\n==============================================================\n")
         cat("\n## Done:", length(fileList$sampleFiles), "spectrum files\n\n")
     } else {
+        ## OPTION or if no internal std, then just report without quantification 
         cat("\n\n ## Fail to generate profiled_ALL due to missing internal Standard \n")
         cat("\t internalStd:", internalStd,"\n\n")
     }
     
     ofile.note <- paste(basename(sampleFileDir),"_note.txt", sep='')
     saveProfilingInfo(ofile.note, Version)   
-
 }
-
-
-
-
-  

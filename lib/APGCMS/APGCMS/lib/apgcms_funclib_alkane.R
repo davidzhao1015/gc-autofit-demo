@@ -186,7 +186,9 @@ extractAlkaneStdInfo <- function(file.alkane) {
 
 
 # xset <- xset.alkane
-extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7, plotFile=TRUE)  {
+# extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7, plotFile=TRUE)  {
+## this will generate PLOT image and RT Peaks 
+extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7)  {
   
   ## This is the important part to detect peak correctly; it depends on mzrange
   # mzrange <- t(range(xset@peaks[,"mz"]))            
@@ -197,13 +199,13 @@ extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7, 
   eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange)   ## when xset is xcmsRaw class
   
   # EIC plot generate & save  
-  if ( plotFile ) {
+  # if ( plotFile ) {
     sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
     # png(filename = paste("Plot_", ctype,"_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
     png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
     plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
     dev.off()
-  }
+  # }
   
   ## get the RT and Intensity from EIC object
   rt_int_matrix <- eic_obj@eic[1][[1]][[1]]         
@@ -757,7 +759,8 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   #}
   
   offset <- 2.01
-  peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset, RunPlotOnly)
+  # peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset, RunPlotOnly)
+  peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset)
   if (DEBUG) { cat("## peaks.alkane:\n"); print(peaks.alkane) }
   
   ## cleanning false peaks before profiling using RT
@@ -808,7 +811,6 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   
   ## Estimated missing alkane
   userEstAlkaneRT<-TRUE
-  # userEstAlkaneRT<-FALSE
   if( userEstAlkaneRT == TRUE ) {
     if(DEBUG) {cat("\n## Use Estimated missing Alkane\n") }
     alkane.peaks.profiled <- estimateMissingAlkaneRT(alkane.peaks.profiled)
