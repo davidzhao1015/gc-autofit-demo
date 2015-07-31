@@ -34,6 +34,7 @@ class Submission < ActiveRecord::Base
   after_destroy     :delete_working_dir
 
   serialize :custom_database, Array
+  # serialize :filter_list, Array
 
 
   def self.delete_old_submissions
