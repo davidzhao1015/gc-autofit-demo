@@ -1,0 +1,30 @@
+.modal.fade#custom-db-list
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close.custom-db-cancel type='button' data-dismiss='modal' aria-hidden='true' &times;
+        h4.modal-title Define Custom Spectral Library for Biofluid [metabolites: <span class='custom-db-count'>#{@submission.custom_database.count}</span>]
+      .modal-body
+        .alert.alert-info
+          p
+            | Select the compounds that GC-AutoFit should use for spectral profiling.
+              The buttons can be used to select predefined sets of metabolites.
+              Compounds marked <em>Experimental</em> have not been extensively tested. 
+            em Note that defining a custom library is experimental and may not provide the best results.
+
+        a.btn.btn-default.btn-xs#db-button-all href='#' All
+        a.btn.btn-default.btn-xs#db-button-none href='#' None
+        - %w( Serum Urine Saliva ).each do |subset|
+          a.btn.btn-default.btn-xs.db-button-select.tool-tip[data-toggle='tooltip'
+            title='#{Metabolites.tool_tip(subset)}'
+            data-hmdb-ids="#{Metabolites.list(subset).join(',')}" href='#']
+              | #{subset} 
+              - unless Metabolites.biofluid_is_verified?(subset)
+                span.glyphicon.glyphicon-warning-sign.subset-not-verified
+
+        = custom_db_table(@submission)
+
+      .modal-footer
+        button.btn.btn-default.custom-db-cancel type='button' Cancel
+        button.btn.btn-primary#custom-db-save type='button' Save
+

@@ -1,0 +1,90 @@
+HMDB00001	1-Methylhistidine
+HMDB00008	2-Hydroxybutyric acid
+HMDB00019	Alpha-ketoisovaleric acid
+HMDB00023	(S)-3-Hydroxyisobutyric acid
+HMDB00042	Acetic acid
+HMDB00043	Betaine
+HMDB00044	Ascorbic acid
+HMDB00060	Acetoacetic acid
+HMDB00062	L-Carnitine
+HMDB00064	Creatine
+HMDB00087	Dimethylamine
+HMDB00094	Citric acid
+HMDB00097	Choline
+HMDB00108	Ethanol
+HMDB00122	D-Glucose
+HMDB00123	Glycine
+HMDB00131	Glycerol
+HMDB00142	Formic acid
+HMDB00148	L-Glutamic acid
+HMDB00157	Hypoxanthine
+HMDB00158	L-Tyrosine
+HMDB00159	L-Phenylalanine
+HMDB00161	L-Alanine
+HMDB00162	L-Proline
+HMDB00167	L-Threonine
+HMDB00168	L-Asparagine
+HMDB00169	D-Mannose
+HMDB00172	L-Isoleucine
+HMDB00177	L-Histidine
+HMDB00182	L-Lysine
+HMDB00187	L-Serine
+HMDB00190	L-Lactic acid
+HMDB00191	L-Aspartic acid
+HMDB00192	L-Cystine
+HMDB00202	Methylmalonic acid
+HMDB00208	Oxoglutaric acid
+HMDB00211	Myoinositol
+HMDB00214	Ornithine
+HMDB00223	Oxalacetic acid
+HMDB00243	Pyruvic acid
+HMDB00254	Succinic acid
+HMDB00267	Pyroglutamic acid
+HMDB00292	Xanthine
+HMDB00294	Urea
+HMDB00357	3-Hydroxybutyric acid
+HMDB00407	2-Hydroxy-3-methylbutyric acid
+HMDB00517	L-Arginine
+HMDB00562	Creatinine
+HMDB00574	L-Cysteine
+HMDB00641	L-Glutamine
+HMDB00660	D-Fructose
+HMDB00687	L-Leucine
+HMDB00691	Malonic acid
+HMDB00696	L-Methionine
+HMDB00754	3-Hydroxyisovaleric acid
+HMDB00863	Isopropyl alcohol
+HMDB00883	L-Valine
+HMDB00929	L-Tryptophan
+HMDB01659	Acetone
+HMDB01873	Isobutyric acid
+HMDB01875	Methanol
+HMDB01881	Propylene glycol
+HMDB02712	"1,5-Anhydrosorbitol"
+HMDB04983	Dimethyl sulfone
+HMDB00020	p-Hydroxyphenylacetic acid
+HMDB00039	Butyric acid
+HMDB00092	Dimethylglycine
+HMDB00115	Glycolic acid
+HMDB00143	D-Galactose
+HMDB00149	Ethanolamine
+HMDB00164	Methylamine
+HMDB00174	L-Fucose
+HMDB00209	Phenylacetic acid
+HMDB00247	Sorbitol
+HMDB00251	Taurine
+HMDB00271	Sarcosine
+HMDB00300	Uracil
+HMDB00479	3-Methylhistidine
+HMDB00625	Gluconic acid
+HMDB00718	Isovaleric acid
+HMDB00906	Trimethylamine
+HMDB01565	Phosphorylcholine
+HMDB01847	Caffeine
+HMDB03355	5-Aminopentanoic acid
+HMDB11635	p-Cresol sulfate
+HMDB00755	Hydroxyphenyllactic acid
+HMDB00128	Guanidoacetic acid
+HMDB00134	Fumaric acid
+HMDB00186	Alpha-Lactose
+HMDB00714	Hippuric acid
