@@ -1,0 +1,7 @@
+# Preprocessing
+
+Rscript ../APGCMS/apgcms_main.R --infiledir='inputfile_dir' --lib.internal='SERUM' --internalstd='Ribitol' --process='PREPROCESSING --outdir=<user_defined_output_directory>
+
+# Profiling
+
+Rscript ../APGCMS/apgcms_main.R --infiledir='inputfile_dir' --lib.internal='SERUM' --internalstd='Ribitol' --process='PROFILING' --outdir='user_defined_output_dir' --infoFileDir='user_defined_output_directory_for_preprocessing'

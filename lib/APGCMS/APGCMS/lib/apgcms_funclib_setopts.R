@@ -24,7 +24,7 @@ helpMessage <- function() {
         --userlib='user_library_file.csv'       # only need if not use internal lib
         --usercal='user_calibration_file.csv'   # only need if not use internal lib
         --internalstd='Compound Name' or 'NONE' # Internal Standard Compound Name in user library and calibration curve
-        --plotonly=FALSE  # boolean (TRUE/FALSE); generate spectrum plot only or analysis only 
+        --process='PREPROCESSING' or 'PROFILING'  # set a processing mode 
 
       Optional Arguments:
         --lib.internal=NONE  # NONE, SERUM, URINE, SALIVA, ... default = NONE; 
@@ -32,13 +32,20 @@ helpMessage <- function() {
         --MFscore=400     # set MF score threshold (Default: 400)
         --RIoffset=0.03   # set RI variation/offset (Default: 0.03)
         --AlkaneRT='10,11,12,13,14,...20,22,24,26,28,30,32,34'  # set RI variation/offset (Default: 0.03)
+        --outdir=<user_defined_output_directory>    # Assign a 'user defined output directory' (recommended to use full path). 
+                                                      It is allowed to use the recursive directory creation 
+        --infoFileDir=<information_file_directory>  # Assign the directory of the information files (Alkane Standard 
+                                                      and Blank Sample's Profiles). It is required for PROFILING process. 
+
+
 
       --help  # print this text
  
       Example:
       > Rscript test.R --infiledir='./data/sample_sep09' --userlib='user_profiledb.csv' --usercal='user_calibration.csv' 
-               --internalstd='Ribitol' --plotonly=TRUE --useblank=TRUE --MFscore=400 --RIoffset=0.03  
-      > Rscript test.R --infiledir='./data/sample_sep09' --lib.internal='SERUM' --internalstd='Cholesterol' --plotonly=TRUE 
+               --internalstd='Ribitol' --process='PREPROCESSING' --useblank=TRUE --MFscore=400 --RIoffset=0.03  
+      > Rscript test.R --infiledir='./data/sample_sep09' --lib.internal='SERUM' --internalstd='Cholesterol' --process='PROFILING'
+               --outdir='/Users/gcms/example/output_profiling'
       \n\n")
   
   q(save="no")  

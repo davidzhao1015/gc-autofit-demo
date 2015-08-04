@@ -32,7 +32,7 @@ generateSpectrumPlot <- function(fname.list) {
     ## peak picking for samples using TIC or EIC (peak's RT & Intensity)
     cat("\t >> Extracting peak list \n")
     # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, isPlotOnly)
-    peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5)
+    peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, plotFile=TRUE)
   }
   
   # To check the process is done or not
@@ -44,11 +44,10 @@ generateSpectrumPlot <- function(fname.list) {
 ###  Updated May20, 2015
 ###
 ## for uning multiple cores 
-# extractFunc <- function(f.sample, opt.plotonly=TRUE) {
-extractFunc <- function(f.sample) {
+extractFunc <- function(f.sample, opt.plotonly=TRUE) {
    xset.asample <- extractSampleInfo2(f.sample)
    # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, opt.plotonly)
-   peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5)
+   peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, plotFile=opt.plotonly)
 }
  
 ### 
@@ -65,8 +64,7 @@ generateSpectrumPlot.multicore <- function(nCluster, fnames) {
    clusterExport(ncl, list("extractFunc", "extractSampleInfo2", "xcmsRaw", "extract_peak_list_samples2",
                            "getEIC", "plotEIC","extract_RT_forEachPeak", "DEBUG","get_RTofeachPeak"))
    
-   # clusterApply(ncl, fnames, extractFunc, opt.plotonly=isPlotOnly)
-   clusterApply(ncl, fnames, extractFunc)
+   clusterApply(ncl, fnames, extractFunc, opt.plotonly=TRUE)
    # parLapply(ncl, fname.list, extractFunc, opt.plotonly=isPlotOnly)
    stopCluster(ncl)
    
@@ -99,7 +97,7 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       ## peak picking for samples using TIC or EIC (peak's RT & Intensity)
       if( print.on & DEBUG ) {  cat("\t >> Extracting peak list \n")  }
       # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, RunPlotOnly)
-      peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5)
+      peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, plotFile=FALSE)
       # cat("peaks.sample:\n"); print(peaks.sample/60)
       
       ## to check missing peak
@@ -150,7 +148,8 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
     
     # Subtract BLANK Peak Areas
     # if there is a blank sample, then substract the area from sample's area
-    if( use.blank &  ! is.null(xset.blank) ) {            
+    # if( use.blank &  ! is.null(xset.blank) ) { 
+    if( use.blank &  ! is.null(final_PeakProfile_blank) ) { 
       if( print.on ) {  cat("\t >> subtract blank peaks' area \n") }
       # final_PeakProfile <- cbind(final_PeakProfile, Area.Blank=0)
       # exclude Standard Peak
@@ -343,9 +342,10 @@ quantification.multicore <- function(nCluster, fnames, use.blank, threshold.matc
   
   clusterExport(ncl, list("DEBUG", "extractSampleInfo2", "xcmsRaw","extract_peak_list_samples2", "getEIC","extract_RT_forEachPeak", "get_RTofeachPeak",
                           "get_RI_for_samples2","calc_RI","peak_alkane_std", "compoundIdentify3", "getMZIntensityofEachPeak2", "getPeakRange2","getPeakArea3",
-                          "getScan","getPeakArea2","RI.Variation","lib.peak","find_similar_peaks","calcMFscore","arrangeProfiledPeaks2","xset.blank",
+                          "getScan","getPeakArea2","RI.Variation","lib.peak","find_similar_peaks","calcMFscore","arrangeProfiledPeaks2",
                           "create_json_file","spectrumToJSON.fullSpectrum","spectrumToJSON.profile","existInternalStd","screeningWithMatchFactor",
                           "quantification","getSamePeakArea", "calibration","calcConcentration","genFinalReport","check.Concentration","alkaneInfo", "plotEIC"))
+  # "xset.blank"
   
   conc.set <- clusterApply(ncl, fnames, quantifictionFunc, print.on=FALSE, use.blank=use.blank, threshold.matchFactor=threshold.matchFactor, 
                            internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)

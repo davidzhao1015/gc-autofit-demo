@@ -32,7 +32,7 @@ options("width"=120)
 
 library(parallel) # for using multiple cores
 
-ISDEBUG <- FALSE
+ISDEBUG <- TRUE
 IS_PRINT_MZINT4DB <- FALSE
 IS_AlkanePeakCnAdjust <- TRUE 
 ## sample type and library --> will be gone
@@ -176,7 +176,35 @@ if ("--help" %in% args) {  helpMessage()  }
     user.AlkaneRT <- as.numeric(unlist(strsplit(argsL$AlkaneRT,",")))
     if(ISDEBUG) { cat("## user.AlkaneRT:"); print(user.AlkaneRT) }
   } 
+  
+  if(is.null(argsL$outdir)) {
+    # default output directory
+    user.outdir <- paste(dirname(sampleFileDir), "/", sub("_input","",basename(sampleFileDir)), '_result', sep='')
+  } else {
+    user.outdir <- argsL$outdir # expected full path
+    if(ISDEBUG) { cat("## user.outdir:"); print(user.outdir) }
+  }
+
+  # In profiling process, it needs to have the Alkane and Blank information from the Preprocessing process.
+  if( processOption == 'PROFILING' ) {
+      cat("argsL$infoFileDir:"); print(argsL$infoFileDir)
+      if(is.null(argsL$infoFileDir)) {
+          showErrMessage("  Error in argument (--infoFileDir):\n\t Alkane Standard and Blank Profiled Information are required \n\t with '--infoFileDir' option")
+          helpMessage()
+      } else {
+          infoFileDir <- argsL$infoFileDir
+          if(ISDEBUG) { cat("## infoFileDir:"); print(argsL$infoFileDir) }
+      }
+  }
 }
+
+## create and set working directory (save output/result files) 
+## may be changed: upload_user_temp_dir \data, \Result
+dir.create(user.outdir, showWarnings=TRUE, recursive=TRUE) # expected full path
+dirProfileResult <- normalizePath(user.outdir)
+setwd(dirProfileResult)  ## Set working directory    
+
+if(ISDEBUG) cat("## dirProfileResult:"); print(dirProfileResult)
 
 if( USE_INTERNAL_LIBRARY == 'NONE') {    
     lib.peak <- getLibInfo(userLibFile)
@@ -209,95 +237,126 @@ setDebugMode(ISDEBUG);
 fileList <- get_file_list(sampleFileDir)
 if (DEBUG) { cat("Input Files:\n"); print(fileList) }
 
-## create and set working directory (save output/result files) 
-## may be changed: upload_user_temp_dir \data, \Result
-dirProfileResult <- paste(dirname(sampleFileDir), "/", sub("_input","",basename(sampleFileDir)), '_result', sep='')
-dir.create(dirProfileResult, showWarnings=FALSE)
-setwd(dirProfileResult)  ## Set working directory
-
 ## read raw data from spectra file (.CDF) to get peak, EIC
 ## xset_list <- extract_xset_list(file_vec, mzStep) # xset_list$alkane & xset_list&samples 
 cat("\n## Extracting Raw data ...\n")
 
+
 ####################################################################################
-# Alkane peak profiling 
+# Preprocessing
+# Alkane Std, Blank, and Spectrum plot of Samples
 ####################################################################################
-source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
 
-# Alkane Peak Profiling
-fname.lib.alkane <- file.path(lib_dir, LibFile.Alkane)
+if (processOption == 'PREPROCESSING') {
+  
+    ## =======================================================================================
+    ## Alkane Peak Handling (Profiling & Spectrum Plot)
+    ## =======================================================================================
+  
+  
+    source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
 
-######  ?????????????????????????????????
-######  Once time read but use all the time
-######
-# peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT==TRUE) 
-peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=FALSE) 
-
-if(DEBUG) {cat("final alkane profiled:\n"); print(peak_alkane_std) }
-alkaneInfo <- check_alkane_std(peak_alkane_std)
-
-## =======================================================================================
-## Blank Sample Handling
-## =======================================================================================
-
-## @@ blank has something serious noise; so if we substract it from sample the result may be wrong
-if( USE_BLANK_SPECTRUM & length(fileList$blankFile) > 0 ) {
-    ###### make a single function as Alkane
-    ######
+    # Alkane Peak Profiling
+    fname.lib.alkane <- file.path(lib_dir, LibFile.Alkane)
     
-    xset.blank <- extractBlankInfo(fileList$blankFile)  
+    # peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT==TRUE) 
+    peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=FALSE) 
+
+    if(DEBUG) {cat("final alkane profiled:\n"); print(peak_alkane_std) }
+    alkaneInfo <- check_alkane_std(peak_alkane_std)
+
+    ## =======================================================================================
+    ## Blank Sample Handling
+    ## =======================================================================================
     
-    cat("\n## Extracting peak list for Blank sample:", basename(fileList$blankFile), "\n")
-    ## peak picking for samples using EIC(extracted ion chromatograms) for m/z values of interest. 
-    # peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5, RunPlotOnly)
-    peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5)
-
-    # if ( ! RunPlotOnly ) {        
-        ## RI calculation using Alkane Std
-        peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
-        profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
-        # head(profiled_peaks_blank)
-        # cat("profiled_peaks_blank\n"); print(profiled_peaks_blank)
-
-        if( DEBUG ) {
-          ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_profiledPeaksTMP.csv", sep='')
-          write.csv(profiled_peaks_blank, file=ofilename, quote=TRUE, row.names=FALSE)
-        }
+    ## @@ blank has something serious noise; so if we substract it from sample the result may be wrong
+    if( USE_BLANK_SPECTRUM & length(fileList$blankFile) > 0 ) {
+        ###### make a single function as Alkane
+        ######
         
-        final_PeakProfile_blank <- arrangeProfiledPeaks2(profiled_peaks_blank, SampleType)
-        cat("final_PeakProfile_blank\n"); print(final_PeakProfile_blank)
-
-        final_PeakProfile_blank$CompoundWithTMS <- as.character(final_PeakProfile_blank$CompoundWithTMS)
-        final_PeakProfile_blank$Area <- as.numeric(as.character(final_PeakProfile_blank$Area))
-        final_PeakProfile_blank$MatchFactor <- as.numeric(as.character(final_PeakProfile_blank$MatchFactor))
+        xset.blank <- extractBlankInfo(fileList$blankFile)  
         
-        final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
-        final_PeakProfile_blank <- final_PeakProfile_blank[,-c(11,12,13,15,16,17)]
-        ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_profiled.csv", sep='')
-        write.csv(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE)
-
-        if (CREATE_JSON_FILE) {
-            ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_spectrum.json", sep='')
-            create_json_file(ofilename, xset.blank@scantime, xset.blank@tic,
-                                        final_PeakProfile_blank$RT, final_PeakProfile_blank$Intensity, final_PeakProfile_blank$Compound)
-        }        
+        cat("\n## Extracting peak list for Blank sample:", basename(fileList$blankFile), "\n")
+        ## peak picking for samples using EIC(extracted ion chromatograms) for m/z values of interest. 
+        # peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5, RunPlotOnly)
+        peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5)
+    
+        # if ( ! RunPlotOnly ) {        
+            ## RI calculation using Alkane Std
+            peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
+            profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
+            # head(profiled_peaks_blank)
+            # cat("profiled_peaks_blank\n"); print(profiled_peaks_blank)
+    
+            if( DEBUG ) {
+              ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_profiledPeaksTMP.csv", sep='')
+              write.csv(profiled_peaks_blank, file=ofilename, quote=TRUE, row.names=FALSE)
+            }
+            
+            final_PeakProfile_blank <- arrangeProfiledPeaks2(profiled_peaks_blank, SampleType)
+            cat("final_PeakProfile_blank\n"); print(final_PeakProfile_blank)
+    
+            final_PeakProfile_blank$CompoundWithTMS <- as.character(final_PeakProfile_blank$CompoundWithTMS)
+            final_PeakProfile_blank$Area <- as.numeric(as.character(final_PeakProfile_blank$Area))
+            final_PeakProfile_blank$MatchFactor <- as.numeric(as.character(final_PeakProfile_blank$MatchFactor))
+            
+            final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
+            final_PeakProfile_blank <- final_PeakProfile_blank[,-c(11,12,13,15,16,17)]
+            ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_profiled.csv", sep='')
+            write.csv(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE)
+    
+            if (CREATE_JSON_FILE) {
+                ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_spectrum.json", sep='')
+                create_json_file(ofilename, xset.blank@scantime, xset.blank@tic,
+                                            final_PeakProfile_blank$RT, final_PeakProfile_blank$Intensity, final_PeakProfile_blank$Compound)
+            }        
+            
+            # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
+            rmCompoundStr <- internalStd
+            final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
+            
+            if( nrow(final_PeakProfile_blank) == 0  ) {
+                # stop("There is no Internal Standard in the Blank file")
+                cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
+                xset.blank <- NULL
+                USE_BLANK_SPECTRUM <- FALSE
+            }
+        # }
+    } else {
+        cat("\n## Blank Sample is not found/used\n")
+        xset.blank <- NULL
+        USE_BLANK_SPECTRUM <- FALSE
+        final_PeakProfile_blank <- NULL
+    }
+    
+    save(alkaneInfo, file="alkaneInfo.Rdata")
+    save(peak_alkane_std, file="alkanePeakInfo.Rdata")
+    save(final_PeakProfile_blank, file="blankInfo.Rdata")
         
-        # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
-        rmCompoundStr <- internalStd
-        final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
-        
-        if( nrow(final_PeakProfile_blank) == 0  ) {
-            # stop("There is no Internal Standard in the Blank file")
-            cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
-            xset.blank <- NULL
-            USE_BLANK_SPECTRUM <- FALSE
-        }
-    # }
 } else {
-    cat("\n## Blank Sample is not found/used\n")
-    xset.blank <- NULL
-    USE_BLANK_SPECTRUM <- FALSE
-    final_PeakProfile_blank <- NULL
+    cat("\n ##### Loading Information Files \n")
+    infoFileDir.alkane <- paste(infoFileDir, "/alkaneInfo.Rdata", sep='')
+    cat(infoFileDir.alkane,"\n")
+    file.exists(infoFileDir.alkane)
+    
+    infoFileDir.alkanePeak <- paste(infoFileDir, "/alkanePeakInfo.Rdata", sep='')
+    cat(infoFileDir.alkanePeak,"\n")
+    file.exists(infoFileDir.alkanePeak)
+    
+    infoFileDir.blank <- paste(infoFileDir, "/blankInfo.Rdata", sep='')
+    cat(infoFileDir.blank,"\n")
+    file.exists(infoFileDir.blank)
+    
+    load(infoFileDir.alkane)
+    load(infoFileDir.alkanePeak)
+    load(infoFileDir.blank)
+    
+    cat("\n\ncheck alkane & blank\n\n")
+    cat("## alkaneInfo:\n"); print(alkaneInfo);
+    cat("## peak_alkane_std:\n"); print(peak_alkane_std);
+    cat("## final_PeakProfile_blank:\n"); print(final_PeakProfile_blank);
+
+    # stop()
 }
 
 ## =======================================================================================
