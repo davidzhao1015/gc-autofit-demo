@@ -76,25 +76,38 @@ h1 GC-AutoFit Analysis
             .form-help
               | The uploaded files must be .CDF or .mzXML
         .form-horizontal
-          = f.fields_for :standards do |standards_fields|
-            .form-group
-              .form-label
-                = standards_fields.label :standards, 'Alkane Standards', class: 'control-label required col-sm-3'
-              .col-sm-9
-                = standards_fields.file_field :spectrum_data
-                = standards_fields.hidden_field :category, value: 'standards'
-          = f.fields_for :blank do |blank_fields|
-            .form-group
-              .form-label
-                = blank_fields.label :blank, 'Blank', class: 'control-label col-sm-3'
-              .col-sm-9
-                = blank_fields.file_field :spectrum_data
-                = blank_fields.hidden_field :category, value: 'blank'
+          /= f.fields_for :standards do |standards_fields|
+          /  .form-group
+          /    .form-label
+          /      = standards_fields.label :standards, 'Alkane Standards', class: 'control-label required col-sm-3'
+          /    .col-sm-9
+          /      = standards_fields.file_field :spectrum_data
+          /      = standards_fields.hidden_field :category, value: 'standards'
+          /= f.fields_for :blank do |blank_fields|
+          /  .form-group
+          /    .form-label
+          /      = blank_fields.label :blank, 'Blank', class: 'control-label col-sm-3'
+          /    .col-sm-9
+          /      = blank_fields.file_field :spectrum_data
+          /      = blank_fields.hidden_field :category, value: 'blank'
+          /.form-group
+          /  .form-label
+          /    = label :standards, 'Alkane Standards', class: 'control-label required col-sm-3'
+          /  .col-sm-9
+          /    = file_field_tag :spectrum_data, name: 'submission[spectra_attributes][][spectrum_data]'
+          /    = hidden_field_tag 'submission[spectra_attributes][][category]', 'standards'
+          /.form-group
+          /  .form-label
+          /    = label :blank, 'Blank', class: 'control-label col-sm-3'
+          /  .col-sm-9
+          /    = file_field_tag :spectrum_data, name: 'submission[spectra_attributes][][spectrum_data]'
+          /    = hidden_field_tag 'submission[spectra_attributes][][category]', 'blank'
           .form-group
             .form-label
               = label :samples, 'Samples', class: 'control-label required col-sm-3'
             .col-sm-9
-              = file_field_tag :spectrum_data, multiple: true, name: 'submission[samples_attributes][][spectrum_data]'
+              = file_field_tag :spectrum_data, multiple: true, name: 'submission[spectra_attributes][][spectrum_data]'
+              /= hidden_field_tag 'submission[spectra_attributes][][category]', 'sample'
 
     .button-clear
 

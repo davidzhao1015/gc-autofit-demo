@@ -16,13 +16,14 @@ class Submission < ActiveRecord::Base
   }
   INTERNAL_STANDARDS = %w[ Ribitol Cholesterol ]
 
-  # has_many :spectra, dependent: :destroy
+  has_many :spectra, dependent: :destroy
 
-  has_one :standards, dependent: :destroy, class_name: 'Spectrum'
-  has_one :blank,     dependent: :destroy, class_name: 'Spectrum'
-  has_many :samples,  dependent: :destroy, class_name: 'Spectrum'
+  # has_one :standards, dependent: :destroy, class_name: 'Spectrum'
+  # has_one :blank,     dependent: :destroy, class_name: 'Spectrum'
+  # has_many :samples,  dependent: :destroy, class_name: 'Spectrum'
 
-  accepts_nested_attributes_for :standards, :blank, :samples
+  # accepts_nested_attributes_for :standards, :blank, :samples
+  accepts_nested_attributes_for :spectra
 
 
   validates :secret_id, presence: true, uniqueness: true

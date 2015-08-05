@@ -1,4 +1,5 @@
 class Spectrum < ActiveRecord::Base
+
   belongs_to :submission
 
   has_attached_file :spectrum_data,
