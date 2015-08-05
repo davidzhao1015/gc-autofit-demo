@@ -7,7 +7,7 @@ class Spectrum < ActiveRecord::Base
   validates_attachment_file_name :spectrum_data, :matches => [/mzXML\Z/]
 
   def paperclip_dir
-    Rails.root.join(self.submission.working_dir, 'input')
+    Rails.root.join(self.submission.input_dir)
   end
 
   Paperclip.interpolates :paperclip_dir do |attachment, style|

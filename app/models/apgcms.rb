@@ -10,7 +10,7 @@ class APGCMS
   # An array of error messages
   attr_reader :errors
 
-  @@debug=false
+  @@debug=true
 
   # Create a ShellSession
   def initialize(options = {})
@@ -18,7 +18,7 @@ class APGCMS
 
     @command = "Rscript #{@@apgcms_path} "
     options.each do |key, value|
-      @command += "--#{key}='#{value}'"
+      @command += "--#{key}='#{value}' "
     end
 
     # @command = "Rscript #{@@apgcms_path} --infiledir=#{options[:infiledir]} --lib.internal='SERUM' "

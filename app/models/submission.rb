@@ -52,8 +52,8 @@ class Submission < ActiveRecord::Base
     create_working_dir
     self.update!(status: 'queued')
     # job_id = SubmissionWorker.perform_async(self.id)
-    SubmissionWorker.new.perform(self.id)
     # self.update!(job_id: job_id)
+    SubmissionWorker.new.perform(self.id)
   end
 
   def finalized?
@@ -65,7 +65,15 @@ class Submission < ActiveRecord::Base
   end
 
   def working_dir
-    File.join(WORKING_DIR,'Results',self.secret_id)
+    File.join(WORKING_DIR, 'Results', self.secret_id)
+  end
+
+  def input_dir
+    File.join(self.working_dir, 'input')
+  end
+
+  def preprocessing_dir
+    File.join(self.working_dir, 'preprocessing')
   end
 
   def create_working_dir

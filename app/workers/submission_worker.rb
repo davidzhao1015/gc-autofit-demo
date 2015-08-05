@@ -6,10 +6,11 @@ class SubmissionWorker
     submission = Submission.find(submission_id)
     submission.update!(status: 'processing')
 
-    apgcms = APGCMS.new(infiledir: File.join(submission.working_dir, 'input'),
+    apgcms = APGCMS.new(infiledir: File.join(submission.input_dir),
                         'lib.internal': 'SERUM',
                         internalstd: 'Ribitol',
-                        plotonly: 'TRUE')
+                        process: 'PREPROCESSING',
+                        outdir: File.join(submission.preprocessing_dir))
     if apgcms.success?
       submission.status = 'complete'
     else
