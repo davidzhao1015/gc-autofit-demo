@@ -2,8 +2,9 @@ require 'sidekiq/web'
 
 Rails.application.routes.draw do
 
-  resources :spectra
-  resources :submissions
+  resources :submissions do
+    resources :spectra
+  end
 
   root :to => "submissions#new"
 

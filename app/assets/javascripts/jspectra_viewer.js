@@ -37,7 +37,6 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
    *  axis_y_show         | false       | Show y-axis
    *  axis_y_grid         | false       | Show grid along y-axis
    *  axis_y_lock         | false       | If true, locks axis to minimum y value. If a number locks the y-axis a percentage below 0 (e.g. 0.1 sets the y-axis minimum to 10% of the viewable y-axis scale below 0)
-   *  label_peaks         | false       | Show peak center label above peaks. _Warning_: This  may slow spectra animations if lots of peaks are present.
    *  min_boundaries      | _undefined_ | The minimum/maximum values for the x/y-axis. e.g. {x: [-1, 10], y: [0, 1]}. _Note_: _min_boundaries_ must be set, if only providing peak data.
    *
    * @param {String} container_id The id of the element to contain the viewer.
@@ -62,13 +61,12 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.axis_x_show    = JSV.default_for(options.axis_x_show, true);
     this.axis_y_grid    = JSV.default_for(options.axis_y_grid, false);
     this.axis_x_grid    = JSV.default_for(options.axis_x_grid, false);
-    this.axis_y_reverse = JSV.default_for(options.axis_y_reverse, true);
+    // this.axis_y_reverse = JSV.default_for(options.axis_y_reverse, false);
     this.axis_x_reverse = JSV.default_for(options.axis_x_reverse, true);
     // If logical true, locks y axis to minimum y value
     // If a number locks the y axis to a percentage below 0 (e.g. 0.1 sets the y-axis min to 10% of the 
     // viewable y axis scale below 0).
     this.axis_y_lock    = JSV.default_for(options.axis_y_lock, false);
-    this.label_peaks    = JSV.default_for(options.label_peaks, false);
     // min_boundaries must be set, if only providing peak data
     this.min_boundaries = options.min_boundaries; // Array example: {x: [-1, 10], y: [0, 1]}]
     this.zoom_max       = JSV.default_for(options.zoom_max, 100);
@@ -141,12 +139,13 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // Scale hold the current x/y scales
     // NOTE: to reverse axis, reverse the ranges
     this.scale = new JSV.SVScale();
-    this.scale.x.range([this.scaled_width, 0]);
     this.scale.y.range([this.scaled_height, 0]);
+    // this.axis_x_reverse = false
+    this.scale.x.range(this.x_range());
 
     // boundary hold the domain extents
     this.boundary = new JSV.SVScale();
-    this.boundary.x.range([this.scaled_width, 0]);
+    this.boundary.x.range(this.x_range());
     this.boundary.y.range([this.scaled_height, 0]);
     this.boundary.clamp(true);
 
@@ -194,7 +193,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       sv.mx = sv.scale.x.invert(JSV.pixel(pos[0]))
       sv.my = sv.scale.y.invert(JSV.pixel(pos[1]))
       // console.log([sv.mx, sv.my]);
-      sv.highlight.draw();
+      sv.highlight.hover();
+      sv.annotation.check_hover();
     });
 
     this.svg.on('mouseover', function() {
@@ -218,6 +218,10 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
     this.selection = new JSV.SVSelection(this, JSV.default_for(options.select, {}));
 
+    // Initialize Labels
+    // this.labels = new JSV.SVLabels(sv);
+    this.annotation = new JSV.SVAnnotation(sv);
+
     // Initialize Zoom Box
     this.zoombox = new JSV.ZoomBox(sv);
     this.zoombox.visible = this.zoombox_show;
@@ -230,6 +234,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
     // Initialize Help
     this.help = new JSV.SVHelp(sv);
+
 
     this.initial_settings();
 
@@ -244,19 +249,6 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   /////////////////////////////////////////////////////////////////////////////
   // SpectraViewer Properties (setters/getters)
   /////////////////////////////////////////////////////////////////////////////
-  // Object.defineProperty(SpectraViewer.prototype, 'drag_drop_load', {
-  //   get: function() { return this._drag_drop_load; },
-  //   set: function(val) {
-  //     this._drag_drop_load = val;
-  //     if (this._drag_drop_load) {
-  //       this.initialize_drag_drop_load();
-  //     } else {
-  //       this.svg.on('dragleave', null);
-  //       this.svg.on('dragover', null);
-  //       this.svg.on('drop', null);
-  //     }
-  //   }
-  // });
   Object.defineProperties(SpectraViewer.prototype, {
     'drag_drop_load': {
       get: function() { return this._drag_drop_load; },
@@ -291,167 +283,13 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // }
   });
 
-
-  SpectraViewer.prototype.draw_peak_labels = function(peaks) {
-    var sv = this;
-    var vertical = true;
-    var peak, label, label_rects, spectra_overlap;
-    // Number of stacked labels to accept before trying to reduce the font size
-    var max_stack = 1;
-    // space between label line and peak/label
-    var line_spacer = JSV.pixel(2);
-    // minimum gap between peak and label
-    var peak_gap = JSV.pixel(12);
-    var font_max = 12;
-    var font_min = 8;
-    var font_range = font_max - font_min;
-    var font_current = font_max;
-    var font_current_min = font_min;
-
-    var scale = sv.scale;
-    var context = sv.context;
-    context.save();
-    var bad_stack = true;
-    // TODO: reduce to restricted peaks
-    // Only show labels on visible spectra
-    peaks = new JSV.SVSet(peaks.filter(function(p) { return p.spectrum().visible; }));
-    while(bad_stack) {
-      bad_stack = false;
-      label_rects = [];
-      context.font = JSV.pixel(font_current) + "px Arial";
-      // Adjust min font based on zoom level
-      font_current_min = font_min + d3.round(font_range * sv.zoom_x / sv.zoom_max);
-      for (var i=0; i < peaks.length; i++) {
-        rect = sv.rect_for_label(peaks[i], font_current, peak_gap, vertical);
-        spectra_overlap = sv.label_over_spectra(rect, peaks);
-        // if (spectra_overlap) {
-        //   rect[1] -= 5;
-        //   spectra_overlap = sv.label_over_spectra(rect, peaks);
-        // }
-        adjusted_label = adjusted_rect_for_label(rect, label_rects, font_current);
-        if ( (adjusted_label.stack_count > max_stack || spectra_overlap) && font_current > font_current_min) {
-          bad_stack = true;
-          font_current -= 1;
-          break;
-        } else {
-          label_rects.push(adjusted_label.rect);
-        }
-      }
-    }
-    // Draw the label lines, joining the peak to the label
-    for (var i=0; i < peaks.length; i++) {
-      var rect = label_rects[i]
-      var line_x = scale.x(peaks[i].center);
-      var line_y1 = rect[1] + rect[3] + line_spacer;
-      var line_y2 = this.scale.y( JSV.sum_of_peaks(peaks[i].center, peaks[i].spectrum().peaks()) ) - line_spacer;
-      context.beginPath();
-      context.moveTo(line_x, line_y1);
-      context.lineTo(line_x, line_y2);
-      context.strokeStyle = '#999999';
-      context.lineWidth = JSV.pixel(0.5);
-      // context.rect(rect[0], rect[1], rect[2], rect[3])
-      context.stroke();
-    }
-
-    // Draw the label
-    context.fillStyle = '#5555DD';
-    if (vertical) {
-      context.textBaseline = 'top';
-      context.textAlign = 'right';
-      for (var i=0; i < peaks.length; i++) {
-        context.save();
-        context.translate(label_rects[i][0], label_rects[i][1]);
-        context.rotate(-Math.PI/2);
-        context.fillText(peaks[i].label(), 0, 0);
-        context.restore();
-      }
-    } else {
-      context.textBaseline = 'top';
-      context.textAlign = 'left';
-      for (var i=0; i < peaks.length; i++) {
-        context.fillText(peaks[i].label(), label_rects[i][0], label_rects[i][1]);
-      }
-    }
-    context.restore();
+  SpectraViewer.prototype.x_range = function(width) {
+    var width = width || this.width;
+    var scaled_width  = JSV.pixel(width - this.axis_y_gutter);
+    return this.axis_x_reverse ?
+      [scaled_width, 0] :
+      [JSV.pixel(this.axis_y_gutter), JSV.pixel(width)];
   }
-
-  // returns default rect for label, centered above a peak
-  SpectraViewer.prototype.rect_for_label = function(peak, font_size, peak_gap, vertical) {
-    var label = peak.label();
-    var rect, x, y;
-    var peak_x = this.scale.x(peak.center);
-    var peak_y = this.scale.y( JSV.sum_of_peaks(peak.center, peak.spectrum().peaks()) );
-    var text_width = this.context.measureText(label).width;
-    var text_height = JSV.pixel(font_size);
-    if (vertical) {
-      x = peak_x - (text_height/2);
-      y = peak_y - text_width - peak_gap;
-      rect = [x, y, text_height, text_width];
-    } else {
-      x = peak_x - (text_width/2);
-      y = peak_y - text_height - peak_gap;
-      rect = [x, y, text_width, text_height];
-    }
-    return rect;
-  }
-
-
-  // Adjust the rect so it does not overlap any rects in rect_array
-  // Returns an obejct with the adjusted rect and how many levels the
-  // rect had to be stacked to not overlap any more.
-  function adjusted_rect_for_label(rect, rect_array, font_size) {
-    var overlap = true;
-    var count = 0;
-    while( check_overlap(rect, rect_array) ) {
-      rect[1] -= JSV.pixel(font_size) * 2;
-      count += 1;
-    }
-    return {rect: rect, stack_count: count};
-  }
-
-  // Check if rect overlaps with any rects in rect_array
-  function check_overlap(rect, rect_array){
-    // Gap between labels
-    var width_gap = JSV.pixel(4);
-    var r2_left, r2_top, r2_right, r2_bottom;
-    var r1_left = rect[0];
-    var r1_top = rect[1];
-    var r1_right = r1_left + rect[2] + width_gap;
-    var r1_bottom = r1_top + rect[3];
-    var overlap = false;
-    for (var i=0; i < rect_array.length; i++){
-      r2_left = rect_array[i][0];
-      r2_top = rect_array[i][1];
-      r2_right = r2_left + rect_array[i][2];
-      r2_bottom = r2_top + rect_array[i][3];
-      if (r1_left <= r2_right && r2_left <= r1_right && r1_top <= r2_bottom && r2_top <= r1_bottom) {
-        overlap = true;
-        break;
-      }else{
-        overlap = false;
-      }
-    }
-    return overlap;
-  }
-
-  // Check if the bottom line of rect overlaps with sumline created from peaks
-  SpectraViewer.prototype.label_over_spectra = function(rect, peaks, tolerance) {
-    var sv = this;
-    var x_vals = [];
-    for (var i=0, len=rect[2]; i < len; i++) {
-      x_vals.push(sv.scale.x.invert(rect[0] + i));
-    }
-    var y = sv.scale.y.invert(rect[1] + rect[3]);
-    var overlap = false;
-    for (var i=0, len=x_vals.length; i < len; i++) {
-      if (y < JSV.sum_of_peaks(x_vals[i], peaks)) {
-        overlap = true;
-        break;
-      }
-    }
-    return overlap;
-  }
-
 
   SpectraViewer.prototype.resize = function(width, height, fast) {
     this.width = width || this.width;
@@ -466,12 +304,15 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.axis_title_font = this.adjust_font(1, undefined, 'bold');
     this.scaled_height = JSV.pixel(this.height - this.axis_x_gutter);
     this.scaled_width  = JSV.pixel(this.width - this.axis_y_gutter);
-    this.scale.x.range([this.scaled_width, 0]);
     this.scale.y.range([this.scaled_height, 0]);
-    this.boundary.x.range([this.scaled_width, 0]);
     this.boundary.y.range([this.scaled_height, 0]);
+    this.scale.x.range(this.x_range());
+    this.boundary.x.range(this.x_range());
+
     this.svg.attr('width', this.width).attr('height', this.height);
     JSV.scale_resolution(this.canvas, JSV.pixel_ratio);
+    this.zoombox.update();
+    this.legend.update();
     this.draw(fast);
   }
 
@@ -788,7 +629,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     data.number_of_points = JSV.default_for(data.number_of_points, max_points);
     data.min_x = JSV.default_for(data.min_x, this.boundary.x.domain()[0]);
     data.max_x = JSV.default_for(data.max_x, this.boundary.x.domain()[1]);
-    var current_ids = this.spectra().map(function(spectrum) { return spectrum.name; } );
+    var current_ids = this.all_spectra().map(function(spectrum) { return spectrum.name; } );
     data.id = JSV.default_for(data.id, JSV.unique_id('Spectrum_', 1, current_ids));
 
     // If a spectrum ID is provided for x data, use that spectrums x data
@@ -827,16 +668,38 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.add_spectrum( JSV.convert_bayesil_data(data) );
   }
 
+  SpectraViewer.prototype.replace_bayesil_data = function(data, keep_domains) {
+    var sv = this;
+    var saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()];
+    var viewer_was_not_empty = sv.spectra().length > 0;
+    sv.remove_all_spectra();
+    sv.add_bayesil_data(data);
+    // if (json_parsed.fit_xy) {
+    //   sv.add_spectrum({ id: 'FIT', xy_line: json_parsed.fit_xy}, {color: 'orange'});
+    // }
+    if (viewer_was_not_empty && keep_domains)  {
+      sv.set_domain('x', saved_domains[0]);
+      sv.set_domain('y', saved_domains[1]);
+    }
+    sv.draw();
+  }
+
   SpectraViewer.prototype.remove_spectra = function(id) {
-    this._spectra = new JSV.SVSet( this.spectra().filter(function(spectrum) { return spectrum.id != id; }) );
+    this._spectra = new JSV.SVSet( this._spectra.filter(function(spectrum) { return spectrum.id != id; }) );
     this.zoombox.remove_spectra(id);
     this.legend.update();
   }
 
-  SpectraViewer.prototype.remove_all_spectra = function(id) {
+  SpectraViewer.prototype.remove_all_spectra = function() {
     var sv = this;
-    this.spectra().forEach(function(spectrum) { sv.remove_spectra(spectrum.id) });
-    // Reset the boundary information
+    sv.selection.clear();
+    this.all_spectra().forEach(function(spectrum) { sv.remove_spectra(spectrum.id) });
+    sv.reset_boundaries();
+  }
+
+  SpectraViewer.prototype.reset_boundaries = function() {
+    var sv = this;
+    sv.selection.clear();
     sv.boundary.initialized = false
     sv.scale.initialized = false
     if (sv.min_boundaries) {
@@ -848,8 +711,16 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     }
   }
 
+  // If no term is given, only active spectra are returned
+  // Otherwise all spectra will be search with the term
   SpectraViewer.prototype.spectra = function(term) {
-    return this._spectra.get(term)
+    if (term) return this._spectra.get(term);
+    var active_spectra = new JSV.SVSet(this._spectra.filter(function(s) { return s.active; }));
+    return active_spectra.get(term);
+  }
+
+  SpectraViewer.prototype.all_spectra = function(term) {
+    return this._spectra.get(term);
   }
 
   SpectraViewer.prototype.compounds = function(term) {
@@ -904,8 +775,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // Draw selection
     this.selection.draw(context, scale, fast, calculated, pixel_skip);
     this.zoombox.set_zoom_area(this.scale);
-    // Draw labels on peaks
-    if (this.label_peaks) this.draw_peak_labels(this.peaks());
+    // Draw labels
+    this.annotation.draw();
     if (this.legend_show) this.legend.draw();
     this.draw_axes();
     this.selection.draw_bounds(context, scale);
@@ -963,12 +834,17 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var context = this.context;
     var data = this.debug_data;
 
-    context.textAlign = 'left';
     context.font = this.adjust_font(1, 'monospace');
     context.fillStyle = 'black';
     var line_height = JSV.pixel(18);
     var y =  y || 0;
-    var x = JSV.pixel(10);
+    if (this.axis_x_reverse) {
+      var x = JSV.pixel(10);
+      context.textAlign = 'left';
+    } else {
+      var x = JSV.pixel(this.width - 10);
+      context.textAlign = 'right';
+    }
     var section_keys = this.debug === true ? Object.keys(data) : this.debug;
     var i = 0;
     section_keys.forEach(function(section_key) {
@@ -1002,7 +878,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // Clear plot graphics from the X axis area
     this.context.clearRect(scale.x.range()[1], scale.y.range()[0], scale.x.range()[0] + y_gutter, x_gutter);
     // Clear plot graphics from the Y axis area
-    this.context.clearRect(scale.x.range()[0], scale.y.range()[1], y_gutter, scale.y.range()[0] + x_gutter);
+    var x = this.axis_x_reverse ? scale.x.range_max() : 0;
+    this.context.clearRect(x, scale.y.range_min(), y_gutter, scale.y.range_max() + x_gutter);
     // Draw
     this.context.fillStyle = 'black';
     if (this.axis_y_show) this.draw_y_axis();
@@ -1017,8 +894,6 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var scale = this.scale;
 
     // Draw axis line
-    context.setLineDash([1,0]);
-    // context.strokeStyle = '#000';
     context.beginPath();
     context.moveTo(scale.x.range()[1], scale.y.range()[0]);
     context.lineTo(scale.x.range()[0], scale.y.range()[0]);
@@ -1049,27 +924,29 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var context = this.context;
     var scale = this.scale;
     var padding = 5;
-    var tick_length = JSV.pixel(this.tick_length);
-    var text_x = scale.x.range()[0] + JSV.pixel(this.tick_length + padding);
+    var direction = this.axis_x_reverse ? 1 : -1
+    var tick_length = direction * JSV.pixel(this.tick_length);
+    var text_x = scale.x.range()[0] +  ( direction * JSV.pixel(this.tick_length + padding) );
     // Draw axis line
-    context.setLineDash([1,0]);
-    // context.strokeStyle = '#000';
     context.beginPath();
     context.moveTo(scale.x.range()[0], scale.y.range()[1]);
     context.lineTo(scale.x.range()[0], scale.y.range()[0]);
     context.stroke();
     // Set up text
-    context.textAlign = 'left';
+    context.textAlign = this.axis_x_reverse ? 'left' : 'right';
     context.textBaseline = 'middle';
     context.font = this.font;
     var max_label_width = 0;
+    // Determine number of decimal places
+    var decimal_places = d3.max( scale.y.ticks(this.tick_count).map(function(tick_y) { return JSV.decimalPlaces(tick_y); }) );
+
     // Draw ticks and text
     scale.y.ticks(this.tick_count).forEach(function(tick_y) {
       context.beginPath();
       context.moveTo(scale.x.range()[0], scale.y(tick_y));
       context.lineTo(scale.x.range()[0] + tick_length, scale.y(tick_y));
       context.stroke();
-      context.fillText(tick_y, text_x, scale.y(tick_y));
+      context.fillText(tick_y.toFixed(decimal_places), text_x, scale.y(tick_y));
       if (sv.axis_y_title) {
         var label_width = Number(context.measureText(tick_y).width);
         if (label_width > max_label_width) max_label_width = label_width;
@@ -1323,8 +1200,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.context = temp_canvas.getContext('2d');
 
     var scaled_height = JSV.pixel(height - this.axis_x_gutter);
-    var scaled_width  = JSV.pixel(width - this.axis_y_gutter);
-    this.scale.x.range([scaled_width, 0]);
+    this.scale.x.range(this.x_range(width));
     this.scale.y.range([scaled_height, 0]);
 
     this.zoombox.visible = false;
@@ -1334,7 +1210,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     image = temp_canvas.toDataURL();
 
     // Restore original settings
-    this.scale.x.range([this.scaled_width, 0]);
+    this.scale.x.range(this.x_range());
     this.scale.y.range([this.scaled_height, 0]);
     this.context = orig_context;
     this.zoombox.visible = zoombox_visible;
@@ -1622,19 +1498,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
         try {
           var json_parsed = JSON.parse(json_obj);
           // TODO: add file and error checking
-          var saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()];
-          var viewer_was_not_empty = sv.spectra().length > 0;
-          sv.remove_all_spectra();
-          sv.selection.clear();
-          sv.add_bayesil_data(json_parsed);
-          if (json_parsed.fit_xy) {
-            sv.add_spectrum({ id: 'FIT', xy_line: json_parsed.fit_xy}, {color: 'orange'});
-          }
-          if (viewer_was_not_empty)  {
-            sv.set_domain('x', saved_domains[0]);
-            sv.set_domain('y', saved_domains[1]);
-          }
-          sv.draw();
+          sv.replace_bayesil_data(json_parsed, true);
           sv.trigger('drop');
         } catch (e) {
           sv.draw();
@@ -1664,7 +1528,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       if (x > d3_scale.max()) {
         throw new Error('x must be less than domain max: ' + d3_scale.max());
       }
-      d3_scale.domain([ x, d3_scale.domain()[1] ]);
+      // d3_scale.domain([ x, d3_scale.domain()[1] ]);
+      d3_scale.domain([ x, d3_scale.max() ]);
       return d3_scale;
     }
 
@@ -1673,7 +1538,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       if (x < d3_scale.min()) {
         throw new Error('x must be greater than domain min: ' + d3_scale.min());
       }
-      d3_scale.domain([ d3_scale.domain()[0], x ]);
+      // d3_scale.domain([ d3_scale.domain()[0], x ]);
+      d3_scale.domain([ d3_scale.min(), x ]);
       return d3_scale;
     }
 
@@ -1683,6 +1549,14 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
     d3_scale.range_diff = function() {
       return Math.abs(d3_scale.range()[1] - d3_scale.range()[0]);
+    }
+
+    d3_scale.range_min = function() {
+      return d3.min(d3_scale.range());
+    }
+
+    d3_scale.range_max = function() {
+      return d3.max(d3_scale.range());
     }
 
     return d3_scale;
@@ -1760,6 +1634,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
    *  selection-empty     | Called after the selection becomes empty
    *  highlight-start     | Called when an element is highlighted
    *  highlight-end       | Called when an element is unhighlighted
+   *  label-click         | Called when a annotation label is clicked
    */
   var SVEvents = function() {
     var handlers = {}
@@ -1834,17 +1709,18 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
      * sv.trigger('drag-start.my_plugin');
      * ```
      * @param {String} event Name of event. Events can be namespaced.
+     * @param {Object} object Object to be passed back 'on'.
      */
-    this.trigger = function(event) {
+    this.trigger = function(event, object) {
       check_type(event);
       var type = parse_event(event);
       var namespace = parse_namespace(event);
       if (Array.isArray(handlers[type])) {
         handlers[type].forEach(function(handler) {
           if (namespace) {
-            if (handler.namespace == namespace) handler.callback.call();
+            if (handler.namespace == namespace) handler.callback.call(null, object);
           } else {
-            handler.callback.call();
+            handler.callback.call(null, object);
           }
         });
       }
@@ -2259,7 +2135,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       data = {x:this.xy_data.x, y:y};
     } else if ( (calculate && this.peaks().length > 0) || (!has_data && this.peaks().length > 0) ) {
       if (!pixel_skip) pixel_skip = 1;
-      var number_of_points = scale.x.range()[0] / JSV.pixel_ratio / pixel_skip;
+      var number_of_points = scale.x.range_diff() / JSV.pixel_ratio / pixel_skip;
       var fast_calc = pixel_skip > 1;
       data = JSV.xy_from_peaks(this.peaks(), number_of_points, scale.x.domain()[0], scale.x.domain()[1], fast_calc);
     } else if (has_data) {
@@ -2354,15 +2230,19 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var context = sv.context;
     this.offset_y = (sv.zoombox.visible ? JSV.pixel(sv.zoombox.height) : 0) + this.margin_top;
     var offset_x = this.margin_side;
+    context.font = sv.adjust_font(1, 'monospace');
     this.items = [];
     for (var i = 0; i < sv.spectra().length; i++) {
       var spectrum = sv.spectra()[i];
+      // if (! spectrum.active) continue;
       var item = new JSV.SVLegendItem(this);
       var rect = new Rect();
-      rect.x = offset_x;
       rect.y = this.offset_y;
       rect.height = this.text_height;
       rect.width = this.key_width + this.key_label_space + context.measureText(spectrum.name).width;
+      rect.x = sv.axis_x_reverse ?
+        offset_x :
+        JSV.pixel(sv.width) - offset_x - rect.width;
       item.rect = rect;
       item.path = spectrum;
       this.offset_y += this.text_height;
@@ -2391,11 +2271,13 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   }
 
   SVLegendItem.prototype.key_x1 = function() {
-    return this.rect.x;
+    return this.sv.axis_x_reverse ?
+      this.rect.x :
+      this.rect.x + this.rect.width - this.legend.key_width;
   }
 
   SVLegendItem.prototype.key_x2 = function() {
-    return this.rect.x + this.legend.key_width;
+    return this.key_x1() + this.legend.key_width;
   }
 
   SVLegendItem.prototype.key_y = function() {
@@ -2403,7 +2285,9 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   }
 
   SVLegendItem.prototype.label_x = function() {
-    return this.rect.x + this.legend.key_width + this.legend.key_label_space;
+    return this.sv.axis_x_reverse ?
+      this.rect.x + this.legend.key_width + this.legend.key_label_space :
+      this.rect.x;
   }
 
 
@@ -2437,6 +2321,349 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
 
 //////////////////////////////////////////////////////////////////////////////
+// SpectraViewer Labels
+//////////////////////////////////////////////////////////////////////////////
+// TODO:
+// - Only check for collesions with spectrum if number of labels is < 100
+// - When checking for overlap with spectrum only use 4 points in increments of (width / 3)
+// - consider having labels per spectrum, them group visible ones together for drawing
+(function(JSV) {
+
+  function SVAnnotation(sv, options) {
+    options = options || {};
+    var self = this;
+    this.sv = sv;
+    this.highlighted_label;
+    this.point_gap = JSV.default_for(options.point_gap, JSV.pixel(12));
+    this.hover = JSV.default_for(options.hover, true);
+    this.labels = [ ];
+    this.visible_labels = [ ];
+    sv.on('label-click', function(label) {
+      console.log(label.text)
+    })
+    sv.svg.on('click', function() {
+      if (self.highlighted_label) {
+        sv.trigger('label-click', self.highlighted_label);
+      }
+    });
+  }
+
+
+  SVAnnotation.prototype.update = function() {
+    var sv = this.sv;
+    var labels = sv.labels ? sv.labels.to_array() : [ ];
+    sv.spectra().forEach(function(spectrum) {
+      if (spectrum.visible && spectrum.active && spectrum.labels) {
+        labels.push.apply(labels, spectrum.labels.to_array())
+      }
+    });
+    this.labels = labels;
+
+    var visible_labels = this.reduce_labels_by_view();
+    visible_labels = this.reduce_labels_by_height(visible_labels);
+    visible_labels = this.adjust_labels(visible_labels);
+    this.visible_labels = visible_labels;
+  }
+
+  SVAnnotation.prototype.rect_for_label = function(label) {
+    var sv = this.sv;
+    var rect, x, y;
+    var point_x = sv.scale.x(label.x);
+    var point_y = sv.scale.y(label.y);
+    var text_width = sv.context.measureText(label.text).width;
+    var text_height = JSV.pixel(label.font_size);
+    if (label.vertical) {
+      x = point_x - (text_height/2);
+      y = point_y - text_width - this.point_gap;
+      rect = new Rect(x, y, text_height, text_width);
+    } else {
+      x = point_x - (text_width/2);
+      y = point_y - text_height - this.point_gap;
+      rect = new Rect(x, y, text_height, text_width);
+    }
+    return rect;
+  }
+
+  // Return labels within view
+  SVAnnotation.prototype.reduce_labels_by_view = function(labels) {
+    if (!labels) labels = this.labels;
+    var scale = this.sv.scale;
+    return labels.filter(function(label) { return (label.x > scale.x.min() && label.x < scale.x.max() && label.y < scale.y.max())})
+  }
+
+  // Return only highest labels of overlapping sets
+  SVAnnotation.prototype.reduce_labels_by_height = function(labels) {
+    if (!labels) labels = this.labels;
+    var scale = this.sv.scale;
+    var font_min = 6;
+    var reduced = [];
+
+    for (var i=0, len=labels.length; i < len; i++) {
+      label = labels[i];
+      label.font_size = font_min;
+      label.rect = this.rect_for_label(label);
+      label.adjust_rect(reduced);
+      if (label.stack_level < 3) {
+        reduced.push(label);
+      }
+    }
+
+    return reduced;
+  }
+
+  SVAnnotation.prototype.adjust_labels = function(labels) {
+    var sv = this.sv;
+    var peak, label, label_rects, spectra_overlap;
+    // Number of stacked labels to accept before trying to reduce the font size
+    var max_stack = 1;
+    // space between label line and peak/label
+    var line_spacer = JSV.pixel(2);
+    // minimum gap between peak and label
+    var peak_gap = JSV.pixel(12);
+    var font_max = 13;
+    var font_min = 8;
+    var font_range = font_max - font_min;
+    var font_current = font_max;
+    var font_current_min = font_min;
+
+    var scale = sv.scale;
+    var context = sv.context;
+    context.save();
+    var bad_stack = true;
+    while(bad_stack) {
+      bad_stack = false;
+      adjusted_labels = [];
+      context.font = JSV.pixel(font_current) + "px Arial";
+      // Adjust min font based on zoom level
+      font_current_min = font_min + d3.round(font_range * sv.zoom_x / sv.zoom_max);
+      for (var i=0, len=labels.length; i < len; i++) {
+        label = labels[i];
+        label.font_size = font_current;
+        label.rect = this.rect_for_label(label);
+        // spectra_overlap = this.label_over_spectra(label, this.sv.peaks());
+        label.adjust_rect(adjusted_labels);
+        if ( (label.stack_level > max_stack) && font_current > font_current_min) {
+          bad_stack = true;
+          font_current -= 1;
+          break;
+        } else {
+          adjusted_labels.push(label);
+        }
+      }
+    }
+    return labels;
+  }
+
+  // Check if the bottom line of rect overlaps with sumline created from peaks
+  SVAnnotation.prototype.label_over_spectra = function(label, peaks, tolerance) {
+    var sv = this.sv;
+    var x_vals = [];
+    for (var i=0, len=label.rect.width; i < len; i++) {
+      x_vals.push(sv.scale.x.invert(label.rect.x + i));
+    }
+    var y = sv.scale.y.invert(label.rect.bottom());
+    var overlap = false;
+    for (var i=0, len=x_vals.length; i < len; i++) {
+      if (y < JSV.sum_of_peaks(x_vals[i], peaks)) {
+        overlap = true;
+        break;
+      }
+    }
+    return overlap;
+  }
+
+  SVAnnotation.prototype.draw = function() {
+    var sv = this.sv;
+    var context = sv.context;
+    var scale = sv.scale;
+    var label;
+    var line_spacer = JSV.pixel(2);
+    context.save();
+
+    this.update();
+    var visible_labels = this.visible_labels;
+    // Draw the label lines, joining the peak to the label
+    for (var i=0, len=visible_labels.length; i < len; i++) {
+      label = visible_labels[i];
+      var line_x = scale.x(label.x);
+      var line_y1 = scale.y(label.y) - line_spacer;
+      var line_y2 = label.rect.bottom() + line_spacer;
+      context.beginPath();
+      context.moveTo(line_x, line_y1);
+      context.lineTo(line_x, line_y2);
+      context.strokeStyle = '#999999';
+      context.lineWidth = JSV.pixel(0.5);
+      context.stroke();
+    }
+
+    // Draw the labels
+    context.fillStyle = '#5555DD';
+    for (var i=0, len=visible_labels.length; i < len; i++) {
+      label = visible_labels[i];
+      if (label === this.highlighted_label) {
+        context.font = "bold " + context.font;
+      } else {
+        context.font = context.font.replace('bold ', '');
+      }
+      context.textBaseline = 'top';
+      if (label.vertical) {
+        context.textAlign = 'right';
+        context.save();
+        context.translate(label.rect.x, label.rect.y);
+        context.rotate(-Math.PI/2);
+        context.fillText(label.text, 0, 0);
+        context.restore();
+      } else {
+        context.textAlign = 'left';
+        context.fillText(label.text, label.rect.x, label.rect.y);
+      }
+    }
+    context.restore();
+  }
+
+  SVAnnotation.prototype.check_hover = function() {
+    var sv = this.sv;
+    var label;
+    if (this.hover) {
+      var x = sv.scale.x(sv.mx);
+      var y = sv.scale.y(sv.my);
+      var old_label = this.highlighted_label;
+      var current_label;
+
+      for (var i=0, len=this.visible_labels.length; i < len; i++) {
+        label = this.visible_labels[i];
+        if (label.rect.contains_pt(x, y)) {
+          current_label = label;
+        }
+      }
+      if (old_label != current_label) {
+        this.highlighted_label = current_label;
+        this.sv.trigger('click-start');
+        sv.full_draw();
+      }
+    }
+  }
+
+
+  function SVLabelSet(options) {
+    options = options || {};
+    this.spectrum = options.spectrum
+    this.labels = [];
+  }
+
+  SVLabelSet.prototype.to_array = function() {
+    return this.labels;
+  }
+
+  // If the SVLabelSet is associated with a spectrum with peaks those labels will be added
+  SVLabelSet.prototype.add_peaks = function() {
+    if (this.spectrum) {
+      var peaks = this.spectrum.peaks();
+      for (var i=0, len=peaks.length; i < len; i++) {
+        var peak = peaks[i];
+        var y = JSV.sum_of_peaks(peak.center, peak.spectrum().peaks())
+        var label = new SVLabel(this, peak.center, y, peak.label());
+        this.labels.push(label);
+      }
+    }
+  }
+
+
+  // If the SVLabelSet is associated with a spectrum with peaks those labels will be regenerated
+  SVLabelSet.prototype.update_peaks = function() {
+    if (this.spectrum) {
+      // TODO: only remove peak associated labels
+      this.labels = [ ];
+      this.add_peaks();
+    }
+  }
+
+
+  /**
+   * @param {Object} object is a SVPath or SVAnnotation
+   */
+  function SVLabel(label_set, x, y, text, options) {
+    options = options || {};
+    this.label_set = label_set;
+    this.vertical = JSV.default_for(options.vertical, true);
+    this.font_size = JSV.default_for(options.font_size, 12);
+    this.x = x;
+    this.y = y;
+    this.text = text;
+    this.stack_level = 0;
+  }
+
+  // Adjust the rect so it does not overlap any rects in rect_array
+  // Returns an object with the adjusted rect and how many levels the
+  // rect had to be stacked to not overlap any more.
+  SVLabel.prototype.adjust_rect = function(labels) {
+    var overlap = true;
+    var count = 0;
+    while( this.overlap(labels) ) {
+      this.rect.y -= JSV.pixel(this.font_size) * 2;
+      count += 1;
+    }
+    this.stack_level = count
+  }
+
+  SVLabel.prototype.overlap =  function(labels) {
+    return this.rect.overlap( labels.map( function(label) { return label.rect; } ) );
+  }
+
+
+  function Rect(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  Rect.prototype.bottom = function() {
+    return this.y + this.height;
+  }
+
+  Rect.prototype.top = function() {
+    return this.y;
+  }
+
+  Rect.prototype.left = function() {
+    return this.x;
+  }
+
+  Rect.prototype.right = function() {
+    return this.x + this.width;
+  }
+
+  // Check if rect overlaps with any rects in rect_array
+  Rect.prototype.overlap = function(rect_array) {
+    // Gap between labels
+    var width_gap = JSV.pixel(4);
+    var r1 = this;
+    var overlap = false;
+    for (var i=0, len=rect_array.length; i < len; i++){
+      var r2 = rect_array[i];
+      if (r1.x <= r2.right() && r2.x <= (r1.right() + width_gap) && r1.y <= r2.bottom() && r2.y <= r1.bottom()) {
+        overlap = true;
+        break;
+      }else{
+        overlap = false;
+      }
+    }
+    return overlap;
+  }
+
+  Rect.prototype.contains_pt = function(x, y) {
+    return ( x >= this.x && x <= (this.x + this.width) && y >= this.y && y <= (this.y + this.height) )
+  }
+
+  JSV.SVAnnotation = SVAnnotation;
+  JSV.SVLabelSet = SVLabelSet;
+  JSV.SVLabel = SVLabel;
+
+})(JSpectraViewer);
+
+
+//////////////////////////////////////////////////////////////////////////////
 // Spectrum
 //////////////////////////////////////////////////////////////////////////////
 (function(JSV) {
@@ -2462,8 +2689,10 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.name = data.name || this.id;
     this.tolerance = data.tolerance;
     this.noise;
+    this.active = true;
     this.xy_data = new JSV.SVData();
     this.simple_xy_data = new JSV.SVData();
+    this.labels = new JSV.SVLabelSet({spectrum: this});
     this._compounds = new JSV.SVSet();
 
     if (data.compounds) {
@@ -2558,6 +2787,29 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     return peaks.get(term);
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Spectrum Properties (setters/getters)
+  /////////////////////////////////////////////////////////////////////////////
+  Object.defineProperties(Spectrum.prototype, {
+    'active': {
+      get: function() { return this._active },
+      set: function(val) {
+        this._active = val;
+        var sv = this._sv;
+        if (sv) {
+          sv.reset_boundaries();
+          sv.all_spectra().each(function() {
+            if (this.active) {
+              sv.boundary.update(this.xy_data);
+              sv.scale.update(this.xy_data);
+            }
+          });
+          sv.zoombox.update();
+          sv.legend.update();
+        }
+      }
+    }
+  });
 
   JSV.Spectrum = Spectrum;
 
@@ -2893,7 +3145,6 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   SVSelection.prototype.add_element = function(element) {
     this._elements.push(element);
     // Remove any previous highlighting
-    // this.sv.highlight.draw();
     this.sv.highlight.remove();
     this.sv.trigger('selection-add');
     return this
@@ -2939,7 +3190,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var element = this.highlighted_element;
     // Increase popup width before adding text, so text_container is not compressed
     this.popup_box.style('width', '100%');
-    this.popup_box.style('right', this.sv.axis_y_gutter + 'px');
+    var position = this.sv.axis_x_reverse ? 'right' : 'left'
+    this.popup_box.style(position, this.sv.axis_y_gutter + JSV.pixel(2) + 'px');
     this.text_container.html(this.info_text());
     // this.popup_box.style('display', 'block').style('width', parseInt(this.text_container.style('width')) + 20);
     var box_width = this.text_container.node().offsetWidth + 20;
@@ -2996,14 +3248,22 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   SVSelection.prototype.draw_adjust_handles = function(context, scale) {
     var self = this;
     var sv = this.sv;
+    var spacer_direction;
     if (self.allow_adjust && self.allow_width_adjust && self.present()) {
       var spacer = this.handle_spacer;
       var handle_size = this.handle_size;
       var domains = sv.get_peak_domains(self.peaks(), true);
-      var width_x1 = scale.x(d3.max(domains[0]));
-      var width_x2 = scale.x(d3.min(domains[0]));
-      this.handle_x1 = width_x1 - spacer - handle_size;
-      this.handle_x2 = width_x2 + spacer;
+      var width_min = scale.x(d3.min(domains[0]));
+      var width_max = scale.x(d3.max(domains[0]));
+      if (sv.axis_x_reverse) {
+        this.handle_min_x = width_min + spacer;
+        this.handle_max_x = width_max - spacer - handle_size;
+        spacer_direction = -1;
+      } else {
+        this.handle_min_x = width_min - spacer - handle_size;
+        this.handle_max_x = width_max + spacer;
+        spacer_direction = 1;
+      }
       var half_height = (scale.y(d3.max(domains[1]) / 2));
       this.handle_y = half_height - (handle_size / 2);
 
@@ -3011,17 +3271,22 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       // Handles
       context.beginPath();
       context.strokeStyle = 'rgba(50, 50, 50, 0.9)';
-      context.rect(this.handle_x1, this.handle_y, handle_size, handle_size);
-      context.rect(this.handle_x2, this.handle_y, handle_size, handle_size);
+      context.rect(this.handle_min_x, this.handle_y, handle_size, handle_size);
+      context.rect(this.handle_max_x, this.handle_y, handle_size, handle_size);
       context.stroke();
 
       // Line to Handles
       context.beginPath();
       context.strokeStyle = 'rgba(150, 150, 150, 0.5)';
-      context.moveTo(width_x1 - spacer, half_height);
-      context.lineTo(width_x1, half_height);
-      context.moveTo(width_x2, half_height);
-      context.lineTo(width_x2 + spacer, half_height);
+      context.moveTo(width_min, half_height);
+      context.lineTo(width_min - (spacer * spacer_direction), half_height);
+      context.moveTo(width_max, half_height);
+      context.lineTo(width_max + (spacer * spacer_direction), half_height);
+
+      // context.moveTo(width_x1 - spacer, half_height);
+      // context.lineTo(width_x1, half_height);
+      // context.moveTo(width_x2, half_height);
+      // context.lineTo(width_x2 + spacer, half_height);
       context.stroke();
 
       context.translate(-0.5, -0.5);
@@ -3094,8 +3359,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       var x = sv.scale.x(sv.mx);
       var y = sv.scale.y(sv.my);
       if ( (y > this.handle_y) && (y < this.handle_y + this.handle_size) ) {
-        if ( (x > this.handle_x1) && (x < this.handle_x1 + this.handle_size) ) handle = 'left';
-        if ( (x > this.handle_x2) && (x < this.handle_x2 + this.handle_size) ) handle = 'right';
+        if ( (x > this.handle_max_x) && (x < this.handle_max_x + this.handle_size) ) handle = 'left';
+        if ( (x > this.handle_min_x) && (x < this.handle_min_x + this.handle_size) ) handle = 'right';
       }
     }
     return handle;
@@ -3423,9 +3688,9 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       peak.set_amplitude(sv.scale.y.invert(mouse_xy[1]));
       if (self.element_type == 'peak') {
         self.add_element(peak);
-      } else if (self.element_type == 'cluster') {
+      } else if (self.empty() && self.element_type == 'cluster') {
         self.add_element(cluster);
-      } else if (self.element_type == 'compound') {
+      } else if (self.empty() && self.element_type == 'compound') {
         self.add_element(cluster.compound());
       }
       adjustend();
@@ -3457,7 +3722,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.text_container = this.popup_box.append('div').attr('class', 'jsv-highlight-text-container');
   }
 
-  SVHighlighter.prototype.draw = function() {
+  SVHighlighter.prototype.hover = function() {
     var sv = this.sv;
     if (this.element_type) {
       var old_element = this.highlighted_element;
@@ -4507,7 +4772,11 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       .attr('height', this.height + 1)
       .style('position', 'absolute')
       .style('top', 0)
-      .style('left', 0);
+      .style('left', sv.width - this.width - 1);
+
+    if (sv.axis_x_reverse) {
+      this.svg.style('left', 0);
+    }
 
     // Set cursor for zoom box
     // this.svg.style('cursor', 'crosshair');
@@ -4522,11 +4791,17 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       .attr('stroke', '#BBB');
 
     // Set initial scales
-    this.scale = {
-      x:d3.scale.linear()
-        .range( [this.width, 0] ),
-      y:d3.scale.linear()
-        .range( [this.height, 0] ) }
+    // TODO: move to SVScale
+    // this.scale = {
+    //   x:d3.scale.linear()
+    //     .range( [this.width, 0] ),
+    //   y:d3.scale.linear()
+    //     .range( [this.height, 0] ) }
+    this.scale = new JSV.SVScale();
+    this.scale.y.range([this.height, 0]);
+    var x_range = this.sv.axis_x_reverse ? [this.width, 0] : [0, this.width];
+    this.scale.x.range(x_range);
+
 
     // Brush for selecting a zoom area
     this.initialize_brushing();
@@ -4634,9 +4909,17 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
   ZoomBox.prototype.update = function() {
     var self = this;
-    this.sv.spectra().forEach(function(spectrum) {
+    var sv = this.sv;
+    if (sv.axis_x_reverse) {
+      this.svg.style('left', 0);
+    } else {
+      this.svg.style('left', sv.width - this.width - 1);
+    }
+    this.sv.all_spectra().forEach(function(spectrum) {
       self.remove_spectra(spectrum.id);
-      self.add_spectrum(spectrum);
+      if (spectrum.active) {
+        self.add_spectrum(spectrum);
+      }
     });
   }
 
@@ -4914,6 +5197,17 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     return isFinite(n) && parseFloat(n) == n;
   }
 
+  JSV.decimalPlaces = function(num) {
+    var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+    if (!match) { return 0; }
+    return Math.max(
+               0,
+               // Number of digits right of decimal point.
+               (match[1] ? match[1].length : 0)
+               // Adjust for scientific notation.
+               - (match[2] ? +match[2] : 0));
+  }
+
   // COLORS
   // http://krazydad.com/tutorials/makecolors.php
   JSV.colors = function(len, center, width, alpha, freq1, freq2, freq3,
@@ -4967,7 +5261,11 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
         name: compound_data.name,
         clusters: [ ],
         display: { visible: false },
-        meta: { dss_ratio: JSV.default_for(JSV.number(compound_data.dss_ratio), 1) }
+        meta: {
+          dss_ratio: JSV.default_for(JSV.number(compound_data.dss_ratio), 1),
+          threshold: compound_data.threshold,
+          score: compound_data.score,
+        }
       };
       compound.meta.amplitude_coefficient = compound.concentration / compound.meta.dss_ratio / spectrum.meta.dss_concentration;
       compound_data.clusters.forEach(function(cluster_data) {
@@ -5008,12 +5306,15 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       dss_conc: fit_spectrum.meta.dss_concentration,
       metabolites: []
     }
+    xy_spectrum = xy_spectrum || { xy_data: { x: [], y: [] } };
     fit_spectrum.compounds().forEach(function(compound) {
       var compound_data = {
         name: compound.name,
         id: compound.id,
-        dss_ratio: compound.meta.dss_ratio,
         concentration: compound.concentration,
+        dss_ratio: compound.meta.dss_ratio,
+        score: compound.meta.score,
+        threshold: compound.meta.threshold,
         clusters: []
       }
       compound.clusters().forEach(function(cluster) {

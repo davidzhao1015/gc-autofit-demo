@@ -1,3 +1,68 @@
-// Place all the styles related to the spectra controller here.
-// They will automatically be included in application.css.
-// You can use Sass (SCSS) here: http://sass-lang.com/
+// Center the spectra viewer
+div#spectra-viewer {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#spectra-container {
+  background-color: white;
+  padding-top: 5px;
+}
+
+div#spectra-container.sticky {
+  width: 100%;
+  position: fixed;
+  top: 50px;
+  left: 0;
+  z-index: 10;
+}
+
+#spectra-container hr {
+  margin: 0;
+  border-top: 0px rgb(200,200,200) solid;
+}
+
+hr.drop-shadow {
+  box-shadow: 0 3px 3px 3px rgba(150,150,150,0.2);
+}
+
+#spectra-resize-bar {
+  margin-top: 5px;
+  height: 10px;
+  border-top: 1px solid rgb(180,180,180);
+  border-bottom: 1px solid rgb(180,180,180);
+  background-color: rgb(245,245,245);
+  cursor: ns-resize;
+}
+
+img.drag-icon {
+  display: block;
+  margin-top: 1px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#spectra-header {
+  margin-left: auto;
+  margin-right: auto;
+  #spectra-title {
+    font-weight: bold;
+  }
+  a.spectrum-nav {
+    margin-right: 0px;
+    margin-left: -1px;
+    margin-bottom: 5px;
+  }
+}
+
+#spectra-controls {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#spectra-controls a {
+  margin-right: 5px;
+  &.pull-right {
+    margin-right: 0px;
+  }
+}

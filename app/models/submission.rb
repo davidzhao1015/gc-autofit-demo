@@ -74,6 +74,10 @@ class Submission < ActiveRecord::Base
     File.join(self.working_dir, 'preprocessing')
   end
 
+  def profiling_dir
+    File.join(self.working_dir, 'profiling')
+  end
+
   def create_working_dir
     FileUtils.mkdir_p(self.working_dir)
   end

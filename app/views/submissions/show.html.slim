@@ -7,3 +7,6 @@ p
 = link_to 'Edit', edit_submission_path(@submission)
 '|
 = link_to 'Back', submissions_path
+
+h2 Alkane Standards
+= render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.standards, 'json')
