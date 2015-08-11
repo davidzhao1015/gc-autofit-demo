@@ -234,12 +234,12 @@ setDebugMode(ISDEBUG);
 
 ## Get Sample mzXML/CDF file list from the input directory
 ## return: infile.alkane/blank/samples
-fileList <- get_file_list(sampleFileDir)
+fileList <- get_file_list(sampleFileDir, processOption)
 if (DEBUG) { cat("Input Files:\n"); print(fileList) }
 
 ## read raw data from spectra file (.CDF) to get peak, EIC
 ## xset_list <- extract_xset_list(file_vec, mzStep) # xset_list$alkane & xset_list&samples 
-cat("\n## Extracting Raw data ...\n")
+cat("\n## [", processOption, "] Extracting Raw data ...\n")
 
 
 ####################################################################################
@@ -334,7 +334,7 @@ if (processOption == 'PREPROCESSING') {
     save(final_PeakProfile_blank, file="blankInfo.Rdata")
         
 } else {
-    cat("\n ##### Loading Information Files \n")
+    cat("\n ##### Loading Preprocessed Information Files \n")
     infoFileDir.alkane <- paste(infoFileDir, "/alkaneInfo.Rdata", sep='')
     cat(infoFileDir.alkane,"\n")
     file.exists(infoFileDir.alkane)
@@ -408,53 +408,60 @@ if ( processOption == "PREPROCESSING" ) {
     if (DEBUG) { beg = Sys.time() }
    
     if (nCores >= 1) {
-        if(DEBUG) cat("## Using multi cores\n")
+        if(DEBUG) cat("## Profiling with multi cores\n")
         flag.blank_spectrum <- ifelse( USE_BLANK_SPECTRUM, TRUE, FALSE)
         conc.each <- quantification.multicore(nCores, fileList$sampleFiles, use.blank=flag.blank_spectrum, threshold.matchFactor=MF_THRESHOLD, 
                                       internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)  
+        if(DEBUG) cat("## Profiling for each sample -- Done\n")
     } else {
-        if(DEBUG) cat("## Using single core\n")
+        if(DEBUG) cat("## Profiling with single core\n")
         conc.each <- lapply(fileList$sampleFiles, quantifictionFunc, print.on=TRUE)
     }
    
     if (DEBUG) { 
-        cat("Each concentration table:\n"); print(conc.each) 
+        cat("# [Profiling] Each concentration table:\n"); print(conc.each) 
         td = as.numeric(Sys.time() - beg, "secs")
-        cat("## Running Time with multiple Cores (", nCores,") :", td,"\n")
+        if (DEBUG) cat("## Running Time with multiple Cores (", nCores,") :", td,"\n")
     }
     
     ## merge concentration for all samples
-    final.Concentration <- mergeConcTable( conc.each )
-    if (DEBUG) { cat("\n\n final.Concentration:\n"); print(final.Concentration) }
-        
-    ## Combining  all concentration and Generate Files for Concentration Table with Sample ID
-    ## use the "final.Concentration" data frame
-    if ( internalStd != 'NONE') {
-        # ofile.merged <- paste(basename(sampleFileDir),"_profiledAll.csv", sep='')
-        ofile.merged <- "profiled_All.csv"
-        cat("\n ## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
-        ## order by RI as in library; merge compound name with RI and sort by RI
-        # cat("# final.concentration:\n"); print(final.Concentration)  
-        colnames(final.Concentration)[1] <- 'HMDB_ID'
-        # final.Concentration <- merge(lib.peakcal[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
-        final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
-        cat("\n ### final.Concentration:\n"); print(final.Concentration)
-        final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
-        cat("\n ### final.Concentration (sort):\n"); print(final.Concentration)
-                
-        rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
-        final.Concentration <- final.Concentration[ , - rm.SeqIndex]
-        rownames(final.Concentration) <- c(1:nrow(final.Concentration))
-        
-        if( DEBUG ) { cat("final.concentration:\n"); print(final.Concentration)  }
-        
-        write.table( t(final.Concentration), file=ofile.merged, sep=",", col.names=FALSE, quote=TRUE)
-        cat("\n==============================================================\n")
-        cat("\n## Done:", length(fileList$sampleFiles), "spectrum files\n\n")
+    if (length(conc.each) >= 2) {       
+        final.Concentration <- mergeConcTable( conc.each )
     } else {
-        ## OPTION or if no internal std, then just report without quantification 
-        cat("\n\n ## Fail to generate profiled_ALL due to missing internal Standard \n")
-        cat("\t internalStd:", internalStd,"\n\n")
+        final.Concentration <- conc.each;
+    }
+    if (DEBUG) { cat("\n\n final.Concentration:\n"); print(final.Concentration) }
+    
+    if (FALSE) {        
+        ## Combining  all concentration and Generate Files for Concentration Table with Sample ID
+        ## use the "final.Concentration" data frame
+        if ( internalStd != 'NONE') {
+            # ofile.merged <- paste(basename(sampleFileDir),"_profiledAll.csv", sep='')
+            ofile.merged <- "profiled_All.csv"
+            cat("\n ## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
+            ## order by RI as in library; merge compound name with RI and sort by RI
+            # cat("# final.concentration:\n"); print(final.Concentration)  
+            colnames(final.Concentration)[1] <- 'HMDB_ID'
+            # final.Concentration <- merge(lib.peakcal[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
+            final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
+            cat("\n ### final.Concentration:\n"); print(final.Concentration)
+            final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
+            cat("\n ### final.Concentration (sort):\n"); print(final.Concentration)
+                    
+            rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
+            final.Concentration <- final.Concentration[ , - rm.SeqIndex]
+            rownames(final.Concentration) <- c(1:nrow(final.Concentration))
+            
+            if( DEBUG ) { cat("final.concentration:\n"); print(final.Concentration)  }
+            
+            write.table( t(final.Concentration), file=ofile.merged, sep=",", col.names=FALSE, quote=TRUE)
+            cat("\n==============================================================\n")
+            cat("\n## Done:", length(fileList$sampleFiles), "spectrum files\n\n")
+        } else {
+            ## OPTION or if no internal std, then just report without quantification 
+            cat("\n\n ## Fail to generate profiled_ALL due to missing internal Standard \n")
+            cat("\t internalStd:", internalStd,"\n\n")
+        }
     }
     
     ofile.note <- paste(basename(sampleFileDir),"_note.txt", sep='')

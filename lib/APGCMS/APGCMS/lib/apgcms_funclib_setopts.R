@@ -102,7 +102,7 @@ getLibInfo <- function(fname.lib)
 ## args:  sample_file_dir
 ## return: a vetor of files
 ## infileDir <- dirCDFSample
-get_file_list <- function(infileDir){
+get_file_list <- function(infileDir, procStatus) {
   
   if(DEBUG) cat("'get_file_list' from ", infileDir,"\n\n")
   
@@ -112,56 +112,76 @@ get_file_list <- function(infileDir){
     alk_file_index <- grep("ALKSTD", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);  
     if (length(alk_file_index) == 0) {
       alk_file_index <- grep("ALK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);
-      if (length(alk_file_index) == 0) {
-        stop("Could not find any Alkane Standard file (filename: ALK* or ALKSTD*)")
+      if (procStatus == "PREPROCESSING" & length(alk_file_index) == 0) {
+          stop("Could not find any Alkane Standard file (filename: ALK* or ALKSTD*)")
       }    
     }
     blank_file_index <- grep("BLANK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);  
     if (length(blank_file_index) == 0) {
       blank_file_index <- grep("BLK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);
-      if (length(blank_file_index) == 0) {
+      if (procStatus == "PREPROCESSING" & length(blank_file_index) == 0) {
         cat("Could not find any Blank file (filename: BLK* or BLANK*)")
       }    
     }
   } else {
-    stop("There is no CDF/mzXML files")
+      stop("There is no CDF/mzXML files")
   }
   
   ## BHAN: if more than two alkane files, then just use first one and exclude others.give message note
   ## if (length(alk_file_index) >1) stop("More than one alkane standard file in the case. Check!!!") 
-  if (length(alk_file_index) > 1) {
-    # stop("More than one alkane standard file in the case. Check!!!") 
-    if(DEBUG) 
-      cat("\n\tCaution: More than one alkane standard files.\n\tProgram will use only first one!\n\n"); 
-    
-    alkaneFile <- file_list_tmp[alk_file_index[1]]
+  if (DEBUG) { cat("filelist:\n"); print(file_list_tmp) }
+  if(length(alk_file_index) == 0L) {    
+      alkaneFile <- NULL
   } else {
-    alkaneFile <- file_list_tmp[alk_file_index]
+      if (length(alk_file_index) > 1) {
+          # stop("More than one alkane standard file in the case. Check!!!") 
+          if(DEBUG) {
+              cat("\n\tCaution: More than one alkane standard files.\n\tProgram will use only first one!\n\n");       
+          }
+          alkaneFile <- file_list_tmp[alk_file_index[1]]
+      } else {
+          alkaneFile <- file_list_tmp[alk_file_index]
+      }
+      # alkaneFiles <- file_list_tmp[alk_file_index]
   }
-  # alkaneFiles <- file_list_tmp[alk_file_index]
-  
-  if (length(blank_file_index) > 1) {
-    if(DEBUG) 
-      cat("\n\tCaution: More than one blank files.\n\tProgram will use only first one!\n\n"); 
-    blankFile <- file_list_tmp[blank_file_index[1]]
+
+  if(length(blank_file_index) == 0L) {
+      blankFile <- NULL
   } else {
-    blankFile <- file_list_tmp[blank_file_index]
+      if (length(blank_file_index) > 1) {
+        if(DEBUG) {
+            cat("\n\tCaution: More than one blank files.\n\tProgram will use only first one!\n\n"); 
+        }
+        blankFile <- file_list_tmp[blank_file_index[1]]
+      } else {
+        blankFile <- file_list_tmp[blank_file_index]
+      }
+      # blankFiles <- file_list_tmp[blank_file_index]
   }
-  # blankFiles <- file_list_tmp[blank_file_index]
   
-  sampleFiles <- file_list_tmp[-c(alk_file_index, blank_file_index)]
+  alkaneBlankList <- c(alk_file_index, blank_file_index)
+  if( length(alkaneBlankList) > 0) {
+      cat("alkaneBlankList is not null\n"); 
+      sampleFiles <- file_list_tmp[-alkaneBlankList]    
+  } else {
+      cat("alkaneBlankList is null\n");
+      sampleFiles <- file_list_tmp
+  }
   
-  # return( list (alkaneFile = alkaneFile, blankFile=blankFile, sampleFiles = sampleFiles ) )
-  return( list (alkaneFile = alkaneFile, blankFile=blankFile, sampleFiles = sampleFiles ) )
+  # cat("sampleFiles:\n"); print(sampleFiles)
+  # print(list ( alkaneFile = alkaneFile, blankFile=blankFile, sampleFiles = sampleFiles ))
+  
+  return( list ( alkaneFile = alkaneFile, blankFile=blankFile, sampleFiles = sampleFiles ) )
+  
 }
 
 
 #save profiling information
 saveProfilingInfo <- function(fname, VersionStr)
 {
-  outstr <- paste("## GC-AutoFit Version", VersionStr) 
+  outstr <- paste("## Done by GC-AutoFit (Version", VersionStr,")", sep='') 
   outstr <- paste(outstr, "\n  - Date:", date())
-  outstr <- paste(outstr, "\n")
+  outstr <- paste(outstr, "\n\n\n")
   cat(outstr, file=fname, append=FALSE)
   cat(outstr)
 }

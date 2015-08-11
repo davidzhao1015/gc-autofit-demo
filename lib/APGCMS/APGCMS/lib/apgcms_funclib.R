@@ -263,17 +263,6 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       
       colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )
   
-      ## Disabled because of multiple cores
-      if ( FALSE ) 
-      {
-            if( is.null(final.Concentration) ) {
-              final.Concentration <- tmp.Concentration
-            } else {
-              final.Concentration <- merge(final.Concentration, tmp.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)
-            }
-            
-            if (print.on & DEBUG) { cat("\n\n final.Concentration:\n"); print(final.Concentration) }
-      }      
     } else {
       ## No internal STD found --> should this be kept???????
       if (FALSE)  {
@@ -323,11 +312,10 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
 mergeConcTable <- function( conc.list )
 {
       # column names: HMDB_ID, Compound, sample_ID
-       conc.all <- conc.list[[1]]
+      conc.all <- conc.list[[1]]
       for (i in 2:length(conc.list))  {
         conc.all <- merge(conc.all, conc.list[[i]], by=c("HMDB_ID","Compound"), sort=FALSE, all=TRUE)
       }
-      
       return (conc.all)
 }
 
