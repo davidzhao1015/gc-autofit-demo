@@ -1,12 +1,20 @@
-p#notice = notice
+ul.nav.nav-tabs
+  li.active[role='presentation']
+    a[href='#preprocessing' data-toggle='tab']Preprocessing
+  li[role='presentation']
+    a[href='#profiling' data-toggle='tab']Profiling
+  li[role='presentation']
+    a[href='#results' data-toggle='tab']Results
 
-p
-  strong Database:
-  = @submission.database
+.tab-content
+  .tab-pane.active#preprocessing
+    h2 Alkane Standards
+    = render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.standards, 'json')
 
-= link_to 'Edit', edit_submission_path(@submission)
-'|
-= link_to 'Back', submissions_path
+  .tab-pane#profiling
+    = render 'profiling'
 
-h2 Alkane Standards
-= render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.standards, 'json')
+  .tab-pane#results
+    = render 'results'
+
+

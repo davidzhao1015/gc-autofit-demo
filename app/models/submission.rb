@@ -54,6 +54,13 @@ class Submission < ActiveRecord::Base
     SubmissionWorker.new.perform(self.id)
   end
 
+  def start_profiling
+    self.update!(status: 'profiling', profile: true)
+    self.samples.each do |sample|
+      SpectrumWorker.new.perform(sample.id)
+    end
+  end
+
   def finalized?
     FINALIZED_STATES.include?(self.status)
   end

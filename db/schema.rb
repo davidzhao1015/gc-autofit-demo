@@ -15,6 +15,9 @@ ActiveRecord::Schema.define(version: 20150716192428) do
 
   create_table "spectra", force: :cascade do |t|
     t.string   "category",                   limit: 255
+    t.string   "status",                     limit: 255
+    t.text     "error",                      limit: 65535
+    t.string   "job_id",                     limit: 255
     t.integer  "runtime",                    limit: 4
     t.integer  "submission_id",              limit: 4
     t.string   "spectrum_data_file_name",    limit: 255
@@ -25,8 +28,8 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.string   "json_results_content_type",  limit: 255
     t.integer  "json_results_file_size",     limit: 4
     t.datetime "json_results_updated_at"
-    t.datetime "created_at",                             null: false
-    t.datetime "updated_at",                             null: false
+    t.datetime "created_at",                               null: false
+    t.datetime "updated_at",                               null: false
   end
 
   create_table "submissions", force: :cascade do |t|
@@ -35,6 +38,7 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.string   "secret_id",                    limit: 255
     t.text     "error",                        limit: 65535
     t.string   "status",                       limit: 255
+    t.boolean  "profile",                                    default: false
     t.string   "internal_standard",            limit: 255
     t.string   "input_zip_file_name",          limit: 255
     t.string   "input_zip_content_type",       limit: 255
@@ -49,8 +53,8 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.integer  "calibration_file_size",        limit: 4
     t.datetime "calibration_updated_at"
     t.text     "custom_database",              limit: 65535
-    t.datetime "created_at",                                 null: false
-    t.datetime "updated_at",                                 null: false
+    t.datetime "created_at",                                                 null: false
+    t.datetime "updated_at",                                                 null: false
   end
 
 end

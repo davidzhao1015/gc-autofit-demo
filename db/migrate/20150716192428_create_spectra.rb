@@ -2,6 +2,9 @@ class CreateSpectra < ActiveRecord::Migration
   def change
     create_table :spectra do |t|
       t.string  :category
+      t.string  :status
+      t.text  :error
+      t.string :job_id
       t.integer :runtime
       t.integer :submission_id
 

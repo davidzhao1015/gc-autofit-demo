@@ -913,7 +913,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // Draw x label
     if (this.axis_x_title) {
       context.font = this.axis_title_font;
-      var label_x = (scale.x.range()[0] - scale.x.range()[1]) / 2;
+      var label_x = scale.x.range_diff() / 2;
       var label_y = scale.y.range()[0] + (3 * tick_length)
       context.fillText(this.axis_x_title, label_x, label_y)
     }

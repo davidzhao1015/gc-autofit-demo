@@ -1,0 +1,27 @@
+- if @submission.profile
+
+  h2 
+    | Samples
+    /span.batch-download-results[class='#{"hidden" unless @nmr_request.finalized?}']
+    /  | (#{link_to 'Download Results', nmr_request_path(@nmr_request, 'csv')})
+
+  table.table.table-condensed#spectra-list
+    thead
+      tr
+        th Name
+        th Run Time
+        th Status
+    tbody
+      - @submission.samples.each do |samples|
+        tr[id='spectrum_id_#{samples.id}'
+           data-spectrum-link='#{submission_spectrum_path(@submission, samples)}'
+           class='#{"spectrum-active" if samples.finalized?}']
+          td = samples.name
+          td.runtime = samples.display_runtime
+          td.status-text = samples.display_status
+
+- else
+  p
+    | If the preprocessing looks good, start profiling
+
+    a.btn.btn-primary.btn-lg.center-block[href='#{profile_submission_path(@submission)}'] PROFILE

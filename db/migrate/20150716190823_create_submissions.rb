@@ -6,6 +6,7 @@ class CreateSubmissions < ActiveRecord::Migration
       t.string :secret_id
       t.text :error
       t.string :status
+      t.boolean :profile, default: false
       t.string :internal_standard
       t.attachment :input_zip
       t.attachment :profile_library

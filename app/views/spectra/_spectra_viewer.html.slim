@@ -1,12 +1,3 @@
-.alert.alert-info
-  | The spectra viewer shows the processed spectrum (black) and the fit (blue).
-    Details in the spectrum can be examined by zooming in on regions of interest
-    (Press <em>Shift</em> and drag around an area; or use a scroll wheel to zoom
-    the X-axis and press <em>Shift</em> while using a scroll wheel to zoom the
-    Y-axis). 
-  a id='spectra-viewer-more-info' href='#' More info...
-
-  /= render 'shared/spectra_viewer_instructions'
 #spectra-anchor
 #spectra-container[data-no-turbolink data-nmr-request-id='#{@nmr_request.try(:secret_id)}' data-spectrum-id='#{@spectrum.try(:id)}']
   #spectra-header
@@ -35,16 +26,6 @@
       title='Lock/Unlock the viewer to the top of the window' href='#']
       /span.glyphicon.glyphicon-lock 
       | Lock Viewer
-    a.btn.btn-default.btn-xs#show-compounds[
-      data-on-name='Hide Compound Fits'
-      data-off-name='Show Compound Fits' href='#'] Show Compound Fits
-    a.btn.btn-default.btn-xs#jsv-adjust-fit.tool-tip[data-toggle='tooltip'
-      data-status='inactive'
-      title='Adjust the fit of individual compound clusters' href='#'] Adjust Fit
-    - if @spectrum.try(:phaseable?)
-      a.btn.btn-default.btn-xs#jsv-phase.tool-tip[data-toggle='tooltip'
-        title='Manually phase the spectrum and reprofile' href='#'] Manually Phase
-
     .btn-group.pull-right
       button.btn.btn-default.btn-xs.dropdown-toggle[type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false"]
         | Download 

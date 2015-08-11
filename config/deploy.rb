@@ -12,6 +12,7 @@ set :linked_dirs, %w{public/system log}
 
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
 set :keep_releases, 5
+set :sidekiq_config, "#{current_path}/config/sidekiq.yml"
 
 namespace :deploy do
 

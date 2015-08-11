@@ -3,6 +3,8 @@ require 'sidekiq/web'
 Rails.application.routes.draw do
 
   resources :submissions do
+    get 'example', on: :collection
+    get 'profile', on: :member
     resources :spectra
   end
 
