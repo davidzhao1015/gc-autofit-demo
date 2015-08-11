@@ -1,0 +1,65 @@
+.alert.alert-info
+  | The spectra viewer shows the processed spectrum (black) and the fit (blue).
+    Details in the spectrum can be examined by zooming in on regions of interest
+    (Press <em>Shift</em> and drag around an area; or use a scroll wheel to zoom
+    the X-axis and press <em>Shift</em> while using a scroll wheel to zoom the
+    Y-axis). 
+  a id='spectra-viewer-more-info' href='#' More info...
+
+  /= render 'shared/spectra_viewer_instructions'
+#spectra-anchor
+#spectra-container[data-no-turbolink data-nmr-request-id='#{@nmr_request.try(:secret_id)}' data-spectrum-id='#{@spectrum.try(:id)}']
+  #spectra-header
+    - if @spectrum && !@spectrum.nmr_request.single_spectrum?
+        .btn-group.pull-right
+          a.spectrum-nav.btn.btn-default.btn-xs#spectrum-prev.tool-tip[data-toggle='tooltip'
+            title='View previous spectrum in Batch'
+            href='#{nmr_request_spectrum_path(@nmr_request, @spectrum.prev)}'] <<
+          a.spectrum-nav.btn.btn-default.btn-xs#spectrum-batch.tool-tip[data-toggle='tooltip'
+            title='View Batch index' href='#{nmr_request_path(@nmr_request)}'] Batch
+          a.spectrum-nav.btn.btn-default.btn-xs#spectrum-next.tool-tip[data-toggle='tooltip'
+            title='View next spectrum in Batch'
+            href='#{nmr_request_spectrum_path(@nmr_request, @spectrum.next)}#spectra-anchor'] >>
+        #spectra-title
+          = select_tag "spectra", options_from_collection_for_select(@nmr_request.spectra, "id", "name", @spectrum.id), class: 'btn', id: 'batch-select'
+    - else
+      #spectra-title = @spectrum.try(:name)
+
+  .clearfix
+  #spectra-viewer[data-spectra-path="#{json_path if defined? json_path}"
+    data-phase-path="#{phase_path if defined? phase_path}"]
+  #spectra-controls
+    a.btn.btn-default.btn-xs#lock-viewer.tool-tip[data-toggle='tooltip'
+      data-on-name='Unlock Viewer'
+      data-off-name='Lock Viewer'
+      title='Lock/Unlock the viewer to the top of the window' href='#']
+      /span.glyphicon.glyphicon-lock 
+      | Lock Viewer
+    a.btn.btn-default.btn-xs#show-compounds[
+      data-on-name='Hide Compound Fits'
+      data-off-name='Show Compound Fits' href='#'] Show Compound Fits
+    a.btn.btn-default.btn-xs#jsv-adjust-fit.tool-tip[data-toggle='tooltip'
+      data-status='inactive'
+      title='Adjust the fit of individual compound clusters' href='#'] Adjust Fit
+    - if @spectrum.try(:phaseable?)
+      a.btn.btn-default.btn-xs#jsv-phase.tool-tip[data-toggle='tooltip'
+        title='Manually phase the spectrum and reprofile' href='#'] Manually Phase
+
+    .btn-group.pull-right
+      button.btn.btn-default.btn-xs.dropdown-toggle[type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false"]
+        | Download 
+        span.caret
+      ul.dropdown-menu
+        li
+          a#jsv-save-json.tool-tip[data-toggle='tooltip'
+            title='Save Bayesil data as reloadable JSON file' href='#'] Bayesil File
+        li
+          a#jsv-save-csv.tool-tip[data-toggle='tooltip'
+            title='Save Bayesil results as CSV file' href='#'] Quantities CSV
+
+
+  .clearfix
+  #spectra-resize-bar
+    = image_tag 'drag_icon.png', class: 'drag-icon'
+  hr
+

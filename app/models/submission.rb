@@ -16,13 +16,12 @@ class Submission < ActiveRecord::Base
   }
   INTERNAL_STANDARDS = %w[ Ribitol Cholesterol ]
 
-  # has_many :spectra, dependent: :destroy
+  has_many :spectra, dependent: :destroy
+  has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
+  has_one :blank,     -> { where category: 'blank'}, class_name: Spectrum
+  has_many :samples,  -> { where category: 'sample'}, class_name: Spectrum
 
-  has_one :standards, dependent: :destroy, class_name: 'Spectrum'
-  has_one :blank,     dependent: :destroy, class_name: 'Spectrum'
-  has_many :samples,  dependent: :destroy, class_name: 'Spectrum'
-
-  accepts_nested_attributes_for :standards, :blank, :samples
+  accepts_nested_attributes_for :spectra
 
 
   validates :secret_id, presence: true, uniqueness: true
@@ -34,7 +33,6 @@ class Submission < ActiveRecord::Base
   after_destroy     :delete_working_dir
 
   serialize :custom_database, Array
-  # serialize :filter_list, Array
 
 
   def self.delete_old_submissions
@@ -52,8 +50,8 @@ class Submission < ActiveRecord::Base
     create_working_dir
     self.update!(status: 'queued')
     # job_id = SubmissionWorker.perform_async(self.id)
-    SubmissionWorker.new.perform(self.id)
     # self.update!(job_id: job_id)
+    SubmissionWorker.new.perform(self.id)
   end
 
   def finalized?
@@ -65,7 +63,19 @@ class Submission < ActiveRecord::Base
   end
 
   def working_dir
-    File.join(WORKING_DIR,'Results',self.secret_id)
+    File.join(WORKING_DIR, 'Results', self.secret_id)
+  end
+
+  def input_dir
+    File.join(self.working_dir, 'input')
+  end
+
+  def preprocessing_dir
+    File.join(self.working_dir, 'preprocessing')
+  end
+
+  def profiling_dir
+    File.join(self.working_dir, 'profiling')
   end
 
   def create_working_dir

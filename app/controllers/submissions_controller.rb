@@ -16,8 +16,6 @@ class SubmissionsController < ApplicationController
   # GET /submissions/new
   def new
     @submission = Submission.new
-    @submission.build_standards
-    @submission.build_blank
   end
 
   # GET /submissions/1/edit
@@ -28,6 +26,7 @@ class SubmissionsController < ApplicationController
   # POST /submissions.json
   def create
     @submission = Submission.new(submission_params)
+    @submission.status = 'validating'
 
     respond_to do |format|
       if @submission.save
@@ -39,8 +38,6 @@ class SubmissionsController < ApplicationController
         format.json { render :show, status: :created, location: @submission }
       else
         format.html do
-          @submission.build_standards
-          @submission.build_blank
           render :new
         end
         format.json { render json: @submission.errors, status: :unprocessable_entity }
@@ -80,11 +77,7 @@ class SubmissionsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def submission_params
-      params.require(:submission).permit(:database, :internal_standard,
-                                         standards_attributes: [:id, :spectrum_data, :category],
-                                         blank_attributes: [:id, :spectrum_data, :category],
-                                         samples_attributes: [ :spectrum_data ])
-                                         # samples_attributes: [ spectrum_data: [] ])
-                                         # samples_attributes: [ :id, :spectrum_data, :category ])
+      params.require(:submission).permit(:database, :internal_standard, :status,
+                                         spectra_attributes: [ :spectrum_data, :category ])
     end
 end

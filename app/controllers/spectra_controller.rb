@@ -10,6 +10,10 @@ class SpectraController < ApplicationController
   # GET /spectra/1
   # GET /spectra/1.json
   def show
+    respond_to do |format|
+      format.json { send_file(@spectrum.json_results.path, type: 'text/json') }
+      format.html
+    end
   end
 
   # GET /spectra/new
@@ -64,7 +68,8 @@ class SpectraController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_spectrum
-      @spectrum = Spectrum.find(params[:id])
+      # @spectrum = Spectrum.find(params[:id])
+      @spectrum = Submission.find_by_secret_id(params[:submission_id]).spectra.find(params[:id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
