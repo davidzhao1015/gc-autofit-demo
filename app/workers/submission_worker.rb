@@ -16,10 +16,12 @@ class SubmissionWorker
       # Save Standards
       standards = submission.standards
       standards.json_results = File.open(File.join(submission.preprocessing_dir, 'Alkstd_spectrum.json') )
+      standards.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Alkstd.png') )
       standards.save!
       # Save Blank
       blank = submission.blank
       blank.json_results = File.open(File.join(submission.preprocessing_dir, 'Blank_spectrum.json') )
+      blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_blank.png') )
       blank.save!
       # Link Samples
       submission.samples.each do |sample|

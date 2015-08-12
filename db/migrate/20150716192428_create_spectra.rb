@@ -10,6 +10,7 @@ class CreateSpectra < ActiveRecord::Migration
 
       t.attachment :spectrum_data
       t.attachment :json_results
+      t.attachment :plot
 
       t.timestamps null: false
     end

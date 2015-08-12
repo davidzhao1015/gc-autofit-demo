@@ -9,8 +9,8 @@ class SpectrumWorker
 
     FileUtils.mkdir_p(spectrum.sample_dir)
     FileUtils.symlink(spectrum.spectrum_data.path, File.join(spectrum.sample_dir, 'sample.mzXML'))
-    FileUtils.symlink(submission.standards.spectrum_data.path, File.join(spectrum.sample_dir, 'Alkstd.mzXML'))
-    FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
+    # FileUtils.symlink(submission.standards.spectrum_data.path, File.join(spectrum.sample_dir, 'Alkstd.mzXML'))
+    # FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
 
     apgcms = APGCMS.new(infiledir: File.join(spectrum.sample_dir),
                         'lib.internal': 'SERUM',
@@ -21,12 +21,8 @@ class SpectrumWorker
     if apgcms.success?
       spectrum.status = 'complete'
       # Save JSON results
-      spectrum.json_results = File.open(File.join(spectrum.preprocessing_dir, 'spectrum.json') )
+      spectrum.json_results = File.open(File.join(spectrum.sample_dir, 'sample_spectrum.json') )
       spectrum.save!
-      # Link Samples
-      spectrum.samples.each do |sample|
-
-      end
     else
       spectrum.status = 'failed'
       spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"

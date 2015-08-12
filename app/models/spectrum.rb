@@ -4,14 +4,13 @@ class Spectrum < ActiveRecord::Base
 
   belongs_to :submission
 
-  has_attached_file :spectrum_data,
-                    path: ':input_dir/:sample_name.:extension'
-
-  has_attached_file :json_results,
-                    path: ':sample_dir/spectrum.:extension'
+  has_attached_file :spectrum_data, path: ':input_dir/:sample_name.:extension'
+  has_attached_file :json_results,  path: ':sample_dir/spectrum.:extension'
+  has_attached_file :plot
 
   validates_attachment_file_name :spectrum_data, :matches => [/mzXML\Z/]
   validates_attachment_file_name :json_results, :matches => [/json\Z/]
+  validates_attachment_file_name :plot, :matches => [/png\Z/]
 
   validates :status, inclusion: { in: STATES }, allow_blank: true
 

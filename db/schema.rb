@@ -28,6 +28,10 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.string   "json_results_content_type",  limit: 255
     t.integer  "json_results_file_size",     limit: 4
     t.datetime "json_results_updated_at"
+    t.string   "plot_file_name",             limit: 255
+    t.string   "plot_content_type",          limit: 255
+    t.integer  "plot_file_size",             limit: 4
+    t.datetime "plot_updated_at"
     t.datetime "created_at",                               null: false
     t.datetime "updated_at",                               null: false
   end

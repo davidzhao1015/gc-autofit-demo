@@ -1,5 +1,5 @@
 class Submission < ActiveRecord::Base
-  STATES = %w[ validating queued processing profiling complete failed ]
+  STATES = %w[ validating queued processing processed profiling complete failed ]
   FINALIZED_STATES = %w[ complete failed ]
 
   WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.root.join('APGCMS_working')
@@ -49,9 +49,9 @@ class Submission < ActiveRecord::Base
   def start_work
     create_working_dir
     self.update!(status: 'queued')
-    # job_id = SubmissionWorker.perform_async(self.id)
-    # self.update!(job_id: job_id)
-    SubmissionWorker.new.perform(self.id)
+    job_id = SubmissionWorker.perform_async(self.id)
+    self.update!(job_id: job_id)
+    # SubmissionWorker.new.perform(self.id)
   end
 
   def start_profiling
@@ -67,6 +67,10 @@ class Submission < ActiveRecord::Base
 
   def failed?
     self.status == 'failed'
+  end
+
+  def processing?
+    ['queued', 'processing'].include?(self.status)
   end
 
   def working_dir

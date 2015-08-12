@@ -200,7 +200,7 @@ if ("--help" %in% args) {  helpMessage()  }
 
 ## create and set working directory (save output/result files) 
 ## may be changed: upload_user_temp_dir \data, \Result
-dir.create(user.outdir, showWarnings=TRUE, recursive=TRUE) # expected full path
+dir.create(user.outdir, showWarnings=FALSE, recursive=TRUE) # expected full path
 dirProfileResult <- normalizePath(user.outdir)
 setwd(dirProfileResult)  ## Set working directory    
 

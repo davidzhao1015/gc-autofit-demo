@@ -8,12 +8,9 @@ ul.nav.nav-tabs
 
 .tab-content
   .tab-pane.active#preprocessing
-    h2 Alkane Standards
-    = render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.standards, 'json')
-
+    = render 'preprocessing'
   .tab-pane#profiling
     = render 'profiling'
-
   .tab-pane#results
     = render 'results'
 

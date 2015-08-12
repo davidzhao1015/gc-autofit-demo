@@ -1,0 +1,31 @@
+h1 GC-AutoFit Submission
+= render 'settings'
+
+- if @submission.processing?
+  h2 Status
+
+  .well-content.intro
+    h2 Processing
+    p
+      | Your spectrum are being preprocessed. 
+        You can bookmark this page and check back later.
+
+- elsif @submission.failed?
+
+  p Sorry the preprocessing failed
+
+- else
+
+  .well-content.intro
+    h2 Preprocessing Results
+    p
+      | Check your results over. If they look ok, click the profile button
+
+  h2 Standards
+  = image_tag @submission.standards.plot.url
+
+  h2 Blank
+  = image_tag @submission.blank.plot.url
+
+
+/= render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.standards, 'json')
