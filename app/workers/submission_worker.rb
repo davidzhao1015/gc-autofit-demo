@@ -3,6 +3,7 @@ class SubmissionWorker
   sidekiq_options :retry => false
 
   def perform(submission_id)
+    start_time = Time.now
     submission = Submission.find(submission_id)
     submission.update!(status: 'processing')
 
@@ -31,6 +32,8 @@ class SubmissionWorker
       submission.status = 'failed'
       submission.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
     end
+
+    submission.runtime = Time.now - start_time
     submission.save!
 
   end

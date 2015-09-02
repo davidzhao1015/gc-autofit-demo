@@ -11,6 +11,7 @@ class SubmissionsController < ApplicationController
   # GET /submissions/1
   # GET /submissions/1.json
   def show
+    @spectrum = @submission.spectra.first
   end
 
   # GET /submissions/new
@@ -30,6 +31,7 @@ class SubmissionsController < ApplicationController
 
     respond_to do |format|
       if @submission.save
+        @submission.start_work
         if params[:submission][:input_zip]
           # Process zip file and ignore aother files
         else
@@ -46,9 +48,8 @@ class SubmissionsController < ApplicationController
   end
 
   def profile
-    @submission.status = 'profiling'
     @submission.start_profiling
-    redirect_to @submission, notice: 'Profiling was successfully started.'
+    redirect_to submission_path(@submission, anchor: 'tab_profiling')
   end
 
   # PATCH/PUT /submissions/1
@@ -78,6 +79,7 @@ class SubmissionsController < ApplicationController
   def example
     @submission = get_example(params[:example_num])
     if @submission.save
+      @submission.start_work
       redirect_to submission_path(@submission)
     else
       redirect_to new_submission_path, notice: 'Unknown example'

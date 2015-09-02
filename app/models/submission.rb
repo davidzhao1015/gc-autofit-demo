@@ -1,5 +1,7 @@
 class Submission < ActiveRecord::Base
-  STATES = %w[ validating queued processing processed profiling complete failed ]
+  # STATES = %w[ validating queued processing processed profiling complete failed ]
+  STATES = %w[ validating queued processing complete failed ]
+  # PROCESSED = %w[ processed profiling complete ]
   FINALIZED_STATES = %w[ complete failed ]
 
   WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.root.join('APGCMS_working')
@@ -29,7 +31,7 @@ class Submission < ActiveRecord::Base
   validates :database, inclusion: { in: DATABASES.keys }
 
   before_validation :generate_secret
-  after_create      :start_work
+  # after_create      :start_work
   after_destroy     :delete_working_dir
 
   serialize :custom_database, Array
@@ -51,13 +53,15 @@ class Submission < ActiveRecord::Base
     self.update!(status: 'queued')
     job_id = SubmissionWorker.perform_async(self.id)
     self.update!(job_id: job_id)
-    # SubmissionWorker.new.perform(self.id)
   end
 
   def start_profiling
-    self.update!(status: 'profiling', profile: true)
-    self.samples.each do |sample|
-      SpectrumWorker.new.perform(sample.id)
+    if self.complete? && !self.profile?
+      self.update!(profile: true)
+      self.samples.each do |sample|
+        # SpectrumWorker.new.perform(sample.id)
+        sample.start_work
+      end
     end
   end
 
@@ -65,13 +69,29 @@ class Submission < ActiveRecord::Base
     FINALIZED_STATES.include?(self.status)
   end
 
+  def samples_all_finalized?
+    self.samples.all? { |s| s.finalized? }
+  end
+
+  def samples_any_finalized?
+    self.samples.any? { |s| s.finalized? }
+  end
+
   def failed?
     self.status == 'failed'
+  end
+
+  def complete?
+    self.status == 'complete'
   end
 
   def processing?
     ['queued', 'processing'].include?(self.status)
   end
+
+  # def processed?
+  #   PROCESSED.include?(self.status)
+  # end
 
   def working_dir
     File.join(WORKING_DIR, 'Results', self.secret_id)
@@ -99,6 +119,10 @@ class Submission < ActiveRecord::Base
 
   def to_param
     self.secret_id
+  end
+
+  def display_status
+    self.status.capitalize
   end
 
   private

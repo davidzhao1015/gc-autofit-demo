@@ -1,24 +1,20 @@
 #spectra-anchor
-#spectra-container[data-no-turbolink data-nmr-request-id='#{@nmr_request.try(:secret_id)}' data-spectrum-id='#{@spectrum.try(:id)}']
+#spectra-container[data-no-turbolink data-submission-id='#{@submission.try(:secret_id)}' data-spectrum-id='#{@spectrum.try(:id)}']
   #spectra-header
-    - if @spectrum && !@spectrum.nmr_request.single_spectrum?
-        .btn-group.pull-right
-          a.spectrum-nav.btn.btn-default.btn-xs#spectrum-prev.tool-tip[data-toggle='tooltip'
-            title='View previous spectrum in Batch'
-            href='#{nmr_request_spectrum_path(@nmr_request, @spectrum.prev)}'] <<
-          a.spectrum-nav.btn.btn-default.btn-xs#spectrum-batch.tool-tip[data-toggle='tooltip'
-            title='View Batch index' href='#{nmr_request_path(@nmr_request)}'] Batch
-          a.spectrum-nav.btn.btn-default.btn-xs#spectrum-next.tool-tip[data-toggle='tooltip'
-            title='View next spectrum in Batch'
-            href='#{nmr_request_spectrum_path(@nmr_request, @spectrum.next)}#spectra-anchor'] >>
-        #spectra-title
-          = select_tag "spectra", options_from_collection_for_select(@nmr_request.spectra, "id", "name", @spectrum.id), class: 'btn', id: 'batch-select'
-    - else
-      #spectra-title = @spectrum.try(:name)
+    .btn-group.pull-right
+      a.spectrum-nav.btn.btn-default.btn-xs#spectrum-prev.tool-tip[data-toggle='tooltip'
+        title='View previous spectrum in Batch'
+        href='#{submission_spectrum_path(@submission, @spectrum.prev)}'] <<
+      a.spectrum-nav.btn.btn-default.btn-xs#spectrum-batch.tool-tip[data-toggle='tooltip'
+        title='View Batch index' href='#{submission_path(@submission)}'] Batch
+      a.spectrum-nav.btn.btn-default.btn-xs#spectrum-next.tool-tip[data-toggle='tooltip'
+        title='View next spectrum in Batch'
+        href='#{submission_spectrum_path(@submission, @spectrum.next)}#spectra-anchor'] >>
+    #spectra-title
+      = select_tag "spectra", options_from_collection_for_select(@submission.spectra, "id", "name", @spectrum.id), class: 'btn', id: 'batch-select'
 
   .clearfix
-  #spectra-viewer[data-spectra-path="#{json_path if defined? json_path}"
-    data-phase-path="#{phase_path if defined? phase_path}"]
+  #spectra-viewer[data-spectra-path="#{json_path if defined? json_path}"]
   #spectra-controls
     a.btn.btn-default.btn-xs#lock-viewer.tool-tip[data-toggle='tooltip'
       data-on-name='Unlock Viewer'

@@ -1,2 +1,10 @@
-Results
-= render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.samples.first, 'json')
+- if @spectrum
+  = render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @spectrum, 'json')
+
+table.results-table.table.table-striped.table-condensed
+  thead
+    tr
+      th HMDB ID
+      th Compound Name
+      th Concentration (µM)
+  tbody

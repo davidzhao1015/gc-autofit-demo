@@ -1,0 +1,5 @@
+$("#spectrum-prev").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum.prev)) %>");
+$("#spectrum-next").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum.next)) %>");
+$('#spectra-container').data('spectrum-id', '<%= @spectrum.id %>');
+$('#batch-select').val(<%= @spectrum.id %>);
+window.history.pushState('', '', '<%= escape_javascript(submission_spectrum_path(@submission, @spectrum)) %>');

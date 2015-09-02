@@ -3,6 +3,7 @@ class SpectrumWorker
   sidekiq_options :retry => false
 
   def perform(spectrum_id)
+    start_time = Time.now
     spectrum = Spectrum.find(spectrum_id)
     submission = spectrum.submission
     spectrum.update!(status: 'profiling')
@@ -27,6 +28,8 @@ class SpectrumWorker
       spectrum.status = 'failed'
       spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
     end
+
+    spectrum.runtime = Time.now - start_time
     spectrum.save!
 
   end

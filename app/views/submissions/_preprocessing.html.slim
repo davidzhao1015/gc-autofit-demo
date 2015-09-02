@@ -1,23 +1,32 @@
-h1 GC-AutoFit Submission
+h1 GC-AutoFit Preprocessing
 = render 'settings'
 
+#submission-status[data-secret-id="#{@submission.secret_id}" data-finalized="#{@submission.finalized?}"]
+
+h2 Status
+
+
 - if @submission.processing?
-  h2 Status
 
   .well-content.intro
-    h2 Processing
+    h2.status-text = @submission.display_status
     p
-      | Your spectrum are being preprocessed. 
+      | Your spectra are being preprocessed.
         You can bookmark this page and check back later.
 
 - elsif @submission.failed?
 
-  p Sorry the preprocessing failed
+  .container-fluid.alert.alert-danger
+    h2.status-text The job failed!
+    p = @submission.error.html_safe
+    p
+      - if Rails.env.development?
+        | Log:
+        /pre = @submission.read_log
 
-- else
-
+- else @submission.complete?
   .well-content.intro
-    h2 Preprocessing Results
+    h2.status-text Preprocessing Complete
     p
       | Check your results over. If they look ok, click the profile button
 

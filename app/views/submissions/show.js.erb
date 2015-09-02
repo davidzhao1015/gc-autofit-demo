@@ -1,0 +1,17 @@
+// Enable tabs
+<% if @submission.complete? %>
+  $('#profiling-tab').removeClass('disabled')
+<% end %>
+<% if @submission.samples_any_finalized? %>
+  $('#results-tab').removeClass('disabled')
+<% end %>
+
+// Load correct partial and update status
+<% if @submission.profile? %>
+  $('#samples-status').data('finalized', '<%= @submission.samples_all_finalized? %>')
+  $('#profiling').html("<%= escape_javascript(render partial: 'profiling') %>");
+  // TODO: Load first available results if results is blank
+<% else %>
+  $('#submission-status').data('finalized', '<%= @submission.finalized? %>')
+  $('#preprocessing').html("<%= escape_javascript(render partial: 'preprocessing') %>");
+<% end %>

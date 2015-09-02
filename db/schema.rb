@@ -42,6 +42,7 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.string   "secret_id",                    limit: 255
     t.text     "error",                        limit: 65535
     t.string   "status",                       limit: 255
+    t.integer  "runtime",                      limit: 4
     t.boolean  "profile",                                    default: false
     t.string   "internal_standard",            limit: 255
     t.string   "input_zip_file_name",          limit: 255

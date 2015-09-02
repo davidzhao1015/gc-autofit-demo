@@ -1,9 +1,9 @@
 ul.nav.nav-tabs
-  li.active[role='presentation']
+  li#preprocessing-tab.active[role='presentation']
     a[href='#preprocessing' data-toggle='tab']Preprocessing
-  li[role='presentation']
+  li#profiling-tab[role='presentation' class="#{'disabled' unless @submission.complete?}"]
     a[href='#profiling' data-toggle='tab']Profiling
-  li[role='presentation']
+  li#results-tab[role='presentation' class='#{"disabled" unless @submission.samples_any_finalized?}']
     a[href='#results' data-toggle='tab']Results
 
 .tab-content

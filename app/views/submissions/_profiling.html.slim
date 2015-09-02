@@ -1,5 +1,7 @@
 - if @submission.profile
 
+  #samples-status[data-secret-id="#{@submission.secret_id}" data-finalized="#{@submission.samples_all_finalized?}"]
+
   h2 
     | Samples
     /span.batch-download-results[class='#{"hidden" unless @nmr_request.finalized?}']

@@ -74,12 +74,42 @@ class Spectrum < ActiveRecord::Base
     jids.index(self.job_id)
   end
 
+  def start_work
+    self.update!(status: 'queued')
+    job_id = SpectrumWorker.perform_async(self.id)
+    self.update!(job_id: job_id)
+  end
+
   def finalized?
     FINALIZED_STATES.include?(self.status)
   end
 
+  def complete?
+    self.status == 'complete'
+  end
+
   def failed?
     self.status == 'failed'
+  end
+
+  def next
+    spectra = self.submission.spectra
+    index = spectra.index(self)
+    if index >= (spectra.length - 1)
+      spectra[0]
+    else
+      spectra[index + 1]
+    end
+  end
+
+  def prev
+    spectra = self.submission.spectra
+    index = spectra.index(self)
+    if index == 0
+      spectra[spectra.length - 1]
+    else
+      spectra[index - 1]
+    end
   end
 
   Paperclip.interpolates :input_dir do |attachment, style|

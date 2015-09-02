@@ -1,3 +1,22 @@
 // Place all the styles related to the submissions controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+
+#spectra-list tbody {
+  tr {
+    color: rgb(100, 100, 100);
+    font-style: italic;
+    cursor: default;
+  }
+  tr.spectrum-active {
+    cursor: pointer;
+    color: #333;
+    font-style: normal;
+    &:hover {
+      td {
+        background-color: #EEE;
+      }
+    }
+  }
+}

@@ -10,9 +10,12 @@ class SpectraController < ApplicationController
   # GET /spectra/1
   # GET /spectra/1.json
   def show
+    @submission = @spectrum.submission
     respond_to do |format|
+      # format.csv { send_file(@spectrum.formatted_bayesil_path, filename: @spectrum.csv_filename, type: 'text/csv') }
       format.json { send_file(@spectrum.json_results.path, type: 'text/json') }
-      format.html
+      format.js
+      format.html { redirect_to submission_path(@submission, anchor: 'tab_results', spectrum: @spectrum.id)}
     end
   end
 
