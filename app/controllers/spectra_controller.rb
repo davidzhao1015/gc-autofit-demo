@@ -1,16 +1,17 @@
 class SpectraController < ApplicationController
   before_action :set_spectrum, only: [:show, :edit, :update, :destroy]
+  before_action :set_submission, only: [:index, :show ]
 
   # GET /spectra
   # GET /spectra.json
   def index
-    @spectra = Spectrum.all
+    redirect_to submission_path(@submission, anchor: 'tab_profiling')
   end
 
   # GET /spectra/1
   # GET /spectra/1.json
   def show
-    @submission = @spectrum.submission
+    # @submission = @spectrum.submission
     respond_to do |format|
       # format.csv { send_file(@spectrum.formatted_bayesil_path, filename: @spectrum.csv_filename, type: 'text/csv') }
       format.json { send_file(@spectrum.json_results.path, type: 'text/json') }
@@ -71,8 +72,11 @@ class SpectraController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_spectrum
-      # @spectrum = Spectrum.find(params[:id])
       @spectrum = Submission.find_by_secret_id(params[:submission_id]).spectra.find(params[:id])
+    end
+
+    def set_submission
+      @submission = Submission.find_by_secret_id(params[:submission_id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

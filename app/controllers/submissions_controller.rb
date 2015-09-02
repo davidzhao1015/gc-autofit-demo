@@ -11,7 +11,12 @@ class SubmissionsController < ApplicationController
   # GET /submissions/1
   # GET /submissions/1.json
   def show
-    @spectrum = @submission.spectra.first
+    if params[:spectrum]
+      @spectrum = @submission.spectra.where(id: params[:spectrum]).first
+    else
+      # TODO: set to first working finalized spectrum
+      @spectrum = @submission.spectra.first
+    end
   end
 
   # GET /submissions/new
