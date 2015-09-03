@@ -14,8 +14,10 @@ class SpectrumWorker
     # FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
 
     apgcms = APGCMS.new(infiledir: File.join(spectrum.sample_dir),
-                        'lib.internal': 'SERUM',
-                        internalstd: 'Ribitol',
+                        # 'lib.internal': 'SERUM',
+                        'lib.internal': submission.database.upcase,
+                        # internalstd: 'Ribitol',
+                        internalstd: submission.internal_standard,
                         process: 'PROFILING',
                         infoFileDir: submission.preprocessing_dir,
                         outdir: File.join(spectrum.sample_dir))

@@ -49,7 +49,7 @@ h1 GC-AutoFit Analysis
               | GC-AutoFit  works with serum and urine.
                 For other biofluids use <em>Custom</em> to define a spectral library for profiling.
                 You can also upload your own library.
-          .col-sm-12.form-input
+          .col-sm-12.form-input#database-selection
             - Submission::DATABASES.each do |key, name|
               .radio-div
                 = f.radio_button :database, key, id: "radio-database-#{key}"
@@ -59,15 +59,34 @@ h1 GC-AutoFit Analysis
                     -  style = @submission.custom_database.empty? ? 'display:none' : ''
                     a#custom-db-edit href='#' style="#{style}"
                       | (metabolites: <span class='custom-db-count'>#{@submission.custom_database.length}</span>)
+        .form-horizontal#custom-database-upload
+          .form-group
+            .form-label
+              = label :profile_library, 'Profile library file', class: 'control-label required col-sm-3'
+            .col-sm-9
+              = f.file_field :profile_library
+          .form-group
+            .form-label
+              = label :calibration, 'Calibration file', class: 'control-label col-sm-3'
+            .col-sm-9
+              = f.file_field :calibration
       li
         .form-group
           .form-label
             = f.label :internal_standard, 'Select internal standard:', class: "control-label required"
-          .col-sm-9.form-input
+            span.form-help
+              | Compound must be present in selected library.
+          .col-sm-9.form-input#internal-standard-selection
             - Submission::INTERNAL_STANDARDS.each do |standard|
               .radio-div
                 = f.radio_button :internal_standard, standard
                 = f.label :internal_standard, standard, class: 'radio-label'
+                - if standard == 'Other'
+                  = text_field_tag 'custom_internal_standard',
+                    @custom_internal_standard,
+                    class: "input-sm form-control radio-other",
+                    size: 10
+
       li
         .form-group
           .form-label

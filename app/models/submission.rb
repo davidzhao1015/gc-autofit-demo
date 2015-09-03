@@ -16,7 +16,7 @@ class Submission < ActiveRecord::Base
     'upload' => 'Upload Your Library'
 
   }
-  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol ]
+  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Other ]
 
   has_many :spectra, dependent: :destroy
   has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
@@ -25,6 +25,8 @@ class Submission < ActiveRecord::Base
 
   accepts_nested_attributes_for :spectra
 
+  has_attached_file :profile_library, path: ':input_dir/user_library.csv'
+  has_attached_file :calibration, path: ':input_dir/user_calibration.csv'
 
   validates :secret_id, presence: true, uniqueness: true
   validates :status, inclusion: { in: STATES }

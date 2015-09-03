@@ -8,8 +8,9 @@ class SubmissionWorker
     submission.update!(status: 'processing')
 
     apgcms = APGCMS.new(infiledir: File.join(submission.input_dir),
-                        'lib.internal': 'SERUM',
-                        internalstd: 'Ribitol',
+                        'lib.internal': submission.database.upcase,
+                        # internalstd: 'Ribitol',
+                        internalstd: submission.internal_standard,
                         process: 'PREPROCESSING',
                         outdir: File.join(submission.preprocessing_dir))
     if apgcms.success?

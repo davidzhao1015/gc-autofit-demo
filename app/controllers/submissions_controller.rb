@@ -22,6 +22,8 @@ class SubmissionsController < ApplicationController
   # GET /submissions/new
   def new
     @submission = Submission.new
+    @submission.database = 'serum'
+    @submission.internal_standard = 'Ribitol'
   end
 
   # GET /submissions/1/edit
@@ -33,6 +35,10 @@ class SubmissionsController < ApplicationController
   def create
     @submission = Submission.new(submission_params)
     @submission.status = 'validating'
+    if @submission.internal_standard == 'Other'
+      @custom_internal_standard = params[:custom_internal_standard]
+      @submission.internal_standard = @custom_internal_standard
+    end
 
     respond_to do |format|
       if @submission.save
@@ -97,6 +103,7 @@ class SubmissionsController < ApplicationController
     if example_num == '1'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'serum')
       submission.database = 'serum'
+      submission.internal_standard = 'Ribitol'
       submission.spectra.build(category: 'standards',
                                spectrum_data: File.new(File.join(example_dir, 'Alkstd.mzXML')))
       submission.spectra.build(category: 'blank',
@@ -106,13 +113,24 @@ class SubmissionsController < ApplicationController
     end
     if example_num == '2'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'urine')
-      submission.database = 'serum'
+      submission.database = 'urine'
+      submission.internal_standard = 'Cholesterol'
       submission.spectra.build(category: 'standards',
                                spectrum_data: File.new(File.join(example_dir, 'Alkstd1.mzXML')))
       submission.spectra.build(category: 'blank',
                                spectrum_data: File.new(File.join(example_dir, 'Blank1.mzXML')))
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'Urine_ex1.mzXML')))
+    end
+    if example_num == '3'
+      example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'saliva')
+      submission.database = 'saliva'
+      submission.spectra.build(category: 'standards',
+                               spectrum_data: File.new(File.join(example_dir, 'ALKS.CDF')))
+      submission.spectra.build(category: 'blank',
+                               spectrum_data: File.new(File.join(example_dir, 'BLK2.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, 'S1.CDF')))
     end
     submission
   end

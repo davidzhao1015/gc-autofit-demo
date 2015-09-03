@@ -138,14 +138,12 @@ $(window).load ->
       # Clear previous data
       table.clear()
       # Load new data
-      sv.compounds().each (i) ->
-        if this.id not in ids_to_skip
-          # Generate row
-          row_data = [hmdb_id, this.name, this.concentration.toFixed(1),
-                      display_threshold, score]
-          row_node = table.row.add(row_data).node()
-          # Add table row id
-          $(row_node).attr('id', this.id)
+      sv.annotation.get().each() ->
+        # Generate row
+        row_data = [this.x, this.y, this.text]
+        row_node = table.row.add(row_data).node()
+        # Add table row id
+        $(row_node).attr('id', this.id)
       # # Format Concentration column
       # table.column(2).nodes().to$().addClass('number')
       table.draw()

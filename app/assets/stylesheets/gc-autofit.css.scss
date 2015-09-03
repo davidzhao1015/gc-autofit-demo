@@ -56,6 +56,11 @@ select.btn {
   display: inline;
 }
 
+.radio-other {
+  display: inline;
+  width: 150px;
+}
+
 .button-clear {
   clear: both;
   margin-bottom: 20px;
@@ -90,6 +95,11 @@ select.btn {
   &:after {
     content: "*";
   }
+}
+
+// Use instead of hidden so it works with jQuery
+.hidden {
+  display: none;
 }
 
 

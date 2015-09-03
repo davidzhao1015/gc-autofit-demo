@@ -5,9 +5,28 @@ $ ->
     setTimeout(updateSamplesStatus, 5000)
 
   $('#spectra-list tbody').on('click', 'tr.spectrum-active', () ->
-  #   window.location.href = $(this).data('spectrum-link')
-  #   TODO: set results tab to this spectrum
+    window.location.href = $(this).data('spectrum-link')
   )
+
+  # Handle 'User uploaded database'
+  if $('#database-selection :radio').val() != 'upload'
+      $('#custom-database-upload').hide()
+  $('#database-selection :radio').on 'click', () ->
+    if $(this).val() == 'upload'
+      $('#custom-database-upload').slideDown('fast')
+    else
+      $('#custom-database-upload').slideUp('fast')
+
+  # Handle 'Other' Internal standard slection
+  if $('#internal-standard-selection :radio').val() != 'Other'
+      $('#custom_internal_standard').hide()
+  $('#internal-standard-selection :radio').on 'click', () ->
+    if $(this).val() == 'Other'
+      $('#custom_internal_standard').fadeIn('fast')
+    else
+      $('#custom_internal_standard').fadeOut('fast')
+
+
 
 
 updateSubmissionStatus = () ->
@@ -21,4 +40,5 @@ updateSamplesStatus = () ->
     secret_id = $('#submission-status').data('secret-id')
     $.getScript('/submissions/' + secret_id + '.js')
     setTimeout(updateSamplesStatus, 5000)
+
 
