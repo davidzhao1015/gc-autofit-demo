@@ -46,19 +46,16 @@ h1 GC-AutoFit Analysis
           .form-label
             = f.label :biofluid_type, 'Select Biofluid:', class: "control-label required"
             span.form-help
-              | GC-AutoFit  works with serum and urine.
-                For other biofluids use <em>Custom</em> to define a spectral library for profiling.
-                You can also upload your own library.
+              | GC-AutoFit  works with serum, urine, saliva and your own custom libraries.
           .col-sm-12.form-input#database-selection
             - Submission::DATABASES.each do |key, name|
               .radio-div
                 = f.radio_button :database, key, id: "radio-database-#{key}"
                 label.radio-label id='label-database-#{key}' for='submission_database_type'
                   | #{name} 
-                  - if key == 'custom'
-                    -  style = @submission.custom_database.empty? ? 'display:none' : ''
-                    a#custom-db-edit href='#' style="#{style}"
-                      | (metabolites: <span class='custom-db-count'>#{@submission.custom_database.length}</span>)
+                  - if key != 'upload'
+                    a.custom-db-edit href='#{key}'
+                      span.glyphicon.glyphicon-edit
         .form-horizontal#custom-database-upload
           .form-group
             .form-label
@@ -118,6 +115,8 @@ h1 GC-AutoFit Analysis
     .submit-button
       = f.submit 'Submit', class: 'btn btn-primary btn-submit'
 
-  = render 'custom_db_dialog'
+  - Submission::DATABASES.each do |key, name|
+    - next if key == 'upload'
+    = render 'custom_db_dialog', database: key
 
 

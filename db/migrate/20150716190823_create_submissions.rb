@@ -12,7 +12,7 @@ class CreateSubmissions < ActiveRecord::Migration
       t.attachment :input_zip
       t.attachment :profile_library
       t.attachment :calibration
-      t.text :custom_database
+      t.text :database_subset
 
       t.timestamps null: false
     end

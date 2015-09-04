@@ -35,7 +35,7 @@ $(window).load ->
             sv.set_domain('x', saved_domains[0])
             sv.set_domain('y', saved_domains[1])
           sv.draw()
-          # load_quantities_table()
+          load_results_table()
         error: () ->
           sv.clear()
           sv.remove_all_spectra()
@@ -132,15 +132,43 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
+    standard_columns = ['Cn', 'ALKRT', 'Intensity']
+
+    fake_standard = () ->
+      labels = [ ]
+      [10, 11, 12, 13, 14].forEach (cn, i) ->
+        labels.push {
+          x: 400+100*i,
+          y: 3000000*i,
+          text: 'label' + i,
+          meta: {
+            table: {
+              'Cn': cn,
+              'ALKRT': 400+100*i
+              'Intensity': 3000000*i
+            }
+          }
+        }
+      labels
+
 
     load_results_table = () ->
       table = $('.results-table').DataTable()
       # Clear previous data
       table.clear()
+      # Set up fake data
+      fake_standard().forEach (label) ->
+        sv.spectra(1).labels.add(label)
+
       # Load new data
-      sv.annotation.get().each() ->
+      sv.spectra(1).labels.get().each () ->
         # Generate row
-        row_data = [this.x, this.y, this.text]
+        data = this.meta.table
+        row_data = [ ]
+        column_names = standard_columns
+        column_names.forEach (column) ->
+          row_data.push(data[column])
+        row_data.push('testbbo')
         row_node = table.row.add(row_data).node()
         # Add table row id
         $(row_node).attr('id', this.id)
@@ -148,3 +176,6 @@ $(window).load ->
       # table.column(2).nodes().to$().addClass('number')
       table.draw()
       sv.draw()
+
+
+

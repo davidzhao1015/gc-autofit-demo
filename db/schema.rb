@@ -57,7 +57,7 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.string   "calibration_content_type",     limit: 255
     t.integer  "calibration_file_size",        limit: 4
     t.datetime "calibration_updated_at"
-    t.text     "custom_database",              limit: 65535
+    t.text     "database_subset",              limit: 65535
     t.datetime "created_at",                                                 null: false
     t.datetime "updated_at",                                                 null: false
   end

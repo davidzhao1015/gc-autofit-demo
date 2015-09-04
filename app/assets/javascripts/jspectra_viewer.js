@@ -2,7 +2,9 @@
 // JSpectraViewer Setup
 //////////////////////////////////////////////////////////////////////////////
 var JSpectraViewer = {};
+ 
 JSpectraViewer.version = '0.1'
+
 if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
 (function(JSV) {
@@ -10,6 +12,16 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   JSV.inherits = function(child, parent) {
     child.prototype = Object.create(parent.prototype);
   }
+
+  JSV.initialize = function(){
+    JSV._viewers = new JSV.SVSet();
+
+    JSV.viewers = function(term) {
+      return JSV._viewers.get(term);
+    }
+
+  }
+
 
 })(JSpectraViewer);
 
@@ -28,6 +40,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
    *  Option              | Default     | Description
    *  --------------------|-------------------------------------------------
    *  title               | _undefined_ | Title will appear above viewer if present
+   *  id                  | jsv-1       | ID to select viewer
    *  width               | 800         | Width of viewer in pixels
    *  height              | 400         | Height of viewer in pixels
    *  axis_x_title        | 'ppm'       | Label of x-axis
@@ -80,7 +93,9 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // An array of debug keys to display or true to show all.
     this.debug = JSV.default_for(options.debug, false);
     this.debug_data = { time: {}, data: {}, drag: {}, zoom: {}, zbox: {} };
-    
+    // Set viewer ID
+    var current_ids = JSV.viewers().map(function(viewer) { return viewer.id; } );
+    this.id = JSV.default_for(options.id, JSV.unique_id('jsv-', 1, current_ids));
 
     // Space required for axes
     this.axis_y_gutter = this.axis_y_show ? 60 : 0;
@@ -239,6 +254,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.initial_settings();
 
     this.cluster_navigation_id = options.cluster_navigation_id;
+
+    JSV._viewers.push(this);
 
     // Draw viewer
     this.draw();
@@ -564,8 +581,11 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
    *   xy_line: xy_data,
    *   // Optional display options
    *   display: {color: 'blue', lineWidth: 3},
-   *   // Optional meta data. That will be accessible through the spectrums meta property.
-   *   meta: {extra_info: 'This spectrum is really good!'}
+   *   // Optional meta data. Accessible through the spectrum's meta property.
+   *   meta: {extra_info: 'This spectrum is really good!'},
+   *   // Optional annotation data. Accessible through the spectrum's labels property
+   *   // See below for details
+   *   labels: labels
    * }
    *
    * // Describes one or more compounds
@@ -608,6 +628,16 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
    * // An array of x and y points [Deprecated]
    * xy_data = [
    *   {x: 1, y: 0.5}, {x: 2, y: 0.4}, {x: 3, y: 0.3}
+   * ]
+   *
+   * // Annotation labels: array of label objects
+   * labels = [
+   *   { x: 1,
+   *     y: 1,
+   *     text: 'my_label',
+   *     display: { vertical: true, font_size: 12 }, // optional
+   *     meta: { something_useful: 'value' } // optional
+   *   }
    * ]
    * ```
    * @param {Object} data Data required to create a new [Spectrum](Spectrum.js.html).
@@ -1954,6 +1984,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     } else if (typeof term == 'string') {
       if ( term.match(/^path-id-/) ) {
         return this.filter(function(element) { return element.path_id() == term; })[0];
+      } else if ( term.match(/^label-id-/) ) {
+        return this.filter(function(element) { return element.label_id() == term; })[0];
       } else {
         return this.filter(function(element) { return element.id == term; })[0];
       }
@@ -2324,7 +2356,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 // SpectraViewer Labels
 //////////////////////////////////////////////////////////////////////////////
 // TODO:
-// - Only check for collesions with spectrum if number of labels is < 100
+// - Only check for collisions with spectrum if number of labels is < 100
 // - When checking for overlap with spectrum only use 4 points in increments of (width / 3)
 // - consider having labels per spectrum, them group visible ones together for drawing
 (function(JSV) {
@@ -2336,8 +2368,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.highlighted_label;
     this.point_gap = JSV.default_for(options.point_gap, JSV.pixel(12));
     this.hover = JSV.default_for(options.hover, true);
-    this.labels = [ ];
-    this.visible_labels = [ ];
+    this.labels = new JSV.SVSet();
+    this.visible_labels = new JSV.SVSet();
     sv.on('label-click', function(label) {
       console.log(label.text)
     })
@@ -2348,13 +2380,16 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     });
   }
 
+  SVAnnotation.prototype.get = function(term) {
+    return this.labels.get(term);
+  }
 
   SVAnnotation.prototype.update = function() {
     var sv = this.sv;
-    var labels = sv.labels ? sv.labels.to_array() : [ ];
+    var labels = sv.labels ? sv.labels.get() : new JSV.SVSet();
     sv.spectra().forEach(function(spectrum) {
       if (spectrum.visible && spectrum.active && spectrum.labels) {
-        labels.push.apply(labels, spectrum.labels.to_array())
+        labels.push.apply(labels, spectrum.labels.get())
       }
     });
     this.labels = labels;
@@ -2396,7 +2431,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     if (!labels) labels = this.labels;
     var scale = this.sv.scale;
     var font_min = 6;
-    var reduced = [];
+    var reduced = new JSV.SVSet();
 
     for (var i=0, len=labels.length; i < len; i++) {
       label = labels[i];
@@ -2432,7 +2467,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var bad_stack = true;
     while(bad_stack) {
       bad_stack = false;
-      adjusted_labels = [];
+      adjusted_labels = new JSV.SVSet();
       context.font = JSV.pixel(font_current) + "px Arial";
       // Adjust min font based on zoom level
       font_current_min = font_min + d3.round(font_range * sv.zoom_x / sv.zoom_max);
@@ -2548,11 +2583,15 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   function SVLabelSet(options) {
     options = options || {};
     this.spectrum = options.spectrum
-    this.labels = [];
+    this.labels = new JSV.SVSet();
   }
 
-  SVLabelSet.prototype.to_array = function() {
-    return this.labels;
+  SVLabelSet.prototype.get = function(term) {
+    return this.labels.get(term);
+  }
+
+  SVLabelSet.prototype.add = function(data, display, meta) {
+    this.labels.push( new SVLabel(this, data, display, meta) );
   }
 
   // If the SVLabelSet is associated with a spectrum with peaks those labels will be added
@@ -2562,8 +2601,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       for (var i=0, len=peaks.length; i < len; i++) {
         var peak = peaks[i];
         var y = JSV.sum_of_peaks(peak.center, peak.spectrum().peaks())
-        var label = new SVLabel(this, peak.center, y, peak.label());
-        this.labels.push(label);
+        this.add({ x: peak.center, y: y, text: peak.label() })
       }
     }
   }
@@ -2573,24 +2611,40 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
   SVLabelSet.prototype.update_peaks = function() {
     if (this.spectrum) {
       // TODO: only remove peak associated labels
-      this.labels = [ ];
+      this.labels = new JSV.SVSet();
       this.add_peaks();
     }
   }
 
 
-  /**
-   * @param {Object} object is a SVPath or SVAnnotation
-   */
-  function SVLabel(label_set, x, y, text, options) {
-    options = options || {};
+  label_id = 0;
+
+  function SVLabel(label_set, data, display, meta) {
+    data = data || {};
+    display_defaults = { vertical: true, font_size: 12 };
+    display = JSV.merge(display_defaults, data.display, display);
+    this.meta = JSV.merge(data.meta, meta);
+
     this.label_set = label_set;
-    this.vertical = JSV.default_for(options.vertical, true);
-    this.font_size = JSV.default_for(options.font_size, 12);
-    this.x = x;
-    this.y = y;
-    this.text = text;
+    this.vertical = display.vertical;
+    this.font_size = display.font_size;
+    // this.id = data.id;
+    // this.name = data.name || this.id;
+    this.text = data.text;
+    this.x = data.x;
+    this.y = data.y;
     this.stack_level = 0;
+    this.label_id();
+  }
+
+  SVLabel.prototype.label_id = function() {
+    var new_id = generate_label_id();
+    this.label_id = function() { return new_id; }
+    return new_id;
+  }
+
+  var generate_label_id = function() {
+    return 'label-id-' + label_id++;
   }
 
   // Adjust the rect so it does not overlap any rects in rect_array
@@ -2712,6 +2766,12 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       self.add_xy_line(xy_line);
     } else if (data.xy_line) {
       self.add_xy_line(data.xy_line);
+    }
+
+    if (data.labels) {
+      data.labels.forEach(function(label) {
+        self.labels.add(label);
+      });
     }
 
   }
@@ -5552,3 +5612,4 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
 
 })(JSpectraViewer);
 
+JSpectraViewer.initialize();

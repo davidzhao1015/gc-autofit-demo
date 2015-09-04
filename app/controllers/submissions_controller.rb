@@ -143,7 +143,7 @@ class SubmissionsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def submission_params
-      params.require(:submission).permit(:database, :internal_standard, :status,
+      params.require(:submission).permit(:database, :internal_standard, :status, database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
 end

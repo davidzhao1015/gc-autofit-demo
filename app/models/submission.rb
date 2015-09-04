@@ -12,7 +12,6 @@ class Submission < ActiveRecord::Base
     #db      #display
     'serum' => 'Serum',
     'urine' => 'Urine',
-    'custom' => 'Custom',
     'upload' => 'Upload Your Library'
 
   }
@@ -36,7 +35,7 @@ class Submission < ActiveRecord::Base
   # after_create      :start_work
   after_destroy     :delete_working_dir
 
-  serialize :custom_database, Array
+  serialize :database_subset, Array
 
 
   def self.delete_old_submissions

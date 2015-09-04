@@ -11,6 +11,7 @@
         title='View next spectrum in Batch'
         href='#{submission_spectrum_path(@submission, @spectrum.next)}#spectra-anchor'] >>
     #spectra-title
+      | Spectrum: 
       = select_tag "spectra", options_from_collection_for_select(@submission.spectra, "id", "name", @spectrum.id), class: 'btn', id: 'batch-select'
 
   .clearfix

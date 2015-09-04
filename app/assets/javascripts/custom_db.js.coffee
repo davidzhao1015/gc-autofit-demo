@@ -16,81 +16,81 @@ $ ->
 
   # Fix the width of the header columns after show the dialog
   # Also activate tool-tips
-  $('#custom-db-list').on 'shown.bs.modal', ->
+  $('.custom-db-list').on 'shown.bs.modal', ->
     db_table.columns.adjust().draw()
 
   # Tool tips settings
   $('.tool-tip').tooltip()
 
   $('.btn-disabled').on 'click', ->
-    false;
+    false
 
+  dialog_for = (element) ->
+    $(element).parents('.custom-db-list')
 
-  # Radio button only shows the dialog if no metabolites have been selected
-  $('#radio-database-custom').on 'click', ->
-    if custom_db_count() == 0
-      $('#custom-db-list').modal('show')
+  # Edit
+  $('.custom-db-edit').on 'click', ->
+    # Determine which dialog
+    db = $(this).attr('href')
+    dialog = $('.custom-db-list[data-db=' + db + ']')
+    # Check all metabolites of count is 0
+    if custom_db_count(dialog) == 0
+      $('.db-button-all', dialog).trigger 'click'
+    dialog.modal('show')
+    return false
 
   # Cancel
   $('.custom-db-cancel').on 'click', ->
-    $('#custom-db-list').modal('hide')
-
+    $(dialog_for(this)).modal('hide')
 
   # Save
-  $('#custom-db-save').on 'click', ->
-    $('#custom-db-list input:checkbox').each ->
+  $('.custom-db-save').on 'click', ->
+    return if $(this).hasClass('disabled')
+    dialog = dialog_for(this)
+    # Only want to save if it is a subset.
+    if $('input:checkbox:checked', dialog).length == $('input:checkbox', dialog).length
+      $('.db-button-none', dialog).trigger 'click'
+    # Save check-state
+    $('input:checkbox', dialog).each ->
       $(this).data('checked-state', this.checked)
-    $('#custom-db-list').modal('hide')
+    $(dialog).modal('hide')
 
   # Dialog Closed
-  # Set check boxes to checked-state
-  $('#custom-db-list').on 'hide.bs.modal', ->
-    $('#custom-db-list input:checkbox').each ->
+  # Set check boxes to saved checked-state
+  $('.custom-db-list').on 'hide.bs.modal', ->
+    $('.custom-db-list input:checkbox').each ->
       $(this).prop('checked', $(this).data('checked-state'))
     check_custom_list_count()
 
-  # Edit
-  $('#custom-db-edit').on 'click', ->
-    $('#custom-db-list').modal('show')
-    return false
-
   # Select All
-  $('#db-button-all').on 'click', ->
-    $('#custom-db-list input:checkbox').prop('checked', true).change()
+  $('.db-button-all').on 'click', ->
+    $('input:checkbox', dialog_for(this)).prop('checked', true).change()
     return false
 
   # Select None
-  $('#db-button-none').on 'click', ->
-    $('#custom-db-list input:checkbox').prop('checked', false).change()
-    return false
-
-  # Select Other (eg. csf, serum ...)
-  $('.db-button-select').on 'click', ->
-    ids = $(this).data('hmdb-ids').split(',')
-    $('#custom-db-list input:checkbox').prop('checked', false).change()
-    $.each ids, (index, value) ->
-      $('#custom-db-list input:checkbox[value="' + value + '"]').prop('checked', true).change()
+  $('.db-button-none').on 'click', ->
+    $('input:checkbox', dialog_for(this)).prop('checked', false).change()
     return false
 
   # Update list count as checkboxes are selected
-  $('#custom-db-list input:checkbox').on 'change', ->
-    update_custom_list_count()
+  $('.custom-db-list input:checkbox').on 'change', ->
+    update_custom_list_count(dialog_for(this))
 
   # Update and Show/Hide "Edit list"
   # If no items are selected, the first radio button will be selected
   check_custom_list_count = ->
-    update_custom_list_count()
-    $('#custom-db-edit').toggle(custom_db_count() > 0)
-    if custom_db_count() == 0
-      $($('input:radio[name="nmr_request[biofluid_type]"]').first()).prop('checked', true)
+    # update_custom_list_count()
+    # TODO: change color of edit button
+    # $('#custom-db-edit').toggle(custom_db_count() > 0)
 
   # Update number of metabolites selected
-  update_custom_list_count = ->
-    $('.custom-db-count').html(custom_db_count())
-
+  update_custom_list_count = (dialog)->
+    checked_count = custom_db_count(dialog)
+    $('.custom-db-count', dialog).html(checked_count)
+    $('.custom-db-save', dialog).toggleClass('disabled', checked_count == 0)
 
   # number of metabolites selected
-  custom_db_count = ->
-    $('#custom-db-list input:checked').length
+  custom_db_count = (dialog) ->
+    $('input:checked', dialog).length
 
 
