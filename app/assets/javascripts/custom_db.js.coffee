@@ -1,7 +1,7 @@
 $ -> 
   # ------
   # Custom Defined Mixture Code
-  
+
   db_table = $('.db-list').DataTable({
     # dataTables 1.10 settings
     "scrollCollapse": true,
@@ -11,13 +11,14 @@ $ ->
     "columnDefs": [ {
        "targets": 0,
        "orderable": false
-     } ]
+     } ],
+    "order": [[ 1, 'asc' ]]
   })
 
   # Fix the width of the header columns after show the dialog
   # Also activate tool-tips
   $('.custom-db-list').on 'shown.bs.modal', ->
-    db_table.columns.adjust().draw()
+    $('.db-list').DataTable().columns.adjust().draw()
 
   # Tool tips settings
   $('.tool-tip').tooltip()
