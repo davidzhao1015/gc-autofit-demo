@@ -135,15 +135,16 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
     if (print.on) {  cat("\t >> Identifying peaks \n") }
     ## Including Additional Information: Area, RTstart & RTend
     profiled_peaks <- compoundIdentify3(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=not_PRINT_MZINT4DB)
-    # head(profiled_peaks)
+    # head(profiled_peaks)    
     if (DEBUG) {
       ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_profiledPeaksTMP.csv", sep='')
       write.csv(profiled_peaks, file=ofilename, quote=TRUE)
     }
-    
+
     ## -- select only the highest score peaks
     if (print.on) { cat("\t >> arrange profiled peaks \n")  }
-    final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks, SampleType)
+    # final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks, SampleType)
+    final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks)
     if (print.on & DEBUG) { cat("final_PeakProfile:"); print(final_PeakProfile) }
     
     # Subtract BLANK Peak Areas
@@ -188,14 +189,6 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
     
     if (print.on & DEBUG) { cat("## final_peakProfile after blank subtraction:\n"); print(final_PeakProfile)  }
     
-    # making JSON file for Profiled Peak View
-    # if (CREATE_JSON_FILE) {
-      
-      ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
-      create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic,
-                       final_PeakProfile$RT, final_PeakProfile$Intensity, final_PeakProfile$Compound )
-    # }
-    
     ## Quantification        
     checkInternalStd <- existInternalStd(internalStd, final_PeakProfile, lib.peak)
     # if (i==1) checkInternalStd <- FALSE
@@ -232,7 +225,9 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
       finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
       rownames(finalReport.All) <- c(1:nrow(finalReport.All))
-      
+
+      finalReport.json <- finalReport.All # for the JSON file generation
+            
       ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
       # names(finalReport.All)
       finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
@@ -242,13 +237,23 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       }
       
       ## exclude NA or MP(Multiple Peak) cases  
-      finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & 
-                                                  (finalReport.All$Concentration2 != "MP") ), ]   
+      finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]   
       
       outColnames <- c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
                        "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
       write.table(finalReport.All, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
       if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
+      
+      # making JSON file for Profiled Peak View
+      # because of the multiple core
+      # if (CREATE_JSON_FILE) {      
+      finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), -c(3,4,11:14,19,22:24)]
+      # ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_finalReport.json.csv", sep='')
+      # write.csv(finalReport.json, file=ofilename, quote=TRUE)
+      
+      ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
+      create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, finalReport.json )
+      # }
       
       ## concentration summary table
       tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
@@ -289,6 +294,13 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
             outColnames <- c("PeakNo","Compound","HMDB ID","RT(min)","RT","RI","Intensity","MatchFactor","RI.Similarity","Area","RT.start","RT.end", "Concentration")
             write.table(finalReport, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
           }
+          
+          # making JSON file for Profiled Peak View
+          # because of the multiple core
+          # if (CREATE_JSON_FILE) {      
+          ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
+          create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, final_PeakProfile )
+          # }
           
           # if some of sample does not have Internal Standard, all the concentration will be null
           # this is only for combined results
@@ -535,7 +547,7 @@ extract_peak_list_blank <- function(xset, ctype="EIC", offset=1.5)  {
   # plot EIC generation
   # if (plotFile) {
     sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath[1]), ignore.case=TRUE)
-    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
+    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 10)
         plotEIC(xset, mzrange=mzrange, rtrange=rtrange); # same as plotTIC when it uses all m/zs
     dev.off()
   # }
@@ -577,7 +589,7 @@ extract_peak_list_samples2 <- function(xset, ctype="EIC", offset=1.5, plotFile=T
   # plot EIC generation  
   if (plotFile) {
         sampleFile <- sub(".mzXML|.CDF", "", basename(xset$xraw@filepath[1]), ignore.case=TRUE)
-        png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
+        png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 10)
             plotEIC(xset$xraw, mzrange=mzrange, rtrange=rtrange); # same as plotTIC when it uses all m/zs
         dev.off()
   }
@@ -859,12 +871,29 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
         }    
   }
   
-  if( FALSE) {
-    cat("peak_mzInt_list\n"); print(peak_mzInt_list)
-    for(k in 1:length(peak_mzInt_list)) {
-      cat(peak_mzInt_list[[k]]$rt/60,"\t",peak_mzInt_list[[k]]$peakArea,"\t",peak_mzInt_list[[k]]$peakRTStart,"\t",peak_mzInt_list[[k]]$peakRTEnd,"\n")
-    }
+  # get mass spectrum data for plotting mass spectrum (JSON format)
+  # call getMassSpec(peak_mzInt_list)  
+  getMassSpec <- function(mzIntList, rt)
+  {    
+      i <- 1
+      while(mzIntList[[i]]$rt != rt) {
+          i <- i + 1;
+      }
+      
+      mzlist <- paste(noquote(round(mzIntList[[i]]$mzInt[,"mz"],2)), collapse=",")
+      intList <- paste(mzIntList[[i]]$mzInt[,"intensity"], collapse=",")
+      
+      # rt, m/z, intensity      
+      return (list(rt=rt, mzlist=mzlist, intList=intList))
   }
+  
+  # if( FALSE) {
+  #   cat("peak_mzInt_list\n"); print(peak_mzInt_list)
+  #   for(k in 1:length(peak_mzInt_list)) {
+  #    cat(peak_mzInt_list[[k]]$rt/60,"\t",peak_mzInt_list[[k]]$peakArea,"\t",peak_mzInt_list[[k]]$peakRTStart,"\t",peak_mzInt_list[[k]]$peakRTEnd,"\n")
+  #   }
+  # }
+  
   ## note: the length of each vector should be same. if not, the function will be stop and give message
   maxItensity <- max(asample.peakInfo[,'intensity'])  
   rtRange <- range(xset.one@scantime)
@@ -986,7 +1015,10 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                     TScore <- tmp.TScore
                     RIScore <- RI.similarity
                     # nearRelPeakRTscore <- nearRelPeakRTscore.tmp
-                                
+                    
+                    # (list(rt=rt, mzlist=mzlist, intList=intList))
+                    aMzInt <- getMassSpec(peak_mzInt_list, RT.sample) 
+                    
                     identified <- c(
                         hmdbID=as.character(lib.matched[k,]$HMDB_ID),
                         CompoundWithTMS=as.character(lib.matched[k,]$CompoundWithTMS),
@@ -1005,7 +1037,9 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                         Area=peakArea,
                         RT.start= peakRTStart,
                         RT.end= peakRTEnd,
-                        peakType = peakType
+                        peakType = peakType,
+                        mz = aMzInt$mzlist,
+                        mzInt = aMzInt$intList
                     )
                     # print(identified)
                 }
@@ -1053,6 +1087,9 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## ========================================================
       ## if no matched RI from library because of no alkane    
       if ( RI.sample < 0 ) {    
+          if (DEBUG) {
+              cat("\n### NO RI was used because of no matched alkane\n\n")
+          }
           # This part covers the peak which does not have alkane
           
           ## get candidate screening with RI of max/min alkane range
@@ -1381,24 +1418,29 @@ calcMFscore <- function(ref_MZS_vec, ref_INT_vec, qry_mzs_vec, qry_int_vec) {
 }
 
 ## screening with highest TScore from the matched list 
-arrangeProfiledPeaks2 <- function(profiled_peaks, stype=NULL)
+# arrangeProfiledPeaks2 <- function(profiled_peaks, stype=NULL)
+arrangeProfiledPeaks2 <- function(profiled_peaks)
 {
-             
-  profiled_final <- NULL
-  unique_complist <- unique(profiled_peaks$Compound)
-  for (j in 1:length(unique_complist))  {
-    # j <- 12
-    tmpdata <- profiled_peaks[which(profiled_peaks$Compound == unique_complist[j]), ]    
-    tmpdata <- tmpdata[order(as.double(as.character(tmpdata$TScore)), decreasing=TRUE), ] 
-    final.comp <- tmpdata[1, ]
-    if(! TRUE) { cat("compd:", unique_complist[j], "\n"); cat("tmpdata:\n"); print(tmpdata);  cat("final.comp:\n"); print(final.comp) }
-    profiled_final <- rbind(profiled_final, final.comp)
-  }  
-  profiled_final <- profiled_final[order(as.double(as.character(profiled_final$RI)), decreasing=FALSE), ] 
-  # profiled_final <- profiled_final[order(as.double(as.character(profiled_final$RT))), ]
-  rownames(profiled_final) <- c(1:nrow(profiled_final))
-  
-  return(profiled_final)
+    profiled_final <- NULL
+    unique_complist <- unique(profiled_peaks$Compound)
+    for (j in 1:length(unique_complist))  {
+      # j <- 12
+      tmpdata <- profiled_peaks[which(profiled_peaks$Compound == unique_complist[j]), ]    
+      tmpdata <- tmpdata[order(as.double(as.character(tmpdata$TScore)), decreasing=TRUE), ] 
+      final.comp <- tmpdata[1, ]
+      if(! TRUE) { cat("compd:", unique_complist[j], "\n"); cat("tmpdata:\n"); print(tmpdata);  cat("final.comp:\n"); print(final.comp) }
+      profiled_final <- rbind(profiled_final, final.comp)
+    }  
+    profiled_final <- profiled_final[order(as.double(as.character(profiled_final$RI)), decreasing=FALSE), ] 
+    # profiled_final <- profiled_final[order(as.double(as.character(profiled_final$RT))), ]
+    rownames(profiled_final) <- c(1:nrow(profiled_final))
+    
+    # change the variable types
+    profiled_final$CompoundWithTMS <- as.character(profiled_final$CompoundWithTMS)
+    profiled_final$Area <- as.numeric(as.character(profiled_final$Area))
+    profiled_final$MatchFactor <- as.numeric(as.character(profiled_final$MatchFactor))  
+    
+    return(profiled_final)
 }
 
 ##################################################################################
@@ -1558,89 +1600,6 @@ genFinalReport <- function(profiled.result, quantified.result) {
     return(profiled_final)
 }
 
-spectrumToJSON.old <- function(d)
-{    
-  NROW <- nrow(d)        
-  ostr <- "{\n \"spectrum_xy\": [\n"
-  for(i in 1:(NROW-1)) {
-    ostr <- paste(ostr, "\t{ \"x\":", d$x[i], ",\n\t  \"y\":", d$y[i], " },\n", sep="")
-  }
-  ostr <- paste(ostr, "\t{ \"x\":", d$x[NROW], ",\n\t  \"y\":", d$y[NROW], " } \t ] }", sep="")
-  # cat(ostr)
-  return(ostr)
-}
-
-
-## generate JSON format string for Spectrum View
-spectrumToJSON.fullSpectrum <- function(d)
-{    
-  name.value <- function(i){
-    quote <- '';
-    # if(class(dtf[, i])!='numeric'){
-    if(class(d[, i])!='numeric' && class(d[, i])!= 'integer'){ # I modified this line so integers are also not enclosed in quotes
-      quote <- '"';
-    }
-    
-    paste('"', i, '" : ', quote, d[,i], quote, sep='')
-  }
-  
-  objs <- apply(sapply(c("x","y"), name.value), 1, function(x) {paste(x, collapse=', ')})
-  objs <- paste('\t\t {', objs, '}')
-  
-  res <- paste(objs, collapse=',\n')
-  res <- paste("\t\"spectrum_xy\": [\n", res, " ]")
-  
-  return(res)
-}
-
-## generate JSON format string for Spectrum View
-spectrumToJSON.profile <- function(d)
-{    
-  name.value <- function(i) {
-    quote <- '';
-    if(class(d[, i])!='numeric' && class(d[, i])!= 'integer'){ # I modified this line so integers are also not enclosed in quotes
-        quote <- '"';
-    }
-    
-    paste('"', i, '" : ', quote, d[,i], quote, sep='')
-  }
-  
-  objs <- apply(sapply(c("x","y","peak"), name.value), 1, function(x) {paste(x, collapse=', ')})
-  objs <- paste('\t\t {', objs, '}')
-  
-  res <- paste(objs, collapse=',\n')
-  res <- paste("\t\"spectrum_xypeak\": [\n", res, " ]")
-  
-  return(res)
-}
-
-create_json_file <- function(ofilename, fullspec.x, fullspec.y, profile.x, profile.y, profile.compound)
-{
-    x <- fullspec.x
-    y <- fullspec.y
-    spectrum.xy <- data.frame(x,y)
-    fullspec.json <- spectrumToJSON.fullSpectrum(spectrum.xy)            
-    
-    x <- profile.x
-    y <- profile.y
-    peak <- profile.compound
-    spectrum.xypeak <- data.frame(x,y,peak)
-    profiledspec.json <- spectrumToJSON.profile(spectrum.xypeak)
-    
-    finalspec.json <- paste("{\n", fullspec.json, ", \n", profiledspec.json, "}")
-    cat(finalspec.json, file=ofilename, append=FALSE)    
-}
-
-create_json_file.alkane <- function(ofilename, fullspec.x, fullspec.y)
-{
-  x <- fullspec.x
-  y <- fullspec.y
-  spectrum.xy <- data.frame(x,y)
-  fullspec.json <- spectrumToJSON.fullSpectrum(spectrum.xy)
-  fullspec.json <- paste("{\n", fullspec.json, "}")
-  
-  cat(fullspec.json, file=ofilename, append=FALSE)    
-}
 
 # check whether the internal standard is exist or not
 existInternalStd <- function(internalStd, profiledPeakSet, libDB)

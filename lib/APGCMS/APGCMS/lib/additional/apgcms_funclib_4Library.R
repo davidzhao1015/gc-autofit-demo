@@ -119,7 +119,7 @@ extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7, 
   if ( plotFile ) {
       sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
       # png(filename = paste("Plot_", ctype,"_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
-      png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
+      png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 800, height = 500, units = "px", pointsize = 10)
         plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
       dev.off()
   }
@@ -365,7 +365,7 @@ extract_peak_list_blank <- function(xset, ctype="EIC", offset=1.5, plotFile=TRUE
   # plot EIC generation
   if (plotFile) {
     sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath[1]), ignore.case=TRUE)
-    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
+    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 800, height = 500, units = "px", pointsize = 10)
         plotEIC(xset, mzrange=mzrange, rtrange=rtrange); # same as plotTIC when it uses all m/zs
     dev.off()
   }
@@ -407,7 +407,7 @@ extract_peak_list_samples2 <- function(xset, ctype="EIC", offset=1.5, plotFile=T
   # plot EIC generation
   if (plotFile) {
         sampleFile <- sub(".mzXML|.CDF", "", basename(xset$xraw@filepath[1]), ignore.case=TRUE)
-        png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
+        png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 800, height = 500, units = "px", pointsize = 10)
           plotEIC(xset$xraw, mzrange=mzrange, rtrange=rtrange); # same as plotTIC when it uses all m/zs
         dev.off()
   }
