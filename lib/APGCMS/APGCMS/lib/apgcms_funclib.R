@@ -230,7 +230,8 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
             
       ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
       # names(finalReport.All)
-      finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+      # finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+      finalReport.All <- finalReport.All[,c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
                                             "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
       if (print.on & DEBUG) { 
         cat("finalReport All:\n"); print(head(finalReport.All)); 
@@ -239,7 +240,8 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       ## exclude NA or MP(Multiple Peak) cases  
       finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]   
       
-      outColnames <- c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+      # outColnames <- c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+      outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
                        "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
       write.table(finalReport.All, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
       if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
