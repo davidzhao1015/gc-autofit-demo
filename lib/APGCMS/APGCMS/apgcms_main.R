@@ -32,33 +32,6 @@ options("width"=120)
 
 library(parallel) # for using multiple cores
 
-ISDEBUG <- TRUE
-IS_PRINT_MZINT4DB <- FALSE
-IS_AlkanePeakCnAdjust <- TRUE 
-## sample type and library --> will be gone
-RI.VARIATION.DEFAULT <- 0.03 # 0.03 default
-
-## R Script program directory
-# Version <- "1.0 released 20150521"
-Version <- "1.0 released 20150731"
-CREATE_JSON_FILE <- TRUE
-# USE_BLANK_SPECTRUM <- FALSE
-MF_THRESHOLD_DEFAULT <- 500 
-
-## now in the library, it includes RI, mz, intensity, 
-## as well as slope and intercept for quantification (calibration curve)
-libfunc.file <- "apgcms_funclib.R"
-libfunc.Alkane.file <- "apgcms_funclib_alkane.R"
-libfunc.SetOpts.file <- "apgcms_funclib_setopts.R"
-
-LibFile.Alkane <- "lib_alkane_20150324.csv"
-
-# LibFile <- c("lib_serum_20140619.csv","lib_organicAcids_20140630.csv","lib_saliva_20140619.csv","lib_milk_20140722.csv") 
-# Milk: from Serum because of same Internal Standard 
-# LibFile <- c("lib_serum_20141211.csv","lib_urine_20141113.csv","lib_saliva_20140619.csv","lib_milk_20141211.csv") 
-LibFile <- c("lib_serum_20150326.csv","lib_urine_20150326.csv","lib_saliva_20140619.csv","lib_milk_20150202.csv") 
-LibCaliCurveFile <- c("lib_serum_CalibrationCurve_20150326.csv","lib_urine_CalibrationCurve_20150326.csv","lib_saliva_20140619.csv","lib_milk_20150202.csv") 
-
 
 ## argument check for standalone version
 ##===========================================================================================
@@ -72,6 +45,7 @@ args <- commandArgs(trailingOnly = FALSE)
 RProgram_dir <- normalizePath(dirname(sub("^--file=", "", args[grep("^--file=", args)])))
 lib_dir <- file.path(RProgram_dir, "lib")
 
+source( file.path(RProgram_dir, "envVars.cfg") )  ## loading packages, libraries, and definitions
 source( file.path(lib_dir, libfunc.SetOpts.file) )  ## loading packages, libraries, and definitions
 
 showProgramInfo(Version)
@@ -227,6 +201,8 @@ if( USE_INTERNAL_LIBRARY == 'NONE') {
 ## load library for the functions
 source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and definitions
 source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
+source( file.path(lib_dir, libfunc.JSON.file) )  ## loading packages, libraries, and definitions
+
 # cat("RProgram_dir:"); print(RProgram_dir)
 
 ## set Debug Mode (TRUE / FALSE)
@@ -243,7 +219,7 @@ cat("\n## [", processOption, "] Extracting Raw data ...\n")
 
 
 ####################################################################################
-# Preprocessing
+# in Preprocessing
 # Alkane Std, Blank, and Spectrum plot of Samples
 ####################################################################################
 
@@ -275,53 +251,57 @@ if (processOption == 'PREPROCESSING') {
         ######
         
         xset.blank <- extractBlankInfo(fileList$blankFile)  
+        specFilename.blank <- sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE)
         
         cat("\n## Extracting peak list for Blank sample:", basename(fileList$blankFile), "\n")
         ## peak picking for samples using EIC(extracted ion chromatograms) for m/z values of interest. 
         # peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5, RunPlotOnly)
         peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5)
     
-        # if ( ! RunPlotOnly ) {        
-            ## RI calculation using Alkane Std
-            peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
-            profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
-            # head(profiled_peaks_blank)
-            # cat("profiled_peaks_blank\n"); print(profiled_peaks_blank)
-    
-            if( DEBUG ) {
-              ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_profiledPeaksTMP.csv", sep='')
-              write.csv(profiled_peaks_blank, file=ofilename, quote=TRUE, row.names=FALSE)
-            }
-            
-            final_PeakProfile_blank <- arrangeProfiledPeaks2(profiled_peaks_blank, SampleType)
-            cat("final_PeakProfile_blank\n"); print(final_PeakProfile_blank)
-    
-            final_PeakProfile_blank$CompoundWithTMS <- as.character(final_PeakProfile_blank$CompoundWithTMS)
-            final_PeakProfile_blank$Area <- as.numeric(as.character(final_PeakProfile_blank$Area))
-            final_PeakProfile_blank$MatchFactor <- as.numeric(as.character(final_PeakProfile_blank$MatchFactor))
-            
-            final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
-            final_PeakProfile_blank <- final_PeakProfile_blank[,-c(11,12,13,15,16,17)]
-            ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_profiled.csv", sep='')
-            write.csv(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE)
-    
-            if (CREATE_JSON_FILE) {
-                ofilename <- paste(sub(".mzXML|.CDF","", basename(fileList$blankFile), ignore.case = TRUE),"_spectrum.json", sep='')
-                create_json_file(ofilename, xset.blank@scantime, xset.blank@tic,
-                                            final_PeakProfile_blank$RT, final_PeakProfile_blank$Intensity, final_PeakProfile_blank$Compound)
-            }        
-            
-            # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
-            rmCompoundStr <- internalStd
-            final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
-            
-            if( nrow(final_PeakProfile_blank) == 0  ) {
-                # stop("There is no Internal Standard in the Blank file")
-                cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
-                xset.blank <- NULL
-                USE_BLANK_SPECTRUM <- FALSE
-            }
-        # }
+
+        ## RI calculation using Alkane Std
+        peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
+        profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
+        # head(profiled_peaks_blank)
+        # cat("profiled_peaks_blank\n"); print(profiled_peaks_blank)
+
+        if( DEBUG ) {
+          ofilename <- paste(specFilename.blank,"_profiledPeaksTMP.tsv", sep='')
+          write.table(profiled_peaks_blank, file=ofilename, quote=TRUE, row.names=FALSE, sep="\t")
+        }
+        
+        final_PeakProfile_blank <- arrangeProfiledPeaks2(profiled_peaks_blank)
+        if (FALSE & DEBUG) { cat("final_PeakProfile_blank\n"); print(final_PeakProfile_blank) }
+
+        # moved to the arrangeProfiledPeak2() 
+        # final_PeakProfile_blank$CompoundWithTMS <- as.character(final_PeakProfile_blank$CompoundWithTMS)
+        # final_PeakProfile_blank$Area <- as.numeric(as.character(final_PeakProfile_blank$Area))
+        # final_PeakProfile_blank$MatchFactor <- as.numeric(as.character(final_PeakProfile_blank$MatchFactor))
+        
+        #!!!! should be included in arrangeProfiledPeaks2
+        final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]                 
+        final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[,-c(9:12,17)], Concentration="NA") # keep mass Spectrum Info (m/z, Intensity)
+        final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,-c(9:13,17,18,19)], Concentration="NA")
+
+        ofilename <- paste(specFilename.blank,"_profiled.csv", sep='')
+        write.csv(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE)
+
+        if (CREATE_JSON_FILE) {
+            ofilename <- paste(specFilename.blank,"_spectrum.json", sep='')
+            create_json_file(ofilename, xset.blank@scantime, xset.blank@tic, final_PeakProfile_blank.json)
+        }        
+                
+        # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
+        rmCompoundStr <- internalStd
+        final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
+        
+        if( nrow(final_PeakProfile_blank) == 0  ) {
+            # stop("There is no Internal Standard in the Blank file")
+            cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
+            xset.blank <- NULL
+            USE_BLANK_SPECTRUM <- FALSE
+        }
+
     } else {
         cat("\n## Blank Sample is not found/used\n")
         xset.blank <- NULL

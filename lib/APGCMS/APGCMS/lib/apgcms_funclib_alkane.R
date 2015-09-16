@@ -202,7 +202,7 @@ extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7) 
   # if ( plotFile ) {
     sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
     # png(filename = paste("Plot_", ctype,"_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
-    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
+    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 12)
     plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
     dev.off()
   # }
@@ -805,8 +805,9 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   
   if (CREATE_JSON_FILE) {       
     ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_spectrum.json", sep='')
-    create_json_file(ofilename, xset.alkane@scantime, xset.alkane@tic,
-                     alkane.peaks.profiled[,"ALKRT"], alkane.peaks.profiled[,"Intensity"], paste('C',alkane.peaks.profiled[,"Cn"],sep='') )
+    # create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic,
+    #                  alkane.peaks.profiled[,"ALKRT"], alkane.peaks.profiled[,"Intensity"], paste('C',alkane.peaks.profiled[,"Cn"],sep='') )
+    create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic, alkane.peaks.profiled )
   }
   
   ## Estimated missing alkane
