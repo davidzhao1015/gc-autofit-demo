@@ -94,4 +94,11 @@ $ ->
   custom_db_count = (dialog) ->
     $('input:checked', dialog).length
 
+  # Clear all biofluid subsets except for the selected biofluid
+  $('#new_submission').submit () ->
+    $('#database-selection input:not(:checked)').each ->
+      $('.custom-db-list[data-db="' + $(this).val() + '"] input:checkbox').prop('checked', false)
+
+
+
 
