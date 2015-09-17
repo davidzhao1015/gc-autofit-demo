@@ -100,7 +100,7 @@ spectrumToJSON.profile <- function(data.in)
                         '\t\t\t\t\t "Area": "', x[10], '",\n', 
                         '\t\t\t\t\t "RT(start)": "', x[11], '",\n', 
                         '\t\t\t\t\t "RT(end)": "', x[12], '",\n',
-                        '\t\t\t\t\t "Concentration": "', x[15], '"\n',
+                        '\t\t\t\t\t "Concentration (mM)": "', x[15], '"\n',
                         '\t\t\t\t},\n',
                         '\t\t\t\t"ms_data" : {\n',
                         '\t\t\t\t\t "m/z": [', x[13], '],\n', 

@@ -187,138 +187,145 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       }
     }
     
-    if (print.on & DEBUG) { cat("## final_peakProfile after blank subtraction:\n"); print(final_PeakProfile)  }
+    if (print.on & DEBUG) { cat("\n\n## final_peakProfile after blank subtraction:\n"); print(final_PeakProfile)  }
+    
+    final_PeakProfile.screened <- screeningWithMatchFactor(final_PeakProfile, threshold.matchFactor)
+    # head(final_PeakProfile.screened)
+    # nrow(final_PeakProfile); nrow(final_PeakProfile.screened)
     
     ## Quantification        
     checkInternalStd <- existInternalStd(internalStd, final_PeakProfile, lib.peak)
-    # if (i==1) checkInternalStd <- FALSE
     
     if ( internalStd != 'NONE' & checkInternalStd == TRUE ) {
-      ## screening with Match Factor using threshold 
-      if (print.on) { cat("\t >> Screening with Match Factor\n") }
-      final_PeakProfile.screened <- screeningWithMatchFactor(final_PeakProfile, threshold.matchFactor)
-      # head(final_PeakProfile.screened)
-      # nrow(final_PeakProfile); nrow(final_PeakProfile.screened)
-      
-      if (print.on) { cat("\t >> Quantifying identified peaks\n") }
-      # unitConv 1 - uM, 1000 - mM ( Serum and Urine -> should be same unit (uM))
-      # quantifiedResult <- quantification(final_PeakProfile, lib.peakcal, internalStd, f.sample, stype=SampleType, unitConv=1000) # 1 or 1000 mM, uM
-      quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType, unitConv="mM") 
-      # nrow(quantifiedResult)  
-      
-      if (print.on & DEBUG) {
-        cat("## quantified Result:\n")
-        print(quantifiedResult)
-        # hmdbID, Area, Concentration 
-      }
-      
-      if (print.on) { cat("\t >> Generating FinalReport for", basename(f.sample), "\n") }
-      finalReport <- genFinalReport(final_PeakProfile.screened, quantifiedResult) 
-      colnames(finalReport)[1] <- "HMDB_ID"
-      
-      if (print.on & DEBUG) { cat("finalReport$Concentration:\n"); print(finalReport$Concentration) }
-      Concentration2 <- check.Concentration(finalReport$Concentration) 
-      finalReport <- cbind(finalReport, Concentration2) 
-      if (print.on & DEBUG) { cat("# finalReport:\n"); print(finalReport); }
-      
-      names(finalReport) 
-      finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
-      finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
-      rownames(finalReport.All) <- c(1:nrow(finalReport.All))
-
-      finalReport.json <- finalReport.All # for the JSON file generation
-            
-      ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
-      # names(finalReport.All)
-      # finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-      finalReport.All <- finalReport.All[,c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                                            "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
-      if (print.on & DEBUG) { 
-        cat("finalReport All:\n"); print(head(finalReport.All)); 
-      }
-      
-      ## exclude NA or MP(Multiple Peak) cases  
-      finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]   
-      
-      # outColnames <- c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-      outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                       "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
-      write.table(finalReport.All, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
-      if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
-      
-      # making JSON file for Profiled Peak View
-      # because of the multiple core
-      # if (CREATE_JSON_FILE) {      
-      finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), -c(3,4,11:14,19,22:24)]
-      # ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_finalReport.json.csv", sep='')
-      # write.csv(finalReport.json, file=ofilename, quote=TRUE)
-      
-      ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
-      create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, finalReport.json )
-      # }
-      
-      ## concentration summary table
-      tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
-      na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
-      if( na.length > 0 ) {
-        # cat("length(NA):", na.length, "\n")
-        tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
-      }
-      if( length(which(tmp.Concentration$Concentration2 == "MP")) > 0 ) {
-        tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "MP"), ]
-      }
-      
-      colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )
+        
+        if (print.on) { cat("\t >> Quantifying identified peaks\n") }
+        # unitConv 1 - uM, 1000 - mM ( Serum and Urine -> should be same unit (uM))
+        # quantifiedResult <- quantification(final_PeakProfile, lib.peakcal, internalStd, f.sample, stype=SampleType, unitConv=1000) # 1 or 1000 mM, uM
+        quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType, unitConv="mM") 
+        # nrow(quantifiedResult)  
+        
+        if (print.on & DEBUG) {
+          cat("## quantified Result:\n")
+          print(quantifiedResult)
+          # hmdbID, Area, Concentration 
+        }
+        
+        # if (print.on) { cat("\t >> Generating FinalReport for", basename(f.sample), "\n") }
+        if (print.on) { cat("\t >> Generating FinalReport\n") }
+        finalReport <- genFinalReport(final_PeakProfile.screened, quantifiedResult) 
+        colnames(finalReport)[1] <- "HMDB_ID"
+        
+        if (print.on & DEBUG) { cat("finalReport$Concentration:\n"); print(finalReport$Concentration) }
+        Concentration2 <- check.Concentration(finalReport$Concentration) 
+        finalReport <- cbind(finalReport, Concentration2) 
+        if (print.on & DEBUG) { cat("# finalReport:\n"); print(finalReport); }
+        
+        names(finalReport) 
+        finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
+        finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
+        rownames(finalReport.All) <- c(1:nrow(finalReport.All))
+  
+        finalReport.json <- finalReport.All # for the JSON file generation
+              
+        ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
+        # names(finalReport.All)
+        finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                                              "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
+        if (print.on & DEBUG) { 
+          cat("finalReport All:\n"); print(head(finalReport.All)); 
+        }
+        
+        ## exclude NA or MP(Multiple Peak) cases  
+        finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]   
+        
+        # outColnames <- c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+        outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                         "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+        write.table(finalReport.All[,-1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
+        if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
+        
+        # making JSON file for Profiled Peak View
+        # because of the multiple core
+        # if (CREATE_JSON_FILE) {      
+        finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), -c(3,4,11:14,19,22:24)]
+        # ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_finalReport.json.csv", sep='')
+        # write.csv(finalReport.json, file=ofilename, quote=TRUE)
+        
+        ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
+        create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, finalReport.json )
+        # }
+        
+        ## concentration summary table
+        tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
+        na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
+        if( na.length > 0 ) {
+            # cat("length(NA):", na.length, "\n")
+            tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
+        }
+        if( length(which(tmp.Concentration$Concentration2 == "MP")) > 0 ) {
+            tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "MP"), ]
+        }
+        
+        colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )
   
     } else {
-      ## No internal STD found --> should this be kept???????
-      if (FALSE)  {
-          cat("\t >> Generating FinalReport for", basename(f.sample), " without Quantification\n")
-          finalReport <- merge(cmpdlist, final_PeakProfile, by = c('Compound'), sort=FALSE) 
-          finalReport <- finalReport[order(as.numeric(as.character(finalReport$SeqIndex))), ]
-          PeakNo <- c(1:nrow(finalReport))
-          finalReport <- cbind(PeakNo, finalReport)
-          rownames(finalReport) <- c(1:nrow(finalReport))
-          if(DEBUG) {  cat("finalReport:\n"); print(head(finalReport)) }
-          
-          Concentration <- NA
-          finalReport <- cbind(finalReport, Concentration)
-          
-          ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
-          if ( DEBUG ) {
-            # if (TRUE) { finalReport <- finalReport[,-c(3,11,12,13,14,15,19,20)] }
-            if (TRUE) { finalReport <- finalReport[,-c(3,4,12,13,14,15,19,22)] }
-            cat("head(finalReport):\n"); print(head(finalReport)); 
-            write.csv(finalReport, file=ofilename, quote=TRUE, row.names=FALSE)
-          } else {
-            # finalReport <- finalReport[,-c(3,11,12,13,14,15,19,20)]
-            finalReport <- finalReport[,-c(3,4,12,13,14,15,19,22)]
-            outColnames <- c("PeakNo","Compound","HMDB ID","RT(min)","RT","RI","Intensity","MatchFactor","RI.Similarity","Area","RT.start","RT.end", "Concentration")
-            write.table(finalReport, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
-          }
-          
-          # making JSON file for Profiled Peak View
-          # because of the multiple core
-          # if (CREATE_JSON_FILE) {      
-          ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
-          create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, final_PeakProfile )
-          # }
-          
-          # if some of sample does not have Internal Standard, all the concentration will be null
-          # this is only for combined results
-          if ( internalStd != 'NONE' & checkInternalStd == FALSE) {
-            tmp.Concentration <- finalReport[, c('Compound','HMDB_ID', 'Concentration')]
-            
-            colnames(tmp.Concentration) <- c('Compound', 'HMDB_ID', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )
-            if( is.null(final.Concentration) ) {
-              final.Concentration <- tmp.Concentration
-            } else {
-              final.Concentration <- merge(final.Concentration, tmp.Concentration, by=c('Compound','HMDB_ID'), sort=FALSE, all=TRUE)
+        ## No internal STD - Only Profile the Compound Names      
+        # cat("\t >> Generating FinalReport for", basename(f.sample), "without Quantification \n\t\t because of no internal standard\n")
+        cat("\t >> Generating FinalReport: without Quantification (NO internal standard)\n")
+        colnames(final_PeakProfile.screened)[1] <- "HMDB_ID"
+        
+        finalReport.All <- merge(cmpdlist, final_PeakProfile.screened, by = c('HMDB_ID','CompoundWithTMS'), sort=FALSE) 
+        # finalReport.All <- merge(cmpdlist, final_PeakProfile, by = c('HMDB_ID','CompoundWithTMS'), sort=FALSE) 
+        finalReport.All <- finalReport.All[order(as.numeric(as.character(finalReport.All$SeqIndex))), ]
+        rownames(finalReport.All) <- c(1:nrow(finalReport.All))
+        # PeakNo <- c(1:nrow(finalReport.All))
+        # finalReport <- cbind(PeakNo, finalReport)
+        # rownames(finalReport) <- c(1:nrow(finalReport))
+        
+        # if(DEBUG) {  cat("finalReport.All:\n"); print(head(finalReport.All)) }
+        Concentration2 <- NA
+        finalReport.All <- cbind(finalReport.All, Concentration2)
+        finalReport.json <- finalReport.All # for the JSON file generation
+        
+        ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
+        # finalReport <- finalReport[,-c(3,4,12,13,14,15,19,22)]
+        finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                                              "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
+                
+        outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                         "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+        
+        # outColnames <- c("PeakNo","Compound","HMDB ID","RT(min)","RT","RI","Intensity","MatchFactor","RI.Similarity","Area","RT.start","RT.end", "Concentration")
+        write.table(finalReport.All[, -1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
+        
+        # making JSON file for Profiled Peak View
+        # because of the multiple core
+        # if (CREATE_JSON_FILE) {      
+        # finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), -c(3,4,11:14,19,22:23)]
+        finalReport.json <- finalReport.json[, -c(3,4,11:14,19,22:23)] ## all NA because of no calibration
+        cat("### finalReport.json: ###\n"); print(head(finalReport.json))
+                
+        ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
+        create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, finalReport.json )
+        # }
+
+        # if some of sample does not have Internal Standard, all the concentration will be null
+        # this is only for combined results
+        ## concentration summary table
+        tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
+        na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
+        if(FALSE) {
+            if ( na.length > 0 ) {
+              # cat("length(NA):", na.length, "\n")
+              tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
             }
-          }
-          if (DEBUG) { cat("\n\n final.Concentration:\n"); print(final.Concentration) }
-      }
-    }
+            if ( length(which(tmp.Concentration$Concentration2 == "MP")) > 0 ) {
+              tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "MP"), ]
+            }
+        }
+        colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )        
+        
+    } # end of else 
 
     return (tmp.Concentration)
 }
@@ -932,7 +939,8 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
             cat("lib.matched: \n"); print(lib.matched[,  c('Compound','RI','RT')])
           }
           
-          sample_mzs_vec <- peak_mzInt_list[[j]]$mzInt[,"mz"] ## from xcmsRaw
+          # sample_mzs_vec <- peak_mzInt_list[[j]]$mzInt[,"mz"] ## from xcmsRaw
+          sample_mzs_vec <- toIntMZ.sample(peak_mzInt_list[[j]]$mzInt[,"mz"]) ## from xcmsRaw
           sample_mz_int_vec <- peak_mzInt_list[[j]]$mzInt[,"intensity"] ## from xcmsRaw
           peakIntensity <- peak_mzInt_list[[j]]$peakIntensity # just for adding addition information
           peakArea <- peak_mzInt_list[[j]]$peakArea
@@ -1108,7 +1116,8 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
           # cat("# N matched with lib compounds:", nrow(lib.matched), " a peak's RT:", asample.peakInfo[j,"rt"]/60, "\t j:", j, "\n");
           # print(lib.matched[,c("Compound","name_short","RT","RI")])
           
-          sample_mzs_vec <- peak_mzInt_list[[j]]$mzInt[,"mz"] ## from xcmsRaw
+          # sample_mzs_vec <- peak_mzInt_list[[j]]$mzInt[,"mz"] ## from xcmsRaw
+          sample_mzs_vec <- toIntMZ.sample(peak_mzInt_list[[j]]$mzInt[,"mz"]) ## from xcmsRaw
           sample_mz_int_vec <- peak_mzInt_list[[j]]$mzInt[,"intensity"] ## from xcmsRaw
           peakIntensity <- peak_mzInt_list[[j]]$peakIntensity # just for adding addition information
           peakArea <- peak_mzInt_list[[j]]$peakArea
@@ -1161,6 +1170,11 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
               }
               #lst20 <- find_similar_peaks(ref.mzInt20$mz, ref.mzInt20$intensity, sample.mzInt20$mz, sample.mzInt20$intensity, round.digit)
               
+              cat("\n\n ### lst:\n")
+              print(lst)
+              print(str(lst))
+              stop()              
+              
               ## Match Factor (1000)
               # MFscore <- get_mathc_factor(MZS_vec, INTS_vec, mzs_vec, mz_int_vec)
               ## split the values of the mzs and intensities both library and sample                                    
@@ -1191,10 +1205,10 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
               # tmp.TScore <-  0.5 * MFscore/10 + 0.5 * matchMZrate
               
               if (matchMZrate == 100) {
-                tmp.TScore <-  0.5 * MFscore/10 + 0.5 * matchMZrate
+                  tmp.TScore <-  0.5 * MFscore/10 + 0.5 * matchMZrate
               } else {
                 ## tmp.TScore <-  0.5 * MFscore/10 + 0.5 * nearRelPeakRTscore.tmp
-                tmp.TScore <-  0.5 * MFscore/10 + 0.5 * matchMZrate
+                  tmp.TScore <-  0.5 * MFscore/10 + 0.5 * matchMZrate
               }
               
               # if (nearRelPeakRTscore < nearRelPeakRTscore.tmp & ( !is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
@@ -1204,26 +1218,26 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 ## nearRelPeakRTscore <- nearRelPeakRTscore.tmp
                 
                 identified <- c(
-                  hmdbID=as.character(lib.matched[k,]$HMDB_ID),
-                  CompoundWithTMS=as.character(lib.matched[k,]$CompoundWithTMS),
-                  RT_min=round(RT.sample/60, 3),
-                  RT=RT.sample,
-                  RI=RI.sample,
-                  Intensity=peakIntensity,
-                  MatchFactor=MFscore,
-                  RI.Similarity=RI.similarity,
-                  Corr.Spearman=round(cor.spearman * 100, 2),
-                  matchMZrate=round(matchMZrate,2),
-                  matchMZnum=matchMZnum,
-                  sampleMZnum=sampleMZnum,
-                  nearRelPeakRTscore=NULL,
-                  #matchMZrate20=matchMZrate20,
-                  #MFscore20=MFscore20,
-                  TScore=round(TScore, 2),
-                  Area=peakArea,
-                  RT.start= peakRTStart,
-                  RT.end= peakRTEnd,
-                  peakType = peakType
+                    hmdbID=as.character(lib.matched[k,]$HMDB_ID),
+                    CompoundWithTMS=as.character(lib.matched[k,]$CompoundWithTMS),
+                    RT_min=round(RT.sample/60, 3),
+                    RT=RT.sample,
+                    RI=RI.sample,
+                    Intensity=peakIntensity,
+                    MatchFactor=MFscore,
+                    RI.Similarity=RI.similarity,
+                    Corr.Spearman=round(cor.spearman * 100, 2),
+                    matchMZrate=round(matchMZrate,2),
+                    matchMZnum=matchMZnum,
+                    sampleMZnum=sampleMZnum,
+                    nearRelPeakRTscore=NULL,
+                    #matchMZrate20=matchMZrate20,
+                    #MFscore20=MFscore20,
+                    TScore=round(TScore, 2),
+                    Area=peakArea,
+                    RT.start= peakRTStart,
+                    RT.end= peakRTEnd,
+                    peakType = peakType
                 )              
               }
               
@@ -1307,45 +1321,45 @@ getPeakArea3 <- function(xraw, peakIntensity, peakRange)  {
 }
 
 getPeakArea2 <- function(xr, peak.rt, peak.rtmin, peak.rtmax)  {
-  # peak.rt <- 1202.074; peak.rtmin <- 1194.735;  peak.rtmax <- 1209.413 
-  scantime.indices <- which(xr@scantime >= peak.rtmin & xr@scantime <= peak.rtmax) 
-  # plot(xr@scantime[scantime.indices]/60, xr@tic[scantime.indices], type="h")
-  # cat("scantime.indices:\n");   print(scantime.indices)
-  # max(xr@tic[scantime.indices])
-  
-  if( length(scantime.indices) == 0)  {
-    cat("## No matced scan time in getPeakArea() - Peak's RT:", peak.rt, "(", peak.rt/60,")\n")
-    return ( list (area=NA, rt.start=NA, rt.end=NA))
-    # stop("No matced scan time index in getPeakArea()")
-  }
-  
-  area <- 0
-  for ( s in scantime.indices[- length(scantime.indices)]) {
-    # mzIntensity <- getScan(xr, s) # *** give all m/z & intensity spectrum
-    # peakIntensity <- sum(mzIntensity[,"intensity"])    
-    # mzIntensity_next <- getScan(xr, s+1) 
-    # peakIntensity_next <- sum(mzIntensity_pre[,"intensity"])
-    tic <- xr@tic[s]  ## same as TIC == sum (mzIntensity)    
-    tic_next <- xr@tic[s+1]  ## same as TIC == sum (mzIntensity)    
+    # peak.rt <- 1202.074; peak.rtmin <- 1194.735;  peak.rtmax <- 1209.413 
+    scantime.indices <- which(xr@scantime >= peak.rtmin & xr@scantime <= peak.rtmax) 
+    # plot(xr@scantime[scantime.indices]/60, xr@tic[scantime.indices], type="h")
+    # cat("scantime.indices:\n");   print(scantime.indices)
+    # max(xr@tic[scantime.indices])
     
-    width <- abs(xr@scantime[s] - xr@scantime[s+1])
-    if( tic < tic_next ) {
-      area_rec <- width * tic
-    } else {
-      area_rec <- width * tic_next
-    }   
-    area_triangle <- width * abs(tic - tic_next) / 2 
-    area.temp <- area_rec + area_triangle
-    area <- area + area.temp    
-  } 
-  
-  # cat("rt:", peak.rt, "\t area:", area, "\n")
-  
-  if (DEBUG & area==0) {
-    cat("## getPeakArea() - area is zero! rt:",peak.rt, "scantime.index:", scantime.indices, "\n")
-  }
-  
-  return ( area )
+    if( length(scantime.indices) == 0)  {
+      cat("## No matced scan time in getPeakArea() - Peak's RT:", peak.rt, "(", peak.rt/60,")\n")
+      return ( list (area=NA, rt.start=NA, rt.end=NA))
+      # stop("No matced scan time index in getPeakArea()")
+    }
+    
+    area <- 0
+    for ( s in scantime.indices[- length(scantime.indices)]) {
+      # mzIntensity <- getScan(xr, s) # *** give all m/z & intensity spectrum
+      # peakIntensity <- sum(mzIntensity[,"intensity"])    
+      # mzIntensity_next <- getScan(xr, s+1) 
+      # peakIntensity_next <- sum(mzIntensity_pre[,"intensity"])
+      tic <- xr@tic[s]  ## same as TIC == sum (mzIntensity)    
+      tic_next <- xr@tic[s+1]  ## same as TIC == sum (mzIntensity)    
+      
+      width <- abs(xr@scantime[s] - xr@scantime[s+1])
+      if( tic < tic_next ) {
+        area_rec <- width * tic
+      } else {
+        area_rec <- width * tic_next
+      }   
+      area_triangle <- width * abs(tic - tic_next) / 2 
+      area.temp <- area_rec + area_triangle
+      area <- area + area.temp    
+    } 
+    
+    # cat("rt:", peak.rt, "\t area:", area, "\n")
+    
+    if (DEBUG & area==0) {
+      cat("## getPeakArea() - area is zero! rt:",peak.rt, "scantime.index:", scantime.indices, "\n")
+    }
+    
+    return ( area )
 }
 
 
@@ -1354,69 +1368,84 @@ getPeakArea2 <- function(xr, peak.rt, peak.rtmin, peak.rtmax)  {
 # mzs_vec <- sample_mzs_vec
 # mz_int_vec <- sample_mz_int_vec
 
-find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, round.digit=2){
-  MZS_vec_tmp <- c()
-  INTS_vec_tmp <- c()
-  mzs_vec_tmp <- c()
-  mz_int_vec_tmp <- c()
-  
-  for(i in 1:length(mzs_vec)) {
-    sample_mz <- round(mzs_vec[i], round.digit) # this will be used for M in Match Factor (MF) calcuration    
-    for(j in 1:length(MZS_vec)) {
-      ## if( MZS_vec[j] - mz_off_set  <= mzs_vec[i] &&  mzs_vec[i] <= MZS_vec[j] + mz_off_set){
-      if( round(MZS_vec[j], round.digit) == sample_mz ){
-        MZS_vec_tmp[length(MZS_vec_tmp)+1] <- sample_mz
-        INTS_vec_tmp[length(INTS_vec_tmp)+1] <- INTS_vec[j]
-        mzs_vec_tmp[length(mzs_vec_tmp)+1] <- sample_mz
-        mz_int_vec_tmp[length(mz_int_vec_tmp)+1] <-  mz_int_vec[i]
-        j <- length(MZS_vec) 
+# round.digit will be taken off because of m/z values was changed to integer 
+find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, round.digit=0, mzCutoff=70) {
+    MZS_vec_tmp <- c()
+    INTS_vec_tmp <- c()
+    mzs_vec_tmp <- c()
+    mz_int_vec_tmp <- c()
+    
+    # recommended to use over m/z > 70 only
+    if (TRUE) {
+        # mzCutoff <- 40
+        cutOffLen.mzs <- length(mzs_vec[which(mzs_vec < mzCutoff)])
+        mzs_vec <- mzs_vec[-c(1:cutOffLen.mzs)]
+        mz_int_vec <- mz_int_vec[-c(1:cutOffLen.mzs)]
+      
+        cutOffLen.MZS <- length(MZS_vec[which(MZS_vec < mzCutoff)])
+        MZS_vec <- MZS_vec[-c(1:cutOffLen.MZS)]
+        INTS_vec <- INTS_vec[-c(1:cutOffLen.MZS)]
+    }    
+    
+    for(i in 1:length(mzs_vec)) {
+        #  sample_mz <- round(mzs_vec[i], round.digit) # this will be used for M in Match Factor (MF) calcuration    
+        sample_mz <- mzs_vec[i] # this will be used for M in Match Factor (MF) calcuration    
+        for(j in 1:length(MZS_vec)) {
+            ## if( MZS_vec[j] - mz_off_set  <= mzs_vec[i] &&  mzs_vec[i] <= MZS_vec[j] + mz_off_set){
+            # if( round(MZS_vec[j], round.digit) == sample_mz ){
+            if( MZS_vec[j] == sample_mz ) {
+                MZS_vec_tmp[length(MZS_vec_tmp)+1] <- sample_mz
+                INTS_vec_tmp[length(INTS_vec_tmp)+1] <- INTS_vec[j]
+                mzs_vec_tmp[length(mzs_vec_tmp)+1] <- sample_mz
+                mz_int_vec_tmp[length(mz_int_vec_tmp)+1] <-  mz_int_vec[i]
+                j <- length(MZS_vec) 
+            }
+        }
+    }
+    
+    # this is wrong I think; 70:30 linear combination means
+    # that " MF score = 0.7 * Pure MF + 0.3 * Impure MF "
+    if (FALSE) {
+      # now keep the length(MZS_vec) : output'length  70:30 ratio
+      if(length(MZS_vec_tmp) / length(MZS_vec) > 3.0/7.0){ # MZS_vec_tmp has more
+        matrx <- as.matrix(data.frame(MZS_vec_tmp=MZS_vec_tmp,INTS_vec_tmp=INTS_vec_tmp, 
+                                      mzs_vec_tmp=mzs_vec_tmp, mz_int_vec_tmp=mz_int_vec_tmp ))
+        for(i in seq(0.001, 1, 0.001)){
+          matrx <- matrx[which(matrx[,"mz_int_vec_tmp"] > i),]
+          if (nrow(matrx)/length(MZS_vec) <= 3.0/7.0) break
+        }
+        MZS_vec_tmp <- matrx[,"MZS_vec_tmp"]; INTS_vec_tmp <- matrx[,"INTS_vec_tmp"]
+        mzs_vec_tmp <- matrx[,"mzs_vec_tmp"]; mz_int_vec_tmp <- matrx[,"mz_int_vec_tmp"]
       }
     }
-  }
-  
-  # this is wrong I think; 70:30 linear combination means
-  # that " MF score = 0.7 * Pure MF + 0.3 * Impure MF "
-  if (FALSE) {
-    # now keep the length(MZS_vec) : output'length  70:30 ratio
-    if(length(MZS_vec_tmp) / length(MZS_vec) > 3.0/7.0){ # MZS_vec_tmp has more
-      matrx <- as.matrix(data.frame(MZS_vec_tmp=MZS_vec_tmp,INTS_vec_tmp=INTS_vec_tmp, 
-                                    mzs_vec_tmp=mzs_vec_tmp, mz_int_vec_tmp=mz_int_vec_tmp ))
-      for(i in seq(0.001, 1, 0.001)){
-        matrx <- matrx[which(matrx[,"mz_int_vec_tmp"] > i),]
-        if (nrow(matrx)/length(MZS_vec) <= 3.0/7.0) break
-      }
-      MZS_vec_tmp <- matrx[,"MZS_vec_tmp"]; INTS_vec_tmp <- matrx[,"INTS_vec_tmp"]
-      mzs_vec_tmp <- matrx[,"mzs_vec_tmp"]; mz_int_vec_tmp <- matrx[,"mz_int_vec_tmp"]
-    }
-  }
-  
-  return(list(MZS_vec_tmp=MZS_vec_tmp, INTS_vec_tmp=INTS_vec_tmp, mzs_vec_tmp=mzs_vec_tmp, 
-              mz_int_vec_tmp=mz_int_vec_tmp))
+    
+    return(list(MZS_vec_tmp=MZS_vec_tmp, INTS_vec_tmp=INTS_vec_tmp, mzs_vec_tmp=mzs_vec_tmp, 
+                mz_int_vec_tmp=mz_int_vec_tmp))
 }
 
 ## get_mathc_factor --> calcMFscore()
 # purity m/z peak: only use for mapping m/z with intensity
 calcMFscore <- function(ref_MZS_vec, ref_INT_vec, qry_mzs_vec, qry_int_vec) {
-  ## calculate match factor with equation 7 of http://chemdata.nist.gov/mass-spc/amdis/docs/method.pdf
-  ## args: mzs from DB:MZS_vec, intensity from db: INTS_vec, 
-  ##       queried mzs from sample: mzs_vec, queried intensity from sample: mz_int_vec
-  ## return: match factor score
-  
-  ref_INT_vec <- round(ref_INT_vec / max(ref_INT_vec), 3)
-  qry_int_vec <- round(qry_int_vec / max(qry_int_vec), 3)
-  
-  a <- 0; b <- 0; c <- 0;  
-  MF.weight <- 0.9 # for Match Factor (MF)
-  # over only library m/z values for the impure match factor
-  for(i in 1:length(ref_MZS_vec)){
-    a <- a + qry_mzs_vec[i] * qry_int_vec[i]
-    b <- b + ref_MZS_vec[i] * ref_INT_vec[i]
-    c <- c + MF.weight * ref_MZS_vec[i] * (ref_INT_vec[i] * qry_int_vec[i]) ** 0.5    
-  }
-  
-  MF_score <- round((1000 * c ** 2)/ (a * b), 3)
-  
-  return(MF_score)
+    ## calculate match factor with equation 7 of http://chemdata.nist.gov/mass-spc/amdis/docs/method.pdf
+    ## args: mzs from DB:MZS_vec, intensity from db: INTS_vec, 
+    ##       queried mzs from sample: mzs_vec, queried intensity from sample: mz_int_vec
+    ## return: match factor score
+    
+    ref_INT_vec <- round(ref_INT_vec / max(ref_INT_vec), 3)
+    qry_int_vec <- round(qry_int_vec / max(qry_int_vec), 3)
+    
+    a <- 0; b <- 0; c <- 0;  
+    MF.weight <- 0.9 # for Match Factor (MF)
+    # over only library m/z values for the impure match factor
+    for(i in 1:length(ref_MZS_vec)){
+      a <- a + qry_mzs_vec[i] * qry_int_vec[i]
+      b <- b + ref_MZS_vec[i] * ref_INT_vec[i]
+      c <- c + MF.weight * ref_MZS_vec[i] * (ref_INT_vec[i] * qry_int_vec[i]) ** 0.5    
+    }
+    
+    MF_score <- round((1000 * c ** 2)/ (a * b), 3)
+    
+    return(MF_score)
 }
 
 ## screening with highest TScore from the matched list 
@@ -1504,7 +1533,7 @@ getSamePeakArea <- function(profiled_peaks) {
 # internalStdCmpd <- "Ribitol"
 quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sample_file, stype, unitConv="mM") {
   
-    cat("## quantification input peaks:", nrow(profiled.result), "\n")
+    if (DEBUG) { cat("## quantification input peaks:", nrow(profiled.result), "\n") }
 
     # combine areas for the same compound
     hmdbIDwithArea <- getSamePeakArea(profiled.result)
@@ -1514,7 +1543,7 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     internalStd.hmdbID <- as.character(lib[which(lib$Compound == internalStdCmpd), 'HMDB_ID'])
     if( DEBUG) cat("\t# selected internal standard compound:", internalStdCmpd, "(", internalStd.hmdbID,")\n\n")
     area.internalStd <- as.double(as.character(hmdbIDwithArea[which(hmdbIDwithArea$hmdbID == internalStd.hmdbID), "Area"]))
-    cat("\t# area.internalStd:", area.internalStd,"\n")
+    if( DEBUG) cat("\t# area.internalStd:", area.internalStd,"\n")
     
     if (DEBUG) { 
         cat("## internalStdCmpd:\n"); 
@@ -1536,7 +1565,7 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     } 
     
     # hmdbIDwithArea: hmdbID, +Compound, +Concentration, Area,  NPeaks
-    cat("\n## calculated concentration:\n")
+    # cat("\n## calculated concentration:\n")
     quantifiedList <- NULL
     for ( hmdbID in hmdbIDwithArea$hmdbID ) {
         aCmpd <- hmdbIDwithArea[which(hmdbIDwithArea$hmdbID == hmdbID), ]
@@ -1611,11 +1640,11 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
    # cat("libDB:\n"); print(head(libDB));
    
    if( ! (internalStd %in% profiledPeakSet$CompoundWithTMS) ) {
-      cat("## Warning: Can not find the interstandard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
+      cat("\n\n## Warning: Can not find the internal standard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
       return (FALSE)
    }
    if( ! (internalStd %in% libDB$CompoundWithTMS) ) {
-     cat("## Warning: Can not find the interstandard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")     
+     cat("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")     
      return (FALSE)
    }      
    
@@ -1625,7 +1654,7 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
 check.Concentration<-function(conc) 
 {
     for (i in 1:length(conc)) {
-        cat("conc[i]"); print(conc[i])
+        # cat("conc[i]"); print(conc[i])
         if(!is.na(conc[i]) & conc[i] != "ISTD" & conc[i] != "NA" & conc[i] == 0) {
             # cat(i, "conc[i]:", conc[i], "--> <LOD\n") 
             conc[i] <- '<LOD' 

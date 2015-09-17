@@ -7,7 +7,7 @@
 showProgramInfo <- function(VersionStr)
 {
   # show version string
-  cat("##### GC-AutoFit: Automatic Profiling GC-MS Spectra #####\n")
+  cat("\n\n##### GC-AutoFit: Automatic Profiling GC-MS Spectra #####\n")
   cat("## Version:", VersionStr,"\n\n")
 }
 
@@ -37,9 +37,7 @@ helpMessage <- function() {
         --infoFileDir=<information_file_directory>  # Assign the directory of the information files (Alkane Standard 
                                                       and Blank Sample's Profiles). It is required for PROFILING process. 
 
-
-
-      --help  # print this text
+        --help  # print this text
  
       Example:
       > Rscript test.R --infiledir='./data/sample_sep09' --userlib='user_profiledb.csv' --usercal='user_calibration.csv' 
@@ -161,10 +159,10 @@ get_file_list <- function(infileDir, procStatus) {
   
   alkaneBlankList <- c(alk_file_index, blank_file_index)
   if( length(alkaneBlankList) > 0) {
-      cat("alkaneBlankList is not null\n"); 
+      # cat("alkaneBlankList is not null\n"); 
       sampleFiles <- file_list_tmp[-alkaneBlankList]    
   } else {
-      cat("alkaneBlankList is null\n");
+      if (DEBUG) { cat("alkaneBlankList is null\n") }
       sampleFiles <- file_list_tmp
   }
   
@@ -177,13 +175,51 @@ get_file_list <- function(infileDir, procStatus) {
 
 
 #save profiling information
-saveProfilingInfo <- function(fname, VersionStr)
+saveProfilingInfo <- function(fname, VersionStr, mfScore)
 {
   outstr <- paste("## Done by GC-AutoFit (Version", VersionStr,")", sep='') 
-  outstr <- paste(outstr, "\n  - Date:", date())
+  outstr <- paste(outstr, "\n  - Date:", date())  
+  outstr <- paste(outstr, "\n  - Match Factor Score: >", mfScore)    
   outstr <- paste(outstr, "\n\n\n")
   cat(outstr, file=fname, append=FALSE)
   cat(outstr)
 }
+
+
+## HMDB ID or Compound Name; No case senstive  
+ucfirst <- function (str) {
+    paste(toupper(substring(str, 1, 1)), tolower(substring(str, 2)), sep = "")  
+}
+
+ucHMDB <- function (str) {
+    paste(toupper(substring(str, 1, 4)), tolower(substring(str, 5)), sep = "")
+}    
+
+# return Internal Standard Compound Name
+getInternalStdCmpdName <- function (alib, std.str) {
+    if ( toupper(substring(std.str,1,4)) == "HMDB" ) {      
+        # cat("ucHMDB(std.str):\n"); print(ucHMDB(std.str))
+        cmpdname <- as.character( alib[which(alib$HMDB_ID == ucHMDB(std.str)), "Compound"] )
+        cat("\n\n## Matched Internal Standard Compound for HMDB ID:", std.str,"is", cmpdname,"\n")
+    } else {
+        # cat("ucfirst(std.str):\n"); print(ucfirst(std.str))
+        cmpdname <- as.character( alib[which(alib$Compound == ucfirst(std.str)), "Compound"] )
+    } 
+
+    if (length(cmpdname) == 1) {  return (cmpdname) 
+    } else {  return ( NULL ) }
+}
+
+# mass (m/z) values convert to integer
+toIntMZ.sample <- function(mz)
+{
+    # mz.num <- as.numeric(unlist(strsplit(as.character(mz.vec), split=" ")))
+    mz.int <- ifelse( (mz - floor(mz)) <= 0.7, floor(mz), ceiling(mz))
+    # paste(noquote(mz.int), collapse=" ")
+    
+    return (mz.int)
+}
+
+
 
 

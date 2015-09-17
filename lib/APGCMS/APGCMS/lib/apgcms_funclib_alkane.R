@@ -9,14 +9,22 @@
 getUniqueAlkanePeakList <- function(peak.list, offset.RT=50)
 {
     # check highest and standard peak: C20
+    if (length(which(peak.list[,"Cn"] == 20)) > 1) {
+        maxIntensity <- max(as.numeric(as.character(peak.list$Intensity)))
+        peak.list[which( (peak.list$Cn == 20) & (as.numeric(as.character(peak.list$Intensity)) < maxIntensity)), "Cn"] <- 99
+        if(DEBUG) {
+            cat("\n\n more than 2 peaks assigned to C20\n")
+            print(peak.list)
+        }
+    }
+  
     idx.c20 <- which(peak.list[,"Cn"] == 20); 
     if (DEBUG) {
-      cat("## getUniqueAlkanePeakList\n")
-      cat("\t length(idx.c20):", length(idx.c20),"\n")
-      cat("## peak.list:\n")
-      print(peak.list)
+        cat("## getUniqueAlkanePeakList\n")
+        cat("\t length(idx.c20):", length(idx.c20),"\n")
+        cat("## peak.list:\n"); print(peak.list)
     }    
-   
+
     d.tmp <- peak.list
     d.down.screen <- NULL
     idx2remove <- NULL
@@ -299,6 +307,7 @@ check_alkane_std <- function(alkane_std_rt) {
 # alkane.peakInfo <- peaks.alkane
 # xset.one <- xset.alkane
 # lib.peak.alkane <- lib.peak.alkane
+#### NOT USED ########
 peakIdentify.alkane <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
 {
   # get m/z and intensity using xcmsRaw() for a sample spectra
@@ -343,6 +352,7 @@ peakIdentify.alkane <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
     ## will only use m/z and intensity
     # use peak location/index for no alkane covering
     RT.sample <- as.numeric(alkane.peakInfo[j,"rt"])      
+    # sample_mzs_vec <- peak_mzInt_list[[j]]$mzInt[,"mz"] ## from xcmsRaw
     sample_mzs_vec <- peak_mzInt_list[[j]]$mzInt[,"mz"] ## from xcmsRaw
     sample_mz_int_vec <- peak_mzInt_list[[j]]$mzInt[,"intensity"] ## from xcmsRaw
     peakIntensity <- peak_mzInt_list[[j]]$peakIntensity # just for adding addition information
@@ -476,7 +486,8 @@ peakIdentify.alkane2 <- function(alkane.peakInfo, xset.one, lib.peak.alkane, pri
     ## will only use m/z and intensity
     # use peak location/index for no alkane covering
     RT.sample <- as.numeric(alkane.peakInfo[j,"rt"])      
-    sample_mzs_vec <- round(peak_mzInt_list[[j]]$mzInt[,"mz"], 0) ## from xcmsRaw
+    # sample_mzs_vec <- round(peak_mzInt_list[[j]]$mzInt[,"mz"], 0) ## from xcmsRaw
+    sample_mzs_vec <- toIntMZ.sample(peak_mzInt_list[[j]]$mzInt[,"mz"]) ## from xcmsRaw
     sample_mz_int_vec <- peak_mzInt_list[[j]]$mzInt[,"intensity"] ## from xcmsRaw
     peakIntensity <- peak_mzInt_list[[j]]$peakIntensity # just for adding addition information
     
@@ -503,7 +514,6 @@ peakIdentify.alkane2 <- function(alkane.peakInfo, xset.one, lib.peak.alkane, pri
       if ( flag_found ) {
         round.digit <- 0 # 0 or 2; not 1
         lst <- find_similar_peaks(aMZIntLib$MZvec, aMZIntLib$INTvec, sample_mzs_vec, sample_mz_int_vec, round.digit)
-        
         if (length(lst$MZS_vec_tmp)==0) { 
           cat("# ERROR - compound:", aMZIntLib$Compound, "\n");
           stop("No m/z matched")
@@ -748,7 +758,7 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   # names(lib.peak.alkane)
   if(nrow(lib.peak.alkane) == 0) stop("Cannot load the m/z & intensity library for Alkane")
   
-  cat("## Extracting peak list for alkane standard ...\n")    
+  ## Extracting peak list for alkane standard 
   xset.alkane <- extractAlkaneStdInfo(sample.fname.alkane)
   
   # peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, show.plot, ctype="TIC", offset=7)

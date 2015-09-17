@@ -17,10 +17,14 @@ then
     then
         echo "##     Preprocessing"
         Rscript ../APGCMS/apgcms_main.R --infiledir='serum' --lib.internal='SERUM' --internalstd='Ribitol' --process='PREPROCESSING'
+        # Rscript ../APGCMS/apgcms_main.R --infiledir='serum' --lib.internal='SERUM' --internalstd='HMDB00508' --process='PREPROCESSING'
+        # Rscript ../APGCMS/apgcms_main.R --infiledir='serum' --lib.internal='SERUM' --internalstd='NONE' --process='PREPROCESSING'
     elif [ $2 = 1 ] 
     then
         echo "##     Profiling"
         Rscript ../APGCMS/apgcms_main.R --infiledir='serum' --lib.internal='SERUM' --internalstd='Ribitol' --process='PROFILING' --infoFileDir='/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/example/serum_result'
+        # Rscript ../APGCMS/apgcms_main.R --infiledir='serum' --lib.internal='SERUM' --internalstd='HMDB00508' --process='PROFILING' --infoFileDir='/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/example/serum_result'
+        # Rscript ../APGCMS/apgcms_main.R --infiledir='serum' --lib.internal='SERUM' --internalstd='NONE' --process='PROFILING' --infoFileDir='/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/example/serum_result'
     else
         echo "\n\t[Usage] sh run_examples.sh SERUM [0:Preprocessing, 1:Profiling]\n"
         exit 1
@@ -31,11 +35,11 @@ then
     if [ $2 = 0 ] 
     then
         echo "##     Preprocessing"
-        Rscript ../APGCMS/apgcms_main.R --infiledir='urine' --lib.internal='URINE' --internalstd='Cholesterol' --process='PREPROCESSING' --infoFileDir='serum_result'
+        Rscript ../APGCMS/apgcms_main.R --infiledir='urine' --lib.internal='URINE' --internalstd='Cholesterol' --process='PREPROCESSING' --infoFileDir='urine_result'
     elif [ $2 = 1 ] 
     then
         echo "##     Profiling"
-        Rscript ../APGCMS/apgcms_main.R --infiledir='urine' --lib.internal='URINE' --internalstd='Cholesterol' --process='PROFILING' --infoFileDir='/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/example/serum_result'
+        Rscript ../APGCMS/apgcms_main.R --infiledir='urine' --lib.internal='URINE' --internalstd='Cholesterol' --process='PROFILING' --infoFileDir='/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/example/urine_result'
     else
         echo "\n\t[Usage] sh run_examples.sh SERUM [0:Preprocessing, 1:Profiling]\n"
         exit 1
