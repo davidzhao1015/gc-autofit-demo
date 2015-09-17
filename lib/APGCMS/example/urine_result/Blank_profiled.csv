@@ -1,5 +1,0 @@
-"hmdbID","CompoundWithTMS","RT_min","RT","RI","Intensity","MatchFactor","RI.Similarity","Area","RT.start","RT.end","Concentration"
-"HMDB00190","Lactic acid","9.388","563.296","1075.268","371605",772.499,"99.58",11154523,"9.35","9.433","NA"
-"HMDB00220","Hexadecanoic acid (Palmitic acid)","30.148","1808.86","2051.812","463930",797.42,"98.85",16972412,"30.097","30.218","NA"
-"HMDB00827","Octadecanoic acid (Stearic acid)","33.042","1982.54","2249.623","367273",801.177,"99.98",15327678,"32.998","33.106","NA"
-"HMDB00067","Cholesterol","44.112","2646.74","3182.435","19059602",729.569,"97.48",1222836462,"43.947","44.303","NA"
