@@ -8,7 +8,7 @@ class Spectrum < ActiveRecord::Base
   has_attached_file :json_results,  path: ':sample_dir/spectrum.:extension'
   has_attached_file :plot
 
-  validates_attachment_file_name :spectrum_data, :matches => [/mzXML\Z/]
+  validates_attachment_file_name :spectrum_data, :matches => [/(CDF|mzXML)\Z/]
   validates_attachment_file_name :json_results, :matches => [/json\Z/]
   validates_attachment_file_name :plot, :matches => [/png\Z/]
 
