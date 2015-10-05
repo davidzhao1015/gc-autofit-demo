@@ -373,20 +373,23 @@ if ( processOption == "PREPROCESSING" ) {
     ## Image Plot generation      
     cat("\n## Spectrum plot generation only ...\n")
 
-    # Multi Core or Single Core
-    if (nCores >= 2) {
-        if (DEBUG) cat("\t# N Core:", nCores, "\n")
-        # beg = Sys.time()
-        # generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles, RunPlotOnly)
-        generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles)
-        # td = as.numeric(Sys.time() - beg, "secs")
-        # cat("\n\n## Time - Multi Core:", td,"\n")
-    } else { 
-        # beg = Sys.time()
-        # generateSpectrumPlot(fileList$sampleFiles, RunPlotOnly)
-        generateSpectrumPlot(fileList$sampleFiles)
-        # td = as.numeric(Sys.time() - beg, "secs")
-        # cat("\n\n## Time - Single Core:", td,"\n")
+    # Multi Core or Single Core => now 2015 10 05, only sing core
+    generateSpectrumPlot(fileList$sampleFiles)
+    if (FALSE) {
+        if (nCores >= 2) {
+            if (DEBUG) cat("\t# N Core:", nCores, "\n")
+            # beg = Sys.time()
+            # generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles, RunPlotOnly)
+            generateSpectrumPlot.multicore(nCluster=nCores, fileList$sampleFiles)
+            # td = as.numeric(Sys.time() - beg, "secs")
+            # cat("\n\n## Time - Multi Core:", td,"\n")
+        } else { 
+            # beg = Sys.time()
+            # generateSpectrumPlot(fileList$sampleFiles, RunPlotOnly)
+            generateSpectrumPlot(fileList$sampleFiles)
+            # td = as.numeric(Sys.time() - beg, "secs")
+            # cat("\n\n## Time - Single Core:", td,"\n")
+        }
     }
 
 } else {
@@ -424,7 +427,8 @@ if ( processOption == "PREPROCESSING" ) {
     if (length(conc.each) >= 2) {
         final.Concentration <- mergeConcTable( conc.each )
     } else {
-        final.Concentration <- conc.each;
+        # final.Concentration <- conc.each;
+        final.Concentration <- as.data.frame(conc.each);
     }
     if (DEBUG) { cat("\n\n final.Concentration:\n"); print(final.Concentration) }
     
@@ -440,7 +444,9 @@ if ( processOption == "PREPROCESSING" ) {
             cat("\n## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
             ## order by RI as in library; merge compound name with RI and sort by RI
             # cat("# final.concentration:\n"); print(final.Concentration)  
-            colnames(final.Concentration)[1] <- 'HMDB_ID'
+
+            # colnames(final.Concentration)[1] <- 'HMDB_ID'
+            
             # final.Concentration <- merge(lib.peakcal[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
             final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
             # cat("\n ### final.Concentration:\n"); print(final.Concentration)
