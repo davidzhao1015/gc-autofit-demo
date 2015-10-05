@@ -13,5 +13,7 @@
 //= require wishart
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
+//= require spectra
+//= require ms_dialog
 //= require_tree .
 

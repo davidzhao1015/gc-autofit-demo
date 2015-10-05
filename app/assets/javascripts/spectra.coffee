@@ -14,7 +14,8 @@ $(window).load ->
       axis_y_lock: 0.04,
       axis_x_reverse: false,
       axis_x_title: 'Seconds',
-      axis_y_title: 'Intensity'
+      axis_y_title: 'Intensity',
+      legend_show: false
     })
     window.sv = sv
     sv.flash('Loading...')
@@ -30,7 +31,7 @@ $(window).load ->
           saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
           viewer_was_not_empty = sv.spectra().length > 0
           sv.remove_all_spectra()
-          sv.add_spectrum({xy_line: data.spectrum_xy, tolerance: 0.001})
+          sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
           if (viewer_was_not_empty)
             sv.set_domain('x', saved_domains[0])
             sv.set_domain('y', saved_domains[1])
@@ -132,50 +133,52 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
-    standard_columns = ['Cn', 'ALKRT', 'Intensity']
 
-    fake_standard = () ->
-      labels = [ ]
-      [10, 11, 12, 13, 14].forEach (cn, i) ->
-        labels.push {
-          x: 400+100*i,
-          y: 3000000*i,
-          text: 'label' + i,
-          meta: {
-            table: {
-              'Cn': cn,
-              'ALKRT': 400+100*i
-              'Intensity': 3000000*i
-            }
-          }
-        }
-      labels
+    # fake_standard = () ->
+    #   labels = [ ]
+    #   [10, 11, 12, 13, 14].forEach (cn, i) ->
+    #     labels.push {
+    #       x: 400+100*i,
+    #       y: 3000000*i,
+    #       text: 'label' + i,
+    #       meta: {
+    #         table: {
+    #           'Cn': cn,
+    #           'ALKRT': 400+100*i
+    #           'Intensity': 3000000*i
+    #         }
+    #       }
+    #     }
+    #   labels
 
+    standard_columns = ['HMDB ID', 'Name', 'Concentration (mM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()
       # Clear previous data
       table.clear()
       # Set up fake data
-      fake_standard().forEach (label) ->
-        sv.spectra(1).labels.add(label)
+      # fake_standard().forEach (label) ->
+      #   sv.spectra(1).labels.add(label)
 
       # Load new data
       sv.spectra(1).labels.get().each () ->
         # Generate row
-        data = this.meta.table
+        data = this.meta.table_data
         row_data = [ ]
         column_names = standard_columns
         column_names.forEach (column) ->
           row_data.push(data[column])
-        row_data.push('testbbo')
         row_node = table.row.add(row_data).node()
         # Add table row id
-        $(row_node).attr('id', this.id)
+        $(row_node).attr('id', data['HMDB ID'])
       # # Format Concentration column
       # table.column(2).nodes().to$().addClass('number')
       table.draw()
       sv.draw()
+
+
+
 
 
 

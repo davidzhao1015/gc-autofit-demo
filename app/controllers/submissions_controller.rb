@@ -110,6 +110,8 @@ class SubmissionsController < ApplicationController
                                spectrum_data: File.new(File.join(example_dir, 'GSS-BLANK.CDF')))
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'GSS-1R.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, 'GSS-2R.CDF')))
     end
     if example_num == '2'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'urine')

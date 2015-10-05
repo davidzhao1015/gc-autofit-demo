@@ -68,6 +68,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.tick_count     = JSV.default_for(options.tick_count, 10);
     this.tick_length    = JSV.default_for(options.tick_length, 10);
     this.tick_precision = JSV.default_for(options.tick_precision, 3);
+    this.axis_x_tick_format = d3.format(JSV.default_for(options.axis_x_tick_format, '.g'));
+    this.axis_y_tick_format = d3.format(JSV.default_for(options.axis_y_tick_format, '.2e'));
     this.axis_x_title   = JSV.default_for(options.axis_x_title, 'ppm');
     this.axis_y_title   = JSV.default_for(options.axis_y_title, 'Intensity');
     this.axis_y_show    = JSV.default_for(options.axis_y_show, false);
@@ -938,7 +940,9 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       context.moveTo(scale.x(tick_x), scale.y.range()[0]);
       context.lineTo(scale.x(tick_x), scale.y.range()[0] + tick_length);
       context.stroke();
-      context.fillText(d3.round(tick_x, self.tick_precision), scale.x(tick_x), scale.y.range()[0] + tick_length);
+      // context.fillText(d3.round(tick_x, self.tick_precision), scale.x(tick_x), scale.y.range()[0] + tick_length);
+      rounded_tick_x = d3.round(tick_x, self.tick_precision);
+      context.fillText(self.axis_x_tick_format(rounded_tick_x), scale.x(tick_x), scale.y.range()[0] + tick_length);
     });
     // Draw x label
     if (this.axis_x_title) {
@@ -968,7 +972,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     context.font = this.font;
     var max_label_width = 0;
     // Determine number of decimal places
-    var decimal_places = d3.max( scale.y.ticks(this.tick_count).map(function(tick_y) { return JSV.decimalPlaces(tick_y); }) );
+    // var decimal_places = d3.max( scale.y.ticks(this.tick_count).map(function(tick_y) { return JSV.decimalPlaces(tick_y); }) );
 
     // Draw ticks and text
     scale.y.ticks(this.tick_count).forEach(function(tick_y) {
@@ -976,7 +980,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       context.moveTo(scale.x.range()[0], scale.y(tick_y));
       context.lineTo(scale.x.range()[0] + tick_length, scale.y(tick_y));
       context.stroke();
-      context.fillText(tick_y.toFixed(decimal_places), text_x, scale.y(tick_y));
+      // context.fillText(tick_y.toFixed(decimal_places), text_x, scale.y(tick_y));
+      context.fillText(sv.axis_y_tick_format(tick_y), text_x, scale.y(tick_y));
       if (sv.axis_y_title) {
         var label_width = Number(context.measureText(tick_y).width);
         if (label_width > max_label_width) max_label_width = label_width;
@@ -2370,10 +2375,10 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.hover = JSV.default_for(options.hover, true);
     this.labels = new JSV.SVSet();
     this.visible_labels = new JSV.SVSet();
-    sv.on('label-click', function(label) {
-      console.log(label.text)
-    })
-    sv.svg.on('click', function() {
+    // sv.on('label-click', function(label) {
+    //   console.log(label.text)
+    // })
+    sv.svg.on('mousedown.label', function() {
       if (self.highlighted_label) {
         sv.trigger('label-click', self.highlighted_label);
       }
