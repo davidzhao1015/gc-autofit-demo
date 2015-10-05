@@ -133,33 +133,12 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
-
-    # fake_standard = () ->
-    #   labels = [ ]
-    #   [10, 11, 12, 13, 14].forEach (cn, i) ->
-    #     labels.push {
-    #       x: 400+100*i,
-    #       y: 3000000*i,
-    #       text: 'label' + i,
-    #       meta: {
-    #         table: {
-    #           'Cn': cn,
-    #           'ALKRT': 400+100*i
-    #           'Intensity': 3000000*i
-    #         }
-    #       }
-    #     }
-    #   labels
-
     standard_columns = ['HMDB ID', 'Name', 'Concentration (mM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()
       # Clear previous data
       table.clear()
-      # Set up fake data
-      # fake_standard().forEach (label) ->
-      #   sv.spectra(1).labels.add(label)
 
       # Load new data
       sv.spectra(1).labels.get().each () ->

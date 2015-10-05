@@ -31,6 +31,7 @@ $(window).load ->
 
   # Mass Spectrum Dialog
   window.sv.on 'label-click', (label) ->
+    return unless label.meta.ms_data
     $('.ms-dialog').modal('show')
     $('.ms-dialog .ms-name').html(label.text + ' (' + label.meta.table_data['HMDB ID'] + ')')
     data = []
@@ -38,7 +39,8 @@ $(window).load ->
       data[i] = { mz: label.meta.ms_data['m/z'][i], intensity: label.meta.ms_data.Intensity[i] }
 
     x.domain( d3.extent(data, (d) -> d.mz ) )
-    y.domain( d3.extent(data, (d) -> d.intensity ) )
+    # y.domain( d3.extent(data, (d) -> d.intensity ) )
+    y.domain([0, d3.max(label.meta.ms_data.Intensity) ])
 
     # Clear old data
     svg.selectAll('*').remove()
