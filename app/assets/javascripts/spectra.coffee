@@ -13,7 +13,7 @@ $(window).load ->
       axis_y_show: true,
       axis_y_lock: 0.04,
       axis_x_reverse: false,
-      axis_x_title: 'Seconds',
+      axis_x_title: 'Retention Time (Seconds)',
       axis_y_title: 'Intensity',
       axis_y_tick_format: '.1e',
       axis_y_gutter: 80,
@@ -33,6 +33,10 @@ $(window).load ->
           saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
           viewer_was_not_empty = sv.spectra().length > 0
           sv.remove_all_spectra()
+          sv.boundary.initialized = false;
+          sv.scale.initialized = false;
+          sv.boundary.update(data.xy_data)
+          sv.scale.update(data.xy_data)
           sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
           if (viewer_was_not_empty)
             sv.set_domain('x', saved_domains[0])
