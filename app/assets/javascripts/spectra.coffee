@@ -15,6 +15,8 @@ $(window).load ->
       axis_x_reverse: false,
       axis_x_title: 'Seconds',
       axis_y_title: 'Intensity',
+      axis_y_tick_format: '.1e',
+      axis_y_gutter: 80,
       legend_show: false
     })
     window.sv = sv
@@ -46,15 +48,8 @@ $(window).load ->
     # Load viewer data
     load_spectrum($(this).data('spectra-path'))
 
-    # $.getJSON $(this).data('spectra-path'), (data) ->
-    #   # sv.add_bayesil_data(data)
-    #   # load_quantities_table()
-    #   sv.add_spectrum({xy_line: data.spectrum_xy, tolerance: 0.001})
-    #   window.data = data
-    #   sv.draw()
 
-
-    # Viewer locking
+    # VIEWER LOCKING
 
     # Make Spectra Viewer Stick to window top when scrolling
     $window = $(window)

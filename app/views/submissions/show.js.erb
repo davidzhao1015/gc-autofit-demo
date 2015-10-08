@@ -1,7 +1,4 @@
 // Enable tabs
-<% if @submission.complete? %>
-  $('#profiling-tab').removeClass('disabled')
-<% end %>
 <% if @submission.samples_any_finalized? %>
   $('#results-tab').removeClass('disabled')
 <% end %>

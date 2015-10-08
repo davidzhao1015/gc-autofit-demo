@@ -69,7 +69,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.tick_length    = JSV.default_for(options.tick_length, 10);
     this.tick_precision = JSV.default_for(options.tick_precision, 3);
     this.axis_x_tick_format = d3.format(JSV.default_for(options.axis_x_tick_format, '.g'));
-    this.axis_y_tick_format = d3.format(JSV.default_for(options.axis_y_tick_format, '.2e'));
+    this.axis_y_tick_format = d3.format(JSV.default_for(options.axis_y_tick_format, '.g'));
     this.axis_x_title   = JSV.default_for(options.axis_x_title, 'ppm');
     this.axis_y_title   = JSV.default_for(options.axis_y_title, 'Intensity');
     this.axis_y_show    = JSV.default_for(options.axis_y_show, false);
@@ -100,8 +100,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.id = JSV.default_for(options.id, JSV.unique_id('jsv-', 1, current_ids));
 
     // Space required for axes
-    this.axis_y_gutter = this.axis_y_show ? 60 : 0;
-    this.axis_x_gutter = this.axis_x_show ? 50 : 0;
+    this.axis_y_gutter = this.axis_y_show ? JSV.default_for(options.axis_y_gutter, 60) : 0;
+    this.axis_x_gutter = this.axis_x_show ? JSV.default_for(options.axis_x_gutter, 50) : 0;
 
     // Delete contents of container and add title
     var header = this.title ? '<h3>' + this.title + '</h3>' : ''
@@ -908,7 +908,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var y_gutter = JSV.pixel(this.axis_y_gutter);
     var x_gutter = JSV.pixel(this.axis_x_gutter);
     // Clear plot graphics from the X axis area
-    this.context.clearRect(scale.x.range()[1], scale.y.range()[0], scale.x.range()[0] + y_gutter, x_gutter);
+    this.context.clearRect(scale.x.range_min(), scale.y.range_max(), scale.x.range_max() + y_gutter, x_gutter);
     // Clear plot graphics from the Y axis area
     var x = this.axis_x_reverse ? scale.x.range_max() : 0;
     this.context.clearRect(x, scale.y.range_min(), y_gutter, scale.y.range_max() + x_gutter);
@@ -991,17 +991,24 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     if (this.axis_y_title) {
       var margin = JSV.pixel(4);
       var gutter = JSV.pixel(this.axis_y_gutter);
-      var font_height = /(\d+)pt/.exec(this.axis_title_font)[1];
+      var font_height = /(\d+\.?\d*)pt/.exec(this.axis_title_font)[1];
       // Width of text and ticks filling up the gutter
-      var draw_width = max_label_width + tick_length + Number(font_height) + margin;
+      var draw_width = max_label_width + Math.abs(tick_length) + Number(font_height) + margin + padding;
       if ( draw_width < gutter) {
         context.save();
         context.textAlign = 'center';
-        context.textBaseline = 'hanging';
+        context.textBaseline = 'middle';
         context.font = this.axis_title_font;
-        context.rotate(Math.PI / 2);
-        var label_y = -scale.x.range()[0] - gutter + margin;
-        var label_x = scale.y.range()[0]/2;
+        // Determine center point of label
+        var label_x = scale.x.range()[0] + ( ( gutter - margin - Number(font_height)/2 ) * direction );
+        var label_y = scale.y.range()[0]/2;
+        // Move to center
+        context.translate(label_x, label_y);
+        // Rotate Label
+        context.rotate(direction * Math.PI / 2);
+        // Move back to origin
+        context.translate(-label_x, -label_y);
+        // Draw label
         context.fillText(this.axis_y_title, label_x, label_y);
         context.restore();
       }

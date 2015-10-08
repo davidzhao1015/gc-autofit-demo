@@ -22,8 +22,3 @@
           td.runtime = samples.display_runtime
           td.status-text = samples.display_status
 
-- else
-  p
-    | If the preprocessing looks good, start profiling
-
-    a.btn.btn-primary.btn-lg.center-block[href='#{profile_submission_path(@submission)}'] PROFILE
