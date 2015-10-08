@@ -15,7 +15,7 @@
       = select_tag "spectra", options_from_collection_for_select(@submission.spectra, "id", "name", @spectrum.id), class: 'btn', id: 'batch-select'
 
   .clearfix
-    #spectrum-error-section = render partial: '/spectra/error', locals: { display: @spectrum.failed? }
+  #spectrum-error-section = render partial: '/spectra/error', locals: { display: @spectrum.failed? }
   #spectra-viewer[data-spectra-path="#{json_path if defined? json_path}"]
   #spectra-controls
     a.btn.btn-default.btn-xs#lock-viewer.tool-tip[data-toggle='tooltip'
