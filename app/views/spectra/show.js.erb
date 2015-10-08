@@ -1,3 +1,12 @@
+// Show/hide spectrum errors
+var new_error = '<%= @spectrum.failed? %>'
+if (new_error == 'true') {
+  $("#spectrum-error-section").html("<%= escape_javascript(render partial: '/spectra/error') %>");
+  $('#spectra-error').slideDown();
+} else {
+  $('#spectra-error').slideUp();
+}
+// Update links
 $("#spectrum-prev").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum.prev)) %>");
 $("#spectrum-next").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum.next)) %>");
 $('#spectra-container').data('spectrum-id', '<%= @spectrum.id %>');

@@ -30,7 +30,7 @@ h2 Status
     - unless @submission.profile?
       p
         | Check over the alkane standards. If they look ok, click the profile button
-      a.btn.btn-primary.btn-lg.center-block[href='#{profile_submission_path(@submission)}' style='width:200px;'] PROFILE
+      a.btn.btn-primary.btn-lg.center-block[href='#{profile_submission_path(@submission)}' style='width:150px;'] Profile
 
   h2 Alkane Standards
   #alkane-viewer[data-spectra-path="#{submission_spectrum_url(@submission, @submission.standards, 'json')}"]

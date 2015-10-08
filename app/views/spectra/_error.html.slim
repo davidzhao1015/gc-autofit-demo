@@ -1,0 +1,5 @@
+- display_style = display ? '' : 'display: none;'
+.container-fluid.alert.alert-danger#spectra-error[style='#{display_style}']
+  p
+    | The job failed!
+  p = @spectrum.error.try(:html_safe)
