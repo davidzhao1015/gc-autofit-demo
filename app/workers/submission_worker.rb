@@ -22,7 +22,7 @@ class SubmissionWorker
       # Save Blank
       blank = submission.blank
       blank.json_results = File.open(File.join(submission.preprocessing_dir, 'Blank_spectrum.json') )
-      blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_blank.png') )
+      blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Blank.png') )
       blank.save!
       # Link Samples
       submission.samples.each do |sample|
