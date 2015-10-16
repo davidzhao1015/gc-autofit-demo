@@ -36,6 +36,7 @@ group :development do
   gem 'better_errors'
   gem 'capistrano', '~> 3.0.1'
   gem 'capistrano-bundler'
+  gem 'capistrano-sidekiq'
   gem 'capistrano-rails', '~> 1.1.0'
   gem 'capistrano-rails-console'
   gem 'quiet_assets'
@@ -46,3 +47,8 @@ group :development do
   gem 'awesome_print'
 end
 
+group :production do
+  #gem 'newrelic_rpm'
+  gem 'execjs'
+  gem 'therubyracer', require: 'v8'
+end
