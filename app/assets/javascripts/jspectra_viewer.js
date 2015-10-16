@@ -2581,12 +2581,18 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
         label = this.visible_labels[i];
         if (label.rect.contains_pt(x, y)) {
           current_label = label;
+          break;
         }
       }
       if (old_label != current_label) {
         this.highlighted_label = current_label;
         this.sv.trigger('click-start');
         sv.full_draw();
+      }
+      if (this.highlighted_label) {
+        sv.svg.style('cursor', 'pointer');
+      } else {
+        sv.svg.style('cursor', 'move');
       }
     }
   }

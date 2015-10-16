@@ -2,13 +2,13 @@
 
 
 set :application, 'gc-autofit'
-# set :repo_url,  "git@bitbucket.org:wishartlab/bayesil-web.git"
+set :repo_url,  "git@bitbucket.org:wishartlab/gc-autofit.git"
 set :branch, 'master'
 set :scm, :git
 set :deploy_to, '/apps/gc-autofit/project'
 set :use_sudo, false
 set :linked_files, %w{config/database.yml}
-set :linked_dirs, %w{public/system log}
+set :linked_dirs, %w{public/system log APGCMS_working}
 
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
 set :keep_releases, 5

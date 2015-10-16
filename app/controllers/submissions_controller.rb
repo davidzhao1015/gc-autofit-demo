@@ -1,6 +1,6 @@
 class SubmissionsController < ApplicationController
 
-  before_action :set_submission, only: [:show, :edit, :profile, :update, :destroy]
+  before_action :set_submission, only: [:show, :edit, :profile, :update, :save_alkane_standards, :destroy]
 
   # GET /submissions
   # GET /submissions.json
@@ -73,6 +73,18 @@ class SubmissionsController < ApplicationController
       else
         format.html { render :edit }
         format.json { render json: @submission.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  def save_alkane_standards
+    respond_to do |format|
+      format.json do
+        standards = JSON.parse(params[:alkane_standards])
+        json_results = JSON.parse(File.read(@submission.standards.json_results.path))
+        json_results['labels'] = standards
+        File.open(@submission.standards.json_results.path, 'w') { |f| f.write(JSON.generate(json_results)) }
+        head :no_content
       end
     end
   end

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resources :submissions do
     get 'example', on: :collection
     get 'profile', on: :member
+    post 'save_alkane_standards', on: :member
     resources :spectra
   end
 

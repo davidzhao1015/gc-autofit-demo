@@ -1,0 +1,16 @@
+.modal.fade.alkane-dialog[data-label-id='']
+  .modal-dialog.modal-sm
+    .modal-content
+      .modal-header
+        button.close.custom-db-cancel type='button' data-dismiss='modal' aria-hidden='true' &times;
+        h4.modal-title Change Alkane Value
+      .modal-body
+        .form-group.has-feedback.alkane-group
+          = label_tag '', nil, class: 'control-label', id: 'alkane-message'
+          = text_field_tag :alkane_standard, nil, class: 'form-control', id: 'alkane-standard-input', autofocus: true
+          span.glyphicon.form-control-feedback
+
+      .modal-footer
+        button.btn.btn-default[type='button' data-dismiss='modal'] Cancel
+        button.btn.btn-primary#alkane-save[type='button'] Save
+

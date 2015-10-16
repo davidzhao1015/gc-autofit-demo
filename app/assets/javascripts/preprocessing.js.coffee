@@ -19,6 +19,7 @@ $(window).load ->
       legend_show: false
     })
     alkane_sv.flash('Loading...')
+    window.alkane_sv = alkane_sv
 
     # Load alkane data
     $.getJSON $(this).data('spectra-path'), (data) ->
