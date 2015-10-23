@@ -4,7 +4,7 @@ $ ->
   if $('#samples-status').length > 0
     setTimeout(updateSamplesStatus, 5000)
 
-  $('#spectra-list tbody').on('click', 'tr.spectrum-active', () ->
+  $('#profiling').on('click', 'tr.spectrum-active', () ->
     window.location.href = $(this).data('spectrum-link')
   )
 
@@ -32,7 +32,8 @@ $ ->
 updateSubmissionStatus = () ->
   if !$('#submission-status').data('finalized')
     secret_id = $('#submission-status').data('secret-id')
-    $.getScript('/submissions/' + secret_id + '.js')
+    $.getScript '/submissions/' + secret_id + '.js', () ->
+      window.load_alkane_viewer()
     setTimeout(updateSubmissionStatus, 5000)
 
 updateSamplesStatus = () ->

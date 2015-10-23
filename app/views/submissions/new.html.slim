@@ -95,20 +95,17 @@ h1 GC-AutoFit Analysis
             .form-label
               = label :standards, 'Alkane Standards', class: 'control-label required col-sm-3'
             .col-sm-9
-              = file_field_tag :spectrum_data, name: 'submission[spectra_attributes][][spectrum_data]'
-              = hidden_field_tag 'submission[spectra_attributes][][category]', 'standards'
+              = file_field_tag :standards_spectrum
           .form-group
             .form-label
               = label :blank, 'Blank', class: 'control-label col-sm-3'
             .col-sm-9
-              = file_field_tag :spectrum_data, name: 'submission[spectra_attributes][][spectrum_data]'
-              = hidden_field_tag 'submission[spectra_attributes][][category]', 'blank'
+              = file_field_tag :blank_spectrum
           .form-group
             .form-label
               = label :samples, 'Samples', class: 'control-label required col-sm-3'
             .col-sm-9
-              = file_field_tag :spectrum_data, multiple: true, name: 'submission[spectra_attributes][][spectrum_data]'
-              = hidden_field_tag 'submission[spectra_attributes][][category]', 'sample'
+              = file_field_tag :spectrum_data, multiple: true, name: 'sample_spectra[]'
 
     .button-clear
 

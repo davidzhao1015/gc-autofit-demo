@@ -157,6 +157,21 @@ class SubmissionsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def submission_params
+      # Update submission params with spectral data
+      spectra_attributes = []
+      if params[:standards_spectrum]
+        spectra_attributes << { category: 'standards', spectrum_data: params[:standards_spectrum] }
+      end
+      if params[:blank_spectrum]
+        spectra_attributes << { category: 'blank', spectrum_data: params[:blank_spectrum] }
+      end
+      if params[:sample_spectra]
+        params[:sample_spectra].each do |sample_spectrum|
+          spectra_attributes << { category: 'sample', spectrum_data: sample_spectrum }
+        end
+      end
+
+      params[:submission][:spectra_attributes] = spectra_attributes
       params.require(:submission).permit(:database, :internal_standard, :status, database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
