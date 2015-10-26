@@ -14,11 +14,11 @@
         th Run Time
         th Status
     tbody
-      - @submission.samples.each do |samples|
-        tr[id='spectrum_id_#{samples.id}'
-           data-spectrum-link='#{submission_spectrum_path(@submission, samples)}'
-           class='#{"spectrum-active" if samples.finalized?}']
-          td = samples.name
-          td.runtime = samples.display_runtime
-          td.status-text = samples.display_status
+      - @submission.samples.each do |sample|
+        tr[id='spectrum_id_#{sample.id}'
+           data-spectrum-link='#{submission_spectrum_path(@submission, sample)}'
+           class='#{"spectrum-active" if sample.finalized?}']
+          td = sample.name
+          td.runtime = sample.display_runtime
+          td.status-text = sample.display_status
 

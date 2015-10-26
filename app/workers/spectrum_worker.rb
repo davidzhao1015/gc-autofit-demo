@@ -14,17 +14,20 @@ class SpectrumWorker
     # FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
 
     apgcms = APGCMS.new(infiledir: File.join(spectrum.sample_dir),
-                        # 'lib.internal': 'SERUM',
                         'lib.internal': submission.database.upcase,
-                        # internalstd: 'Ribitol',
                         internalstd: submission.internal_standard,
                         process: 'PROFILING',
+                        AlkaneRT: submission.alkane_rt.join(','),
                         infoFileDir: submission.preprocessing_dir,
-                        outdir: File.join(spectrum.sample_dir))
+                        outdir: File.join(spectrum.sample_dir),
+                        log: spectrum.log_file)
     if apgcms.success?
       spectrum.status = 'complete'
       # Save JSON results
-      spectrum.json_results = File.open(File.join(spectrum.sample_dir, 'sample_spectrum.json') )
+      json_path = File.join(spectrum.sample_dir, 'sample_spectrum.json')
+      spectrum.json_results = File.open(json_path)
+      # Remove original JSON file
+      FileUtils.rm(json_path)
       spectrum.save!
     else
       spectrum.status = 'failed'

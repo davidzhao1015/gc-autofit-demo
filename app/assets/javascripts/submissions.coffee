@@ -11,7 +11,7 @@ $ ->
   # Handle 'User uploaded database'
   if $('#database-selection :radio').val() != 'upload'
       $('#custom-database-upload').hide()
-  $('#database-selection :radio').on 'click', () ->
+  $('#database-selection :radio').on 'change', () ->
     if $(this).val() == 'upload'
       $('#custom-database-upload').slideDown('fast')
     else

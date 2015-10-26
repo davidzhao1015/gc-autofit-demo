@@ -23,13 +23,36 @@ $(window).load ->
       window.alkane_sv = alkane_sv
 
       # Load alkane data
-      $.getJSON $(this).data('spectra-path'), (data) ->
-        if data
-          alkane_sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
-          alkane_sv.draw()
+      $.ajax
+        dataType: 'json'
+        url: $(this).data('spectra-path')
+        success: (data) ->
+          if data && data.xy_data
+            alkane_sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
+            alkane_sv.draw()
+        # Error handling not working for some reason
+        # error: (jqXHR, textStatus, errorThrown) ->
+        #   console.log('error')
+      # $.getJSON $(this).data('spectra-path'), (data) ->
+      #   if data
+      #     alkane_sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
+      #     alkane_sv.draw()
+
+      alkane_sv.on 'label-click', (label) ->
+        $('#alkane-save').removeClass('disabled')
+        $('#alkane-message').html('')
+        $('.alkane-group').removeClass('has-success').removeClass('has-error')
+        $('#alkane-standard-input ~ span').removeClass('glyphicon-remove').removeClass('glyphicon-ok')
+        $('.alkane-dialog').modal('show')
+        $('.alkane-dialog').data('label-id', label.label_id())
+        $('.alkane-dialog #alkane-standard-input').val(label.text)
 
   load_alkane_viewer()
   window.load_alkane_viewer = load_alkane_viewer
+
+  if $('#profiling-tab:not(.disabled)').length > 0
+    window.alkane_sv.annotation.hover = false
+    window.alkane_sv.annotation.label_color = 'black'
 
 
 

@@ -11,22 +11,28 @@ class SubmissionWorker
                         'lib.internal': submission.database.upcase,
                         internalstd: submission.internal_standard,
                         process: 'PREPROCESSING',
-                        outdir: File.join(submission.preprocessing_dir))
+                        outdir: File.join(submission.preprocessing_dir),
+                        log: submission.log_file)
     if apgcms.success?
       submission.status = 'complete'
       # Save Standards
       standards = submission.standards
-      standards.json_results = File.open(File.join(submission.preprocessing_dir, 'Alkstd_spectrum.json') )
-      standards.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Alkstd.png') )
-      standards.save!
+      if standards
+        standards.json_results = File.open(File.join(submission.preprocessing_dir, 'Alkstd_spectrum.json') )
+        standards.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Alkstd.png') )
+        standards.save!
+      end
       # Save Blank
       blank = submission.blank
-      blank.json_results = File.open(File.join(submission.preprocessing_dir, 'Blank_spectrum.json') )
-      blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Blank.png') )
-      blank.save!
+      if blank
+        blank.json_results = File.open(File.join(submission.preprocessing_dir, 'Blank_spectrum.json') )
+        blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Blank.png') )
+        blank.save!
+      end
       # Link Samples
       submission.samples.each do |sample|
-
+        sample.plot = File.open(File.join(submission.preprocessing_dir, "Plot_EIC_Sample_#{sample.id}.png") )
+        sample.save!
       end
     else
       submission.status = 'failed'

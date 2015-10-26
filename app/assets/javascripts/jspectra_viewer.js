@@ -2379,14 +2379,16 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.sv = sv;
     this.highlighted_label;
     this.point_gap = JSV.default_for(options.point_gap, JSV.pixel(12));
+    this.label_color = JSV.default_for(options.label_color, '#5555DD');
     this.hover = JSV.default_for(options.hover, true);
     this.labels = new JSV.SVSet();
     this.visible_labels = new JSV.SVSet();
+    // Test label-click
     // sv.on('label-click', function(label) {
     //   console.log(label.text)
     // })
     sv.svg.on('mousedown.label', function() {
-      if (self.highlighted_label) {
+      if (self.highlighted_label && self.hover) {
         sv.trigger('label-click', self.highlighted_label);
       }
     });
@@ -2544,7 +2546,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     }
 
     // Draw the labels
-    context.fillStyle = '#5555DD';
+    context.fillStyle = this.label_color;
     for (var i=0, len=visible_labels.length; i < len; i++) {
       label = visible_labels[i];
       if (label === this.highlighted_label) {

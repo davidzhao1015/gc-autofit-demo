@@ -29,14 +29,20 @@ h2 Status
     h3.status-text Preprocessing Complete
     - unless @submission.profile?
       p
-        | Check over the alkane standards. If they look ok, click the profile button
+        | Check over the alkane standards. Click on a standard to change its value.
+          If they look ok, click the profile button
       a.btn.btn-primary.btn-lg.center-block[href='#{profile_submission_path(@submission)}' style='width:150px;'] Profile
 
   h2 Alkane Standards
   #alkane-viewer[data-submission-id="#{@submission.secret_id}" data-spectra-path="#{submission_spectrum_url(@submission, @submission.standards, 'json')}"]
 
-  h2 Blank
-  = image_tag @submission.blank.plot.url
+  - if @submission.blank
+    h2 Blank
+    = image_tag @submission.blank.plot.url
+
+  - @submission.samples.each do |sample|
+    h2 = sample.name
+    = image_tag sample.plot.url
 
 = render '/submissions/alkane_dialog'
 

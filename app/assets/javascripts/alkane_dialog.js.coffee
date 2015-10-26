@@ -1,19 +1,10 @@
 $(window).load ->
   # Alkane Standards Dialog
-  if window.alkane_sv
-    window.alkane_sv.on 'label-click', (label) ->
-      $('#alkane-save').removeClass('disabled')
-      $('#alkane-message').html('')
-      $('.alkane-group').removeClass('has-success').removeClass('has-error')
-      $('#alkane-standard-input ~ span').removeClass('glyphicon-remove').removeClass('glyphicon-ok')
-      $('.alkane-dialog').modal('show')
-      $('.alkane-dialog').data('label-id', label.label_id())
-      $('.alkane-dialog #alkane-standard-input').val(label.text)
 
-  $('.alkane-dialog').on 'shown.bs.modal', () ->
+  $('#preprocessing').on 'shown.bs.modal', '.alkane-dialog', () ->
       $('#alkane-standard-input').focus()
 
-  $('#alkane-save').on 'click', () ->
+  $('#preprocessing').on 'click', '#alkane-save', () ->
     # Validate
     if /^\s*C\d+\s*$/.test( $('#alkane-standard-input').val() )
       # Save locally
@@ -24,7 +15,7 @@ $(window).load ->
       # Save remotely
       save_alkane_standards()
 
-  $('#alkane-standard-input').on 'keyup', () ->
+  $('#preprocessing').on 'keyup', '#alkane-standard-input', () ->
     if /^\s*C\d+\s*$/.test( $(this).val() )
       $('#alkane-save').removeClass('disabled')
       $('~ span', this).addClass('glyphicon-ok').removeClass('glyphicon-remove')

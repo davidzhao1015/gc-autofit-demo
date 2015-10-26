@@ -12,6 +12,7 @@ class Submission < ActiveRecord::Base
     #db      #display
     'serum' => 'Serum',
     'urine' => 'Urine',
+    # 'saliva' => 'Saliva',
     'upload' => 'Upload Your Library'
 
   }
@@ -106,6 +107,10 @@ class Submission < ActiveRecord::Base
     File.join(self.working_dir, 'preprocessing')
   end
 
+  def log_file
+    File.join(preprocessing_dir, 'log.txt')
+  end
+
   def profiling_dir
     File.join(self.working_dir, 'profiling')
   end
@@ -124,6 +129,17 @@ class Submission < ActiveRecord::Base
 
   def display_status
     self.status.capitalize
+  end
+
+  def alkane_rt
+    rt = []
+    if self.standards.json_results.present?
+      json_results = JSON.parse(File.read(self.standards.json_results.path))
+      json_results['labels'].each do |label|
+        rt << label['text'].strip.sub(/^\D+/, '')
+      end
+    end
+    rt
   end
 
   private

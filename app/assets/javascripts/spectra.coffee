@@ -30,19 +30,20 @@ $(window).load ->
         dataType: 'json',
         url: path,
         success: (data) ->
-          saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
-          viewer_was_not_empty = sv.spectra().length > 0
-          sv.remove_all_spectra()
-          sv.boundary.initialized = false;
-          sv.scale.initialized = false;
-          sv.boundary.update(data.xy_data)
-          sv.scale.update(data.xy_data)
-          sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
-          if (viewer_was_not_empty)
-            sv.set_domain('x', saved_domains[0])
-            sv.set_domain('y', saved_domains[1])
-          sv.draw()
-          load_results_table()
+          if data && data.xy_data
+            saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
+            viewer_was_not_empty = sv.spectra().length > 0
+            sv.remove_all_spectra()
+            sv.boundary.initialized = false;
+            sv.scale.initialized = false;
+            sv.boundary.update(data.xy_data)
+            sv.scale.update(data.xy_data)
+            sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
+            if (viewer_was_not_empty)
+              sv.set_domain('x', saved_domains[0])
+              sv.set_domain('y', saved_domains[1])
+            sv.draw()
+            load_results_table()
         error: () ->
           sv.clear()
           sv.remove_all_spectra()
@@ -141,12 +142,17 @@ $(window).load ->
       table.clear()
 
       # Load new data
+      sv.annotation.hover = true
       sv.spectra(1).labels.get().each () ->
         # Generate row
         data = this.meta.table_data
+        unless data
+          sv.annotation.hover = false
+          sv.annotation.label_color = 'black'
+          return false
+
         row_data = [ ]
-        column_names = standard_columns
-        column_names.forEach (column) ->
+        standard_columns.forEach (column) ->
           row_data.push(data[column])
         row_node = table.row.add(row_data).node()
         # Add table row id

@@ -22,6 +22,10 @@ class Spectrum < ActiveRecord::Base
     self.submission.input_dir
   end
 
+  def log_file
+    File.join(sample_dir, 'log.txt')
+  end
+
   def sample_name
     case self.category
     when 'blank'
