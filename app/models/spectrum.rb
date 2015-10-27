@@ -26,6 +26,17 @@ class Spectrum < ActiveRecord::Base
     File.join(sample_dir, 'log.txt')
   end
 
+  def csv_file
+    case self.category
+    when 'blank'
+      File.join(self.submission.preprocessing_dir, 'Blank_profiled.csv')
+    when 'standards'
+      File.join(self.submission.preprocessing_dir, 'Alkstd_alkanePeakList.csv')
+    else
+      File.join(sample_dir, 'sample_profiled.csv')
+    end
+  end
+
   def sample_name
     case self.category
     when 'blank'

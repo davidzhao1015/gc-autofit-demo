@@ -2,6 +2,11 @@
 # use $(window).load rather than $(document).ready, so images are loaded first
 $(window).load ->
 
+
+  $('.results-table').DataTable({
+    'paging': false
+  })
+
   $('#spectra-viewer').each ->
     # Initialize Spectra Viewer
     sv = new JSV.SpectraViewer('#spectra-viewer', {
@@ -134,7 +139,7 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
-    standard_columns = ['HMDB ID', 'Name', 'Concentration (mM)']
+    standard_columns = ['HMDB ID', 'Name', 'RT', 'RI', 'Intensity', 'MatchFactor', 'Concentration (mM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()
@@ -143,6 +148,7 @@ $(window).load ->
 
       # Load new data
       sv.annotation.hover = true
+      sv.annotation.label_color = '#5555DD'
       sv.spectra(1).labels.get().each () ->
         # Generate row
         data = this.meta.table_data

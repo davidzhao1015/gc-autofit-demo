@@ -17,6 +17,13 @@ class SubmissionsController < ApplicationController
       # TODO: set to first working finalized spectrum
       @spectrum = @submission.spectra.first
     end
+    respond_to do |format|
+      format.csv do
+        send_data(@submission.csv_report, type: 'text/csv', disposition: 'attachment', filename: @submission.csv_filename)
+      end
+      format.html
+      format.js
+    end
   end
 
   # GET /submissions/new

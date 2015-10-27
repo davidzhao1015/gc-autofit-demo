@@ -3,9 +3,9 @@
   #samples-status[data-secret-id="#{@submission.secret_id}" data-finalized="#{@submission.samples_all_finalized?}"]
 
   h2 
-    | Samples
-    /span.batch-download-results[class='#{"hidden" unless @nmr_request.finalized?}']
-    /  | (#{link_to 'Download Results', nmr_request_path(@nmr_request, 'csv')})
+    | Samples 
+    span.batch-download-results[class='#{"hidden" unless @submission.samples_all_finalized?}']
+      | (#{link_to 'Download Results', submission_path(@submission, 'csv')})
 
   table.table.table-condensed#spectra-list
     thead

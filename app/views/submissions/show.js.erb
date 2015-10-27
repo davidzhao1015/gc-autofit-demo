@@ -12,3 +12,6 @@
   $('#submission-status').data('finalized', '<%= @submission.finalized? %>')
   $('#preprocessing').html("<%= escape_javascript(render partial: 'preprocessing') %>");
 <% end %>
+<% if @submission.samples_all_finalized? %>
+  $('.batch-download-results').removeClass('hidden')
+<% end %>

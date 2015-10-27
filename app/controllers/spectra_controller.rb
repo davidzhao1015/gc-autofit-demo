@@ -13,7 +13,7 @@ class SpectraController < ApplicationController
   def show
     # @submission = @spectrum.submission
     respond_to do |format|
-      # format.csv { send_file(@spectrum.formatted_bayesil_path, filename: @spectrum.csv_filename, type: 'text/csv') }
+      format.csv { send_file(@spectrum.csv_file, filename: @spectrum.name, type: 'text/csv') }
       format.json do
         if @spectrum.json_results.present?
           send_file(@spectrum.json_results.path, type: 'text/json')

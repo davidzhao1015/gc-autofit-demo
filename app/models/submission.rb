@@ -131,6 +131,21 @@ class Submission < ActiveRecord::Base
     self.status.capitalize
   end
 
+  def display_database
+    #TEMP
+    self.database.capitalize
+  end
+
+  def display_runtime
+    if self.runtime.nil?
+      'NA'
+    else
+      min = self.runtime / 60
+      sec = self.runtime % 60
+      min > 0 ? "#{min} minutes #{sec} seconds" : "#{sec} seconds"
+    end
+  end
+
   def alkane_rt
     rt = []
     if self.standards.json_results.present?
@@ -142,6 +157,38 @@ class Submission < ActiveRecord::Base
     rt
   end
 
+  # Join CSV reports from all spectra into single CSV
+  def csv_report
+    all_concs = []
+    hmdbids = {}
+    self.samples.each do |spectrum|
+      concentrations = {}
+      if File.exist?(spectrum.json_results.path.to_s)
+        json_results = JSON.parse(File.read(spectrum.json_results.path))
+        json_results['labels'].each do |label|
+          data = label['meta']['table_data']
+          hmdbids[ data['HMDB ID'] ] = data['Name'] unless hmdbids[ data['id'] ].present?
+
+          concentrations[ data['HMDB ID'] ] = data['Concentration (mM)']
+        end
+      end
+      all_concs << concentrations
+    end
+
+    CSV.generate do |output|
+      # self.settings.each { |s| output << s }
+      output << ['# Concentration Units: µM']
+      output << ["# Job ID: #{self.to_param}"]
+      output << ['HMDB ID', 'Compound Name'] + self.samples.map(&:name)
+      hmdbids.each do |hmdbid, name|
+        output << [hmdbid, name] + all_concs.map { |d| "#{d[hmdbid]}" }
+      end
+    end
+  end
+
+  def csv_filename
+    "GC-AutoFit_Report_#{self.created_at.strftime('%Y-%m-%d')}.csv"
+  end
   private
 
   # Generate private URL
