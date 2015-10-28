@@ -31,6 +31,10 @@ class Submission < ActiveRecord::Base
   validates :secret_id, presence: true, uniqueness: true
   validates :status, inclusion: { in: STATES }
   validates :database, inclusion: { in: DATABASES.keys }
+  validate :check_required_spectra
+  #validate :check_internal_standard
+  #validate :check_user_calibration
+  #validate :check_user_library
 
   before_validation :generate_secret
   # after_create      :start_work
@@ -189,11 +193,21 @@ class Submission < ActiveRecord::Base
   def csv_filename
     "GC-AutoFit_Report_#{self.created_at.strftime('%Y-%m-%d')}.csv"
   end
+
   private
 
   # Generate private URL
   def generate_secret
     self.secret_id ||= SecureRandom.hex(SECRET_ID_LENGTH)
+  end
+
+  def check_required_spectra
+    unless self.spectra.any? { |s| s.category == 'standards' }
+      errors[:base] << "An alkane standards spectra must be provided"
+    end
+    unless self.spectra.any? { |s| s.category == 'sample' }
+      errors[:base] << "At least one sample spectra must be provided"
+    end
   end
 
 end

@@ -1,8 +1,9 @@
 class Spectrum < ActiveRecord::Base
   STATES = %w[ validating queued profiling complete failed ]
   FINALIZED_STATES = %w[ complete failed ]
+  CATEGORIES = %w[ standards blank sample ]
 
-  belongs_to :submission
+  belongs_to :submission, inverse_of: :spectra
 
   has_attached_file :spectrum_data, path: ':input_dir/:sample_name.:extension'
   has_attached_file :json_results,  path: ':sample_dir/spectrum.:extension'
@@ -13,6 +14,7 @@ class Spectrum < ActiveRecord::Base
   validates_attachment_file_name :plot, :matches => [/png\Z/]
 
   validates :status, inclusion: { in: STATES }, allow_blank: true
+  validates :category, inclusion: { in: CATEGORIES }
 
   def sample_dir
     Rails.root.join(self.submission.profiling_dir, self.sample_name)
