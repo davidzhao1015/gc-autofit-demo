@@ -32,6 +32,7 @@ class SubmissionsController < ApplicationController
     @submission.database = 'serum'
     @submission.internal_standard = 'Ribitol'
     @submission.mf_score_threshold = 400
+    @upload_spectra_format = 'zip'
   end
 
   # GET /submissions/1/edit
@@ -43,6 +44,7 @@ class SubmissionsController < ApplicationController
   def create
     @submission = Submission.new(submission_params)
     @submission.status = 'validating'
+    @upload_spectra_format = params[:upload_spectra_format]
     if @submission.internal_standard == 'Other'
       @custom_internal_standard = params[:custom_internal_standard]
       @submission.internal_standard = @custom_internal_standard
@@ -52,7 +54,7 @@ class SubmissionsController < ApplicationController
       if @submission.save
         @submission.start_work
         if params[:submission][:input_zip]
-          # Process zip file and ignore aother files
+          # Process zip file and ignore other files
         else
         end
         format.html { redirect_to @submission, notice: 'Submission was successfully created.' }

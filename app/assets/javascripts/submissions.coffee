@@ -26,6 +26,11 @@ $ ->
     else
       $('#custom_internal_standard').fadeOut('fast')
 
+  #Upload Spectra format
+  $('.toggle-upload').on 'click', () ->
+    toggle = $(this).attr('id').replace('toggle-upload-','')
+    $('#upload_spectra_format').val(toggle)
+
 
 
 

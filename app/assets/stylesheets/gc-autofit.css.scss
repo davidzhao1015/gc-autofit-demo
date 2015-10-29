@@ -28,14 +28,17 @@ select.btn {
 
 .form-label {
   clear: both;
-
 }
+
 .form-input {
   clear: both;
   padding-left: 0px;
   margin: 5px 0 15px 0;
 }
 
+.form-horizontal .control-label {
+  padding-top: 0;
+}
 
 .form-list li {
   clear: both;
@@ -67,7 +70,7 @@ select.btn {
 }
 
 .example-button {
-  float: left;
+  display: inline-block;
   width: 100px;
   text-align: center;
   .btn {
@@ -81,7 +84,7 @@ select.btn {
 }
 
 .float-text {
-  float: left;
+  display: inline-block;
 }
 
 .clear {
