@@ -20,6 +20,7 @@ class SpectrumWorker
                         AlkaneRT: submission.alkane_rt.join(','),
                         infoFileDir: submission.preprocessing_dir,
                         outdir: File.join(spectrum.sample_dir),
+                        MFscore: submission.mf_score_threshold,
                         log: spectrum.log_file)
     if apgcms.success?
       spectrum.status = 'complete'

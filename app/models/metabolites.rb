@@ -18,10 +18,11 @@ class Metabolites
     File.join(METABOLITES_DIR, "#{biofluid}.csv")
   end
 
-  def self.available_for(biofluid)
-    biofluid = biofluid.downcase
+  def self.available_for(biofluid_or_path)
     available = {}
-    CSV.foreach(self.file_path_for_biofluid(biofluid), CSV_OPTIONS) do |row|
+    biofluid_path = self.file_path_for_biofluid(biofluid_or_path.downcase)
+    path = File.exist?(biofluid_path) ? biofluid_path : biofluid_or_path
+    CSV.foreach(path, CSV_OPTIONS) do |row|
       available[row[HMDB_ID_COLUMN]] = row[COMPOUND_NAME_COLUMN]
     end
     available

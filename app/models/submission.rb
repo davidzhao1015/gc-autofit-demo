@@ -27,14 +27,23 @@ class Submission < ActiveRecord::Base
 
   has_attached_file :profile_library, path: ':input_dir/user_library.csv'
   has_attached_file :calibration, path: ':input_dir/user_calibration.csv'
+  validates_attachment_presence :profile_library, if: Proc.new { |sub| sub.database == 'upload' }
+  validates_attachment_file_name :profile_library, :matches => [/csv\Z/]
+  validates_attachment_file_name :calibration, :matches => [/csv\Z/]
+
 
   validates :secret_id, presence: true, uniqueness: true
   validates :status, inclusion: { in: STATES }
   validates :database, inclusion: { in: DATABASES.keys }
+  validates_numericality_of :mf_score_threshold,
+                             greater_than_or_equal_to: 0,
+                             less_than_or_equal_to: 999,
+                             only_integer: true
+  validates_presence_of :internal_standard
   validate :check_required_spectra
-  #validate :check_internal_standard
+  validate :check_internal_standard
+  validate :check_user_library
   #validate :check_user_calibration
-  #validate :check_user_library
 
   before_validation :generate_secret
   # after_create      :start_work
@@ -203,11 +212,38 @@ class Submission < ActiveRecord::Base
 
   def check_required_spectra
     unless self.spectra.any? { |s| s.category == 'standards' }
-      errors[:base] << "An alkane standards spectra must be provided"
+      errors[:base] << "An alkane standards spectrum must be provided"
     end
     unless self.spectra.any? { |s| s.category == 'sample' }
-      errors[:base] << "At least one sample spectra must be provided"
+      errors[:base] << "At least one sample spectrum must be provided"
     end
+  end
+
+  def check_internal_standard
+    if self.internal_standard
+      standard = self.internal_standard.downcase
+      profile_file = self.profile_library.queued_for_write[:original]
+      metabolites = {}
+      if self.database == 'upload' 
+        if profile_file
+          metabolites = Metabolites.available_for(profile_file.path)
+        end
+      else
+        metabolites = Metabolites.available_for(self.database)
+      end
+      ids = metabolites.keys.map { |i| i.downcase }
+      names = metabolites.values.map { |n| n.downcase }
+      valid_standard = (standard =~ /^hmdb/) ? ids.include?(standard) : names.include?(standard)
+      unless valid_standard
+        errors[:base] << "Internal standard must be present in the selected library"
+      end
+    end
+  end
+
+  def check_user_library
+    # profile_file = self.profile_library.queued_for_write[:original]
+    # if profile_file.path
+    # end
   end
 
 end

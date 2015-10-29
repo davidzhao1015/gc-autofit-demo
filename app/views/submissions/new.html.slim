@@ -107,6 +107,15 @@ h1 GC-AutoFit Analysis
             .col-sm-9
               = file_field_tag :spectrum_data, multiple: true, name: 'sample_spectra[]'
 
+      li
+        .form-group
+          .form-label
+            = f.label :mf_score_threshold, 'Provide a MF Score cutoff:', class: "control-label"
+            span.form-help
+              | An integer between 0 - 999 but somewhere between 400 - 600 is recommended.
+
+          .col-sm-2.form-input
+            = f.text_field :mf_score_threshold, class: "input-sm form-control"
     .button-clear
 
     .submit-button

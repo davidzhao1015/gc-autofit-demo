@@ -12,6 +12,7 @@ class SubmissionWorker
                         internalstd: submission.internal_standard,
                         process: 'PREPROCESSING',
                         outdir: File.join(submission.preprocessing_dir),
+                        MFscore: submission.mf_score_threshold,
                         log: submission.log_file)
     if apgcms.success?
       submission.status = 'complete'

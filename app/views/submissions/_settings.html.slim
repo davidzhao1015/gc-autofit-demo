@@ -23,6 +23,12 @@ h2 Settings
       em
         = human_boolean(@submission.blank.present?)
   .row
+    .col-sm-12
+      strong
+        | MF Score Cut Off: 
+      em
+        | #{@submission.mf_score_threshold}
+  .row
     .col-sm-6
       strong
         | Date: 

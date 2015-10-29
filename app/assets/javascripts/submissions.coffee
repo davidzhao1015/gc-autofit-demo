@@ -9,7 +9,7 @@ $ ->
   )
 
   # Handle 'User uploaded database'
-  if $('#database-selection :radio').val() != 'upload'
+  if $('#database-selection :radio:checked').val() != 'upload'
       $('#custom-database-upload').hide()
   $('#database-selection :radio').on 'change', () ->
     if $(this).val() == 'upload'

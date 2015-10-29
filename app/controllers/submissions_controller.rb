@@ -31,6 +31,7 @@ class SubmissionsController < ApplicationController
     @submission = Submission.new
     @submission.database = 'serum'
     @submission.internal_standard = 'Ribitol'
+    @submission.mf_score_threshold = 400
   end
 
   # GET /submissions/1/edit
@@ -119,6 +120,7 @@ class SubmissionsController < ApplicationController
   def get_example(example_num)
     submission = Submission.new
     submission.status = 'validating'
+    submission.mf_score_threshold = 400
     if example_num == '1'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'serum')
       submission.database = 'serum'
@@ -179,7 +181,9 @@ class SubmissionsController < ApplicationController
       end
 
       params[:submission][:spectra_attributes] = spectra_attributes
-      params.require(:submission).permit(:database, :internal_standard, :status, database_subset: [],
+      params.require(:submission).permit(:database, :internal_standard, :status, :mf_score_threshold,
+                                         :profile_library, :calibration,
+                                         database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
 end
