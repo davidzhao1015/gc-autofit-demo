@@ -67,13 +67,14 @@ img.drag-icon {
   }
 }
 
-#spectra-error {
-  margin-top: 0;
-  margin-bottom: 5px;
-}
-#spectrum-error-section {
+#spectrum-message-section {
   margin-left: auto;
   margin-right: auto;
+
+  #spectrum-message {
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
 }
 
 #results-section {

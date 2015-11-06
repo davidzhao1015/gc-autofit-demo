@@ -109,6 +109,10 @@ class Spectrum < ActiveRecord::Base
     self.status == 'failed'
   end
 
+  def has_message?
+    self.failed?
+  end
+
   def next
     spectra = self.submission.spectra
     index = spectra.index(self)

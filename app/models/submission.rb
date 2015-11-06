@@ -203,6 +203,29 @@ class Submission < ActiveRecord::Base
     "GC-AutoFit_Report_#{self.created_at.strftime('%Y-%m-%d')}.csv"
   end
 
+  def unzip_spectra
+    return unless self.zip_file.present?
+    FileUtils.mkdir_p(input_dir)
+    Zip::File.open(self.zip_file.path) do |zip_file|
+      zip_file.each do |entry|
+        ext = File.extname(entry.name)
+        name = File.basename(entry.name, '.*')
+        case name.downcase
+        when 'alkane' || ' alkstd'
+          dest_path = File.join(input_dir, "Alkstd.#{ext}")
+        when 'Blank' || 'Blk'
+          dest_path = File.join(input_dir, "Blank.#{ext}")
+        else
+          dest_path = File.join(input_dir, "#{name}.#{ext}")
+        end
+        entry.extract(dest_path)
+      end
+      # TODO: UNZIPPPING must be done in temp folder
+      # TODO: Then attach to
+      # self.spectra.build(category: '', spectrum_data: File.open(path))
+    end
+  end
+
   private
 
   # Generate private URL

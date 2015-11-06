@@ -49,14 +49,14 @@ class SubmissionsController < ApplicationController
       @custom_internal_standard = params[:custom_internal_standard]
       @submission.internal_standard = @custom_internal_standard
     end
+    # Add zip file contents
+    if @upload_spectra_format == 'zip' && params[:submission][:input_zip]
+      @submission.unzip_spectra
+    end
 
     respond_to do |format|
       if @submission.save
         @submission.start_work
-        if params[:submission][:input_zip]
-          # Process zip file and ignore other files
-        else
-        end
         format.html { redirect_to @submission, notice: 'Submission was successfully created.' }
         format.json { render :show, status: :created, location: @submission }
       else
@@ -169,22 +169,26 @@ class SubmissionsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def submission_params
       # Update submission params with spectral data
-      spectra_attributes = []
-      if params[:standards_spectrum]
-        spectra_attributes << { category: 'standards', spectrum_data: params[:standards_spectrum] }
-      end
-      if params[:blank_spectrum]
-        spectra_attributes << { category: 'blank', spectrum_data: params[:blank_spectrum] }
-      end
-      if params[:sample_spectra]
-        params[:sample_spectra].each do |sample_spectrum|
-          spectra_attributes << { category: 'sample', spectrum_data: sample_spectrum }
+      if @upload_spectra_format == 'separate'
+        spectra_attributes = []
+        if params[:standards_spectrum]
+          spectra_attributes << { category: 'standards', spectrum_data: params[:standards_spectrum] }
         end
+        if params[:blank_spectrum]
+          spectra_attributes << { category: 'blank', spectrum_data: params[:blank_spectrum] }
+        end
+        if params[:sample_spectra]
+          params[:sample_spectra].each do |sample_spectrum|
+            spectra_attributes << { category: 'sample', spectrum_data: sample_spectrum }
+          end
+        end
+        params[:submission][:spectra_attributes] = spectra_attributes
+        # Remove any zip file
+        params[:submission][:zip_file] = nil
       end
 
-      params[:submission][:spectra_attributes] = spectra_attributes
       params.require(:submission).permit(:database, :internal_standard, :status, :mf_score_threshold,
-                                         :profile_library, :calibration,
+                                         :profile_library, :calibration, :zip_file,
                                          database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end

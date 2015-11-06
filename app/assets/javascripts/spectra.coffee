@@ -70,7 +70,7 @@ $(window).load ->
     min_window_height = sv_container.height() + top_margin + 30
     $('#spectra-header').width($('main').width())
     $('#spectra-controls').width($('main').width())
-    $('#spectrum-error-section').width($('main').width())
+    $('#spectrum-message-section').width($('main').width())
     $('#phase-controls').width($('main').width())
 
     if $window.height() <= min_window_height
@@ -102,6 +102,7 @@ $(window).load ->
       sv.resize($('main').width(), null, true)
       $('#spectra-header').width($('main').width())
       $('#spectra-controls').width($('main').width())
+      $('#spectrum-message-section').width($('main').width())
       $('#phase-controls').width($('main').width())
       if $window.height() <= min_window_height
         $('#lock-viewer').addClass('disabled')
