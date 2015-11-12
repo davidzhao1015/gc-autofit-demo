@@ -22,16 +22,12 @@
 ## 4. download link with the report file (.csv)
 ############################################################################################
 
-## update? 
-# threshold for each compound? or use different with respond to intensities
-library(parallel)
-
 #!/usr/bin/Rscript
 options(echo=FALSE) # if you want see commands in output file
 options("width"=120)
+options(warn = -1) # ignore the warnings
 
 library(parallel) # for using multiple cores
-
 
 ## argument check for standalone version
 ##===========================================================================================
@@ -40,8 +36,9 @@ library(parallel) # for using multiple cores
 args <- commandArgs(trailingOnly = FALSE)
 # args <- commandArgs(TRUE)
 # cat("length(args):", length(args),"\n")
-
 # cat("argsL:\n"); print(argsL)
+
+# get program directory
 RProgram_dir <- normalizePath(dirname(sub("^--file=", "", args[grep("^--file=", args)])))
 lib_dir <- file.path(RProgram_dir, "lib")
 
@@ -53,125 +50,9 @@ showProgramInfo(Version)
 if (length(args) == 5) {  args <- c("--help") } 
 if ("--help" %in% args) {  helpMessage()  }
 
-# NOT FUNCTION --> function 
-# Define Global Variables
-# Parsing arguments
-{
-  argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
-  argsL <- as.list(as.character(argsDF$V2))
-  names(argsL) <- argsDF$V1
-  
-  # cat("argsDF:\n"); print(argsDF);
-  # cat("argsL:\n"); print(argsL);
-  
-  if(is.null(argsL$infiledir)) {
-    showErrMessage("  Error in argument:\n\t There is no input spectrum file directory")
-    helpMessage()
-  } else {
-    sampleFileDir <- normalizePath(argsL$infiledir) # should be absolute path
-  }
-  
-  if(is.null(argsL$lib.internal)) {
-      USE_INTERNAL_LIBRARY <- 'NONE' # argsL$lib.internal
-      
-      if(is.null(argsL$userlib)) {
-        showErrMessage("  Error in argument:\n\t There is no user defined library file")
-        helpMessage()
-      } else {
-        userLibFile <- argsL$userlib
-      }
-      
-      if(is.null(argsL$usercal)) {
-        showErrMessage("  Error in argument:\n\t There is no user defined calibration curve file")
-        helpMessage()
-      } else {
-        userCalFile <- argsL$usercal
-      }
-      
-  } else {
-      # NONE, SERUM, URINE, SILIVA, ... default = none
-      if (argsL$lib.internal %in% c('SERUM', 'URINE', 'SALIVA', 'MILK')) {
-        USE_INTERNAL_LIBRARY <- argsL$lib.internal
-      } else {
-        showErrMessage("  Error in argument:\n\t see the help to correctly use the internal library option (lib.internal)")
-        helpMessage()
-      } 
-  }
-  
-  # Internal Std in Library (HMDB ID or Compound Name; Final, Compound Name will be used for the analysis)
-  if(is.null(argsL$internalstd)) {
-      showErrMessage("  Error in argument:\n\t There is no internal standard compound. 
-                            If you want profile only, then please set with 'NONE' ")
-      helpMessage()
-  } else {
-      internalStd.in <- argsL$internalstd
-  }
-  
-  ### changed this option to support new platform 
-  # 
-  # if(is.null(argsL$plotonly)) {
-  #  showErrMessage("  Warning in argument:\n\t plot only option is not assigned")
-  #  helpMessage()
-  #} else {
-  #  RunPlotOnly <- as.logical(argsL$plotonly)
-  #}
-  
-  if(argsL$process %in% c('PREPROCESSING','PROFILING')) {
-      processOption <- argsL$process;
-  } else {
-      showErrMessage("  Error in argument:\n\t see the help to correctly use the process option")
-      helpMessage()
-  }
-  
-  # optional arguments
-  if(is.null(argsL$useblank)) {
-    # showErrMessage("  Warning in argument:\n\t Blank file option is not assigned. Program will use default (TRUE)")
-    USE_BLANK_SPECTRUM <- TRUE
-  } else {
-    USE_BLANK_SPECTRUM <- as.logical(argsL$useblank)
-  }
-  
-  if(is.null(argsL$MFscore)) {
-    # showErrMessage("  Warning in argument:\n\t MFscore option is not assigned. Program will use default 400")
-    MF_THRESHOLD <- MF_THRESHOLD_DEFAULT
-  } else {
-    MF_THRESHOLD <- as.numeric(argsL$MFscore)
-  }
-  
-  if(is.null(argsL$RIoffset)) {
-    # showErrMessage("  Warning in argument:\n\t RI offset option (RIoffset) is not assigned. Program will use default 0.03")
-    RI.Variation <- RI.VARIATION.DEFAULT     
-  } else {
-    RI.Variation <- as.numeric(argsL$RIoffset)
-  }
-  
-  if(is.null(argsL$AlkaneRT)) {
-    user.AlkaneRT <-  NULL
-  } else {
-    user.AlkaneRT <- as.numeric(unlist(strsplit(argsL$AlkaneRT,",")))
-    if(ISDEBUG) { cat("## user.AlkaneRT:"); print(user.AlkaneRT) }
-  } 
-  
-  if(is.null(argsL$outdir)) {
-    # default output directory
-    user.outdir <- paste(dirname(sampleFileDir), "/", sub("_input","",basename(sampleFileDir)), '_result', sep='')
-  } else {
-    user.outdir <- argsL$outdir # expected full path
-    if(ISDEBUG) { cat("## user.outdir:"); print(user.outdir) }
-  }
-
-  # In profiling process, it needs to have the Alkane and Blank information from the Preprocessing process.
-  if( processOption == 'PROFILING' ) {
-      cat("argsL$infoFileDir:"); print(argsL$infoFileDir)
-      if(is.null(argsL$infoFileDir)) {
-          showErrMessage("  Error in argument (--infoFileDir):\n\t Alkane Standard and Blank Profiled Information are required \n\t with '--infoFileDir' option")
-          helpMessage()
-      } else {
-          infoFileDir <- normalizePath(argsL$infoFileDir)
-          if(ISDEBUG) { cat("## infoFileDir:"); print(argsL$infoFileDir) }
-      }
-  }
-}
+## parsing input arguments
+parsingArgument(args)
+# cat("\n## AFTER PARSING ARGs\n")
 
 ## create and set working directory (save output/result files) 
 ## may be changed: upload_user_temp_dir \data, \Result
@@ -187,17 +68,27 @@ if( USE_INTERNAL_LIBRARY == 'NONE') {
 } else{  
     SampleType <- setSampleType(USE_INTERNAL_LIBRARY)
     
-    ## load libraries 
-    {
-      fname.lib.peak <- file.path(file.path(lib_dir, LibFile[SampleType]))
-      lib.peak <- getLibInfo(fname.lib.peak)
-      
-      fname.lib.calicurve <- file.path(file.path(lib_dir, LibCaliCurveFile[SampleType]))
-      lib.calicurv <- getLibInfo(fname.lib.calicurve)
+    ## load libraries (profiling and calibration curve)
+    fname.lib.peak <- file.path(file.path(lib_dir, LibFile[SampleType]))
+    lib.peak <- getLibInfo(fname.lib.peak)
+    
+    fname.lib.calicurve <- file.path(file.path(lib_dir, LibCaliCurveFile[SampleType]))
+    lib.calicurv <- getLibInfo(fname.lib.calicurve)
+    
+    ## making Subset of Internal Library 
+    ## if USER_SELECTED_CMPDS is not NULL (user selected some compounds of internal library)
+    if (! is.null(USER_SELECTED_CMPDS)) {
+        userSelectedCmpdList <- unlist(strsplit(USER_SELECTED_CMPDS, ","))
+        # cat("\n\n# lib.peak:\n"); print(as.character(lib.peak$HMDB_ID)) 
+        # cat("\n\n# lib.calicurv:\n"); print(as.character(lib.calicurv$HMDB_ID))
+        lib.peak <- lib.peak[which(as.character(lib.peak$HMDB_ID) %in% userSelectedCmpdList), ]
+        lib.calicurv <- lib.calicurv[which(as.character(lib.calicurv$HMDB_ID) %in% userSelectedCmpdList), ]
     }
 }  
-# head(lib.peak)
-# head(lib.calicurv)
+
+# print(lib.peak[,c(1:3)])
+# print(lib.calicurv)
+# stop()
 
 ## load library for the functions
 source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and definitions
@@ -272,8 +163,8 @@ if (processOption == 'PREPROCESSING') {
         ## RI calculation using Alkane Std
         peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
         profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
-        # head(profiled_peaks_blank)
-        # cat("profiled_peaks_blank\n"); print(profiled_peaks_blank)
+        # cat("\n\n## profiled_peaks_blank\n"); print(head(profiled_peaks_blank))
+        colnames(profiled_peaks_blank)[1] <- "HMDB_ID"
 
         if( DEBUG ) {
             ofilename <- paste(specFilename.blank,"_profiledPeaksTMP.tsv", sep='')
@@ -281,25 +172,26 @@ if (processOption == 'PREPROCESSING') {
         }
         
         final_PeakProfile_blank <- arrangeProfiledPeaks2(profiled_peaks_blank)
-        if (DEBUG) { cat("final_PeakProfile_blank\n"); print(final_PeakProfile_blank) }
+        if (DEBUG) { cat("\n\n## final_PeakProfile_blank\n"); print(head(final_PeakProfile_blank)) }
 
-        # moved to the arrangeProfiledPeak2() 
-        # final_PeakProfile_blank$CompoundWithTMS <- as.character(final_PeakProfile_blank$CompoundWithTMS)
-        # final_PeakProfile_blank$Area <- as.numeric(as.character(final_PeakProfile_blank$Area))
-        # final_PeakProfile_blank$MatchFactor <- as.numeric(as.character(final_PeakProfile_blank$MatchFactor))
-        
         #!!!! should be included in arrangeProfiledPeaks2
-        final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]                 
-        final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[,-c(9:12,17)], Concentration="NA") # keep mass Spectrum Info (m/z, Intensity)
-        final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,-c(9:13,17,18,19)], Concentration="NA")
-
+        final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
+        
+        final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[, c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity",
+                                                        "mzMaxInts","MatchFactor","TScore","Area","RT.start","RT.end","mz","mzInt")], 
+                                                        Concentration="NA") # keep mass Spectrum Info (m/z, Intensity)
+        final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                                                                    "mzMaxInts","MatchFactor", "RI.Similarity","Area","RT.start","RT.end")], 
+                                         Concentration="NA")
         ofilename <- paste(specFilename.blank,"_profiled.csv", sep='')
-        write.csv(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE)
+        outColnames <- c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                         "Irons","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+        write.table(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
 
         if (CREATE_JSON_FILE) {
             ofilename <- paste(specFilename.blank,"_spectrum.json", sep='')
-            create_json_file(ofilename, xset.blank@scantime, xset.blank@tic, final_PeakProfile_blank.json)
-        }        
+            create_json_file(ofilename, round(xset.blank@scantime/60,3), xset.blank@tic, final_PeakProfile_blank.json)
+        }
                 
         # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
         if( (internalStd != "NONE") && !is.null(internalStd) ) {
@@ -326,6 +218,7 @@ if (processOption == 'PREPROCESSING') {
     save(final_PeakProfile_blank, file="blankInfo.Rdata")
         
 } else {
+    ## for Quantification Process, loading preprocessed information from saved files
     cat("\n##### Loading Preprocessed Information Files \n")
     infoFileDir.alkane <- paste(infoFileDir, "/alkaneInfo.Rdata", sep='')
     # cat(infoFileDir.alkane,"\n")
@@ -401,18 +294,19 @@ if ( processOption == "PREPROCESSING" ) {
     checkInternalStd <- FALSE    
     if (DEBUG) { beg = Sys.time() }
    
-    # if (nCores > 1) {
+    # For supporting multiple cores. However, it was changed because process as queue structure
     if ( FALSE ) {
-        if(DEBUG) cat("\n\n## Profiling with multi cores\n")
-        flag.blank_spectrum <- ifelse( USE_BLANK_SPECTRUM, TRUE, FALSE)
-        conc.each <- quantification.multicore(nCores, fileList$sampleFiles, use.blank=flag.blank_spectrum, threshold.matchFactor=MF_THRESHOLD, 
-                                      internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)  
-        if(DEBUG) cat("## Profiling for each sample -- Done\n")
+        # if(DEBUG) cat("\n\n## Profiling with multi cores\n")
+        # flag.blank_spectrum <- ifelse( USE_BLANK_SPECTRUM, TRUE, FALSE)
+        # conc.each <- quantification.multicore(nCores, fileList$sampleFiles, use.blank=flag.blank_spectrum, threshold.matchFactor=MF_THRESHOLD, 
+        #                              internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)  
+        # if(DEBUG) cat("## Profiling for each sample -- Done\n")
     } else {
         if(DEBUG) cat("\n\n## Profiling with single core\n")
-        # conc.each <- lapply(fileList$sampleFiles, quantifictionFunc, print.on=TRUE)
-        conc.each <- lapply(fileList$sampleFiles, quantifictionFunc, print.on=TRUE, use.blank=USE_BLANK_SPECTRUM, threshold.matchFactor=MF_THRESHOLD, 
-                            internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)        
+        conc.each <- lapply(fileList$sampleFiles, quantifictionFunc, print.on=TRUE, 
+                            use.blank=USE_BLANK_SPECTRUM, threshold.matchFactor=MF_THRESHOLD, 
+                            internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, 
+                            final_PeakProfile_blank=final_PeakProfile_blank)        
     }
    
     if (DEBUG) { 
@@ -430,9 +324,7 @@ if ( processOption == "PREPROCESSING" ) {
         # final.Concentration <- conc.each;
         final.Concentration <- as.data.frame(conc.each);
     }
-    if (DEBUG) { cat("\n\n final.Concentration:\n"); print(final.Concentration) }
-    
-    
+
     ## Collect concentrations only and combine all samples
     ## ==================================================================================================
     if (TRUE) {        
@@ -443,11 +335,7 @@ if ( processOption == "PREPROCESSING" ) {
             ofile.merged <- "profiled_All.csv"
             cat("\n## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
             ## order by RI as in library; merge compound name with RI and sort by RI
-            # cat("# final.concentration:\n"); print(final.Concentration)  
 
-            # colnames(final.Concentration)[1] <- 'HMDB_ID'
-            
-            # final.Concentration <- merge(lib.peakcal[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
             final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
             # cat("\n ### final.Concentration:\n"); print(final.Concentration)
             final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]

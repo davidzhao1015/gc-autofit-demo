@@ -797,7 +797,8 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   
   alkane.peaks.profiled <- cbind(ALKRT=as.double(as.character(alkane.peaks.cleaned$RT))
                                  , Cn=as.integer(as.character(alkane.peaks.cleaned$Cn))
-                                 , Intensity=as.integer(as.character(alkane.peaks.cleaned$Intensity)))
+                                 , Intensity=as.integer(as.character(alkane.peaks.cleaned$Intensity))
+                                 , ALKRTmin=round(as.double(as.character(alkane.peaks.cleaned$RT))/60,3))
   
   if (DEBUG) { cat("## alkane peaks:\n"); print(round(alkane.peaks.profiled,2)) }
   
@@ -817,7 +818,7 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
     ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_spectrum.json", sep='')
     # create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic,
     #                  alkane.peaks.profiled[,"ALKRT"], alkane.peaks.profiled[,"Intensity"], paste('C',alkane.peaks.profiled[,"Cn"],sep='') )
-    create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic, alkane.peaks.profiled )
+    create_json_file.alkane(ofilename, round(xset.alkane@scantime/60,3), xset.alkane@tic, alkane.peaks.profiled )
   }
   
   ## Estimated missing alkane
