@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150716192428) do
+ActiveRecord::Schema.define(version: 20151028164927) do
 
   create_table "spectra", force: :cascade do |t|
     t.string   "category",                   limit: 255
@@ -60,6 +60,7 @@ ActiveRecord::Schema.define(version: 20150716192428) do
     t.text     "database_subset",              limit: 65535
     t.datetime "created_at",                                                 null: false
     t.datetime "updated_at",                                                 null: false
+    t.integer  "mf_score_threshold",           limit: 4
   end
 
 end

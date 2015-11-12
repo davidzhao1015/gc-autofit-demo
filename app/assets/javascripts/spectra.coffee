@@ -2,6 +2,11 @@
 # use $(window).load rather than $(document).ready, so images are loaded first
 $(window).load ->
 
+
+  $('.results-table').DataTable({
+    'paging': false
+  })
+
   $('#spectra-viewer').each ->
     # Initialize Spectra Viewer
     sv = new JSV.SpectraViewer('#spectra-viewer', {
@@ -13,8 +18,11 @@ $(window).load ->
       axis_y_show: true,
       axis_y_lock: 0.04,
       axis_x_reverse: false,
-      axis_x_title: 'Seconds',
-      axis_y_title: 'Intensity'
+      axis_x_title: 'Retention Time (Seconds)',
+      axis_y_title: 'Intensity',
+      axis_y_tick_format: '.1e',
+      axis_y_gutter: 80,
+      legend_show: false
     })
     window.sv = sv
     sv.flash('Loading...')
@@ -27,15 +35,20 @@ $(window).load ->
         dataType: 'json',
         url: path,
         success: (data) ->
-          saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
-          viewer_was_not_empty = sv.spectra().length > 0
-          sv.remove_all_spectra()
-          sv.add_spectrum({xy_line: data.spectrum_xy, tolerance: 0.001})
-          if (viewer_was_not_empty)
-            sv.set_domain('x', saved_domains[0])
-            sv.set_domain('y', saved_domains[1])
-          sv.draw()
-          load_results_table()
+          if data && data.xy_data
+            saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
+            viewer_was_not_empty = sv.spectra().length > 0
+            sv.remove_all_spectra()
+            sv.boundary.initialized = false;
+            sv.scale.initialized = false;
+            sv.boundary.update(data.xy_data)
+            sv.scale.update(data.xy_data)
+            sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
+            if (viewer_was_not_empty)
+              sv.set_domain('x', saved_domains[0])
+              sv.set_domain('y', saved_domains[1])
+            sv.draw()
+            load_results_table()
         error: () ->
           sv.clear()
           sv.remove_all_spectra()
@@ -45,15 +58,8 @@ $(window).load ->
     # Load viewer data
     load_spectrum($(this).data('spectra-path'))
 
-    # $.getJSON $(this).data('spectra-path'), (data) ->
-    #   # sv.add_bayesil_data(data)
-    #   # load_quantities_table()
-    #   sv.add_spectrum({xy_line: data.spectrum_xy, tolerance: 0.001})
-    #   window.data = data
-    #   sv.draw()
 
-
-    # Viewer locking
+    # VIEWER LOCKING
 
     # Make Spectra Viewer Stick to window top when scrolling
     $window = $(window)
@@ -64,6 +70,7 @@ $(window).load ->
     min_window_height = sv_container.height() + top_margin + 30
     $('#spectra-header').width($('main').width())
     $('#spectra-controls').width($('main').width())
+    $('#spectrum-error-section').width($('main').width())
     $('#phase-controls').width($('main').width())
 
     if $window.height() <= min_window_height
@@ -132,50 +139,37 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
-    standard_columns = ['Cn', 'ALKRT', 'Intensity']
-
-    fake_standard = () ->
-      labels = [ ]
-      [10, 11, 12, 13, 14].forEach (cn, i) ->
-        labels.push {
-          x: 400+100*i,
-          y: 3000000*i,
-          text: 'label' + i,
-          meta: {
-            table: {
-              'Cn': cn,
-              'ALKRT': 400+100*i
-              'Intensity': 3000000*i
-            }
-          }
-        }
-      labels
-
+    standard_columns = ['HMDB ID', 'Name', 'RT', 'RI', 'Intensity', 'MatchFactor', 'Concentration (mM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()
       # Clear previous data
       table.clear()
-      # Set up fake data
-      fake_standard().forEach (label) ->
-        sv.spectra(1).labels.add(label)
 
       # Load new data
+      sv.annotation.hover = true
+      sv.annotation.label_color = '#5555DD'
       sv.spectra(1).labels.get().each () ->
         # Generate row
-        data = this.meta.table
+        data = this.meta.table_data
+        unless data
+          sv.annotation.hover = false
+          sv.annotation.label_color = 'black'
+          return false
+
         row_data = [ ]
-        column_names = standard_columns
-        column_names.forEach (column) ->
+        standard_columns.forEach (column) ->
           row_data.push(data[column])
-        row_data.push('testbbo')
         row_node = table.row.add(row_data).node()
         # Add table row id
-        $(row_node).attr('id', this.id)
+        $(row_node).attr('id', data['HMDB ID'])
       # # Format Concentration column
       # table.column(2).nodes().to$().addClass('number')
       table.draw()
       sv.draw()
+
+
+
 
 
 

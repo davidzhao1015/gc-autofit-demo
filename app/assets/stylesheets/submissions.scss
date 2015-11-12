@@ -20,3 +20,55 @@
     }
   }
 }
+
+h3.status-text {
+  margin-top: 0;
+  margin-bottom: 0;
+  & ~ p {
+    margin-top: 10px;
+  }
+}
+
+#alkane-message {
+  margin-bottom: 0px;
+}
+.form-control-feedback {
+  top: 20px !important;
+}
+
+.db-edited .glyphicon {
+  color: green;
+}
+
+.nav-pills-custom {
+  display: inline-block;
+  vertical-align: middle;
+
+  .active {
+    a {
+      background-color: #00b9c2 !important;
+    }
+  }
+  a {
+    border: 1px solid #00b9c2;
+    border-color: #00b9c2;
+    color: #00b9c2;
+  }
+  li {
+    clear: none;
+    line-height: 10px;
+    margin-bottom: 3px;
+  }
+}
+
+.text-only {
+  padding: 10px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.example-section {
+  margin: 20px 0;
+  vertical-align: middle;
+}
+

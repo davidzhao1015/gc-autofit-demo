@@ -4,14 +4,14 @@ $ ->
   if $('#samples-status').length > 0
     setTimeout(updateSamplesStatus, 5000)
 
-  $('#spectra-list tbody').on('click', 'tr.spectrum-active', () ->
+  $('#profiling').on('click', 'tr.spectrum-active', () ->
     window.location.href = $(this).data('spectrum-link')
   )
 
   # Handle 'User uploaded database'
-  if $('#database-selection :radio').val() != 'upload'
+  if $('#database-selection :radio:checked').val() != 'upload'
       $('#custom-database-upload').hide()
-  $('#database-selection :radio').on 'click', () ->
+  $('#database-selection :radio').on 'change', () ->
     if $(this).val() == 'upload'
       $('#custom-database-upload').slideDown('fast')
     else
@@ -26,13 +26,19 @@ $ ->
     else
       $('#custom_internal_standard').fadeOut('fast')
 
+  #Upload Spectra format
+  $('.toggle-upload').on 'click', () ->
+    toggle = $(this).attr('id').replace('toggle-upload-','')
+    $('#upload_spectra_format').val(toggle)
+
 
 
 
 updateSubmissionStatus = () ->
   if !$('#submission-status').data('finalized')
     secret_id = $('#submission-status').data('secret-id')
-    $.getScript('/submissions/' + secret_id + '.js')
+    $.getScript '/submissions/' + secret_id + '.js', () ->
+      window.load_alkane_viewer()
     setTimeout(updateSubmissionStatus, 5000)
 
 updateSamplesStatus = () ->

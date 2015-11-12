@@ -1,7 +1,7 @@
 ul.nav.nav-tabs
   li#preprocessing-tab.active[role='presentation']
     a[href='#preprocessing' data-toggle='tab']Preprocessing
-  li#profiling-tab[role='presentation' class="#{'disabled' unless @submission.complete?}"]
+  li#profiling-tab[role='presentation' class="#{'disabled' unless @submission.profile?}"]
     a[href='#profiling' data-toggle='tab']Profiling
   li#results-tab[role='presentation' class='#{"disabled" unless @submission.samples_any_finalized?}']
     a[href='#results' data-toggle='tab']Results

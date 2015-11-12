@@ -1,0 +1,44 @@
+h2 Settings
+.alert.alert-info
+  .row
+    .col-sm-6
+      strong
+        | Biofluid: 
+      em
+        | #{@submission.display_database}
+    .col-sm-6
+      strong
+        | Internal Standard: 
+      em
+        | #{@submission.internal_standard}
+  .row
+    .col-sm-6
+      strong
+        | Number of Samples: 
+      em
+        | #{@submission.samples.count}
+    .col-sm-6
+      strong
+        | Blank Provided: 
+      em
+        = human_boolean(@submission.blank.present?)
+  .row
+    .col-sm-12
+      strong
+        | MF Score Cut Off: 
+      em
+        | #{@submission.mf_score_threshold}
+  .row
+    .col-sm-6
+      strong
+        | Date: 
+      em
+        | #{@submission.created_at}
+    .col-sm-6
+      - if @submission.finalized?
+          strong
+            | Runtime: 
+          em
+            | #{@submission.display_runtime}
+
+

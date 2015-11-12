@@ -15,6 +15,7 @@
       = select_tag "spectra", options_from_collection_for_select(@submission.spectra, "id", "name", @spectrum.id), class: 'btn', id: 'batch-select'
 
   .clearfix
+  #spectrum-error-section = render partial: '/spectra/error', locals: { display: @spectrum.failed? }
   #spectra-viewer[data-spectra-path="#{json_path if defined? json_path}"]
   #spectra-controls
     a.btn.btn-default.btn-xs#lock-viewer.tool-tip[data-toggle='tooltip'
@@ -23,21 +24,11 @@
       title='Lock/Unlock the viewer to the top of the window' href='#']
       /span.glyphicon.glyphicon-lock 
       | Lock Viewer
-    .btn-group.pull-right
-      button.btn.btn-default.btn-xs.dropdown-toggle[type='button' data-toggle='dropdown' aria-haspopup="true" aria-expanded="false"]
-        | Download 
-        span.caret
-      ul.dropdown-menu
-        li
-          a#jsv-save-json.tool-tip[data-toggle='tooltip'
-            title='Save Bayesil data as reloadable JSON file' href='#'] Bayesil File
-        li
-          a#jsv-save-csv.tool-tip[data-toggle='tooltip'
-            title='Save Bayesil results as CSV file' href='#'] Quantities CSV
-
+    a.btn.btn-default.btn-xs.pull-right#spectrum-csv[href='#{submission_spectrum_path(@submission, @spectrum, 'csv')}'] Download CSV
 
   .clearfix
   #spectra-resize-bar
     = image_tag 'drag_icon.png', class: 'drag-icon'
   hr
 
+= render '/spectra/ms_dialog'

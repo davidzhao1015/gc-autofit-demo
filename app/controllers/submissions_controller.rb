@@ -1,6 +1,6 @@
 class SubmissionsController < ApplicationController
 
-  before_action :set_submission, only: [:show, :edit, :profile, :update, :destroy]
+  before_action :set_submission, only: [:show, :edit, :profile, :update, :save_alkane_standards, :destroy]
 
   # GET /submissions
   # GET /submissions.json
@@ -17,6 +17,13 @@ class SubmissionsController < ApplicationController
       # TODO: set to first working finalized spectrum
       @spectrum = @submission.spectra.first
     end
+    respond_to do |format|
+      format.csv do
+        send_data(@submission.csv_report, type: 'text/csv', disposition: 'attachment', filename: @submission.csv_filename)
+      end
+      format.html
+      format.js
+    end
   end
 
   # GET /submissions/new
@@ -24,6 +31,8 @@ class SubmissionsController < ApplicationController
     @submission = Submission.new
     @submission.database = 'serum'
     @submission.internal_standard = 'Ribitol'
+    @submission.mf_score_threshold = 400
+    @upload_spectra_format = 'zip'
   end
 
   # GET /submissions/1/edit
@@ -35,6 +44,7 @@ class SubmissionsController < ApplicationController
   def create
     @submission = Submission.new(submission_params)
     @submission.status = 'validating'
+    @upload_spectra_format = params[:upload_spectra_format]
     if @submission.internal_standard == 'Other'
       @custom_internal_standard = params[:custom_internal_standard]
       @submission.internal_standard = @custom_internal_standard
@@ -44,7 +54,7 @@ class SubmissionsController < ApplicationController
       if @submission.save
         @submission.start_work
         if params[:submission][:input_zip]
-          # Process zip file and ignore aother files
+          # Process zip file and ignore other files
         else
         end
         format.html { redirect_to @submission, notice: 'Submission was successfully created.' }
@@ -77,6 +87,18 @@ class SubmissionsController < ApplicationController
     end
   end
 
+  def save_alkane_standards
+    respond_to do |format|
+      format.json do
+        standards = JSON.parse(params[:alkane_standards])
+        json_results = JSON.parse(File.read(@submission.standards.json_results.path))
+        json_results['labels'] = standards
+        File.open(@submission.standards.json_results.path, 'w') { |f| f.write(JSON.generate(json_results)) }
+        head :no_content
+      end
+    end
+  end
+
   # DELETE /submissions/1
   # DELETE /submissions/1.json
   def destroy
@@ -100,6 +122,7 @@ class SubmissionsController < ApplicationController
   def get_example(example_num)
     submission = Submission.new
     submission.status = 'validating'
+    submission.mf_score_threshold = 400
     if example_num == '1'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'serum')
       submission.database = 'serum'
@@ -110,6 +133,8 @@ class SubmissionsController < ApplicationController
                                spectrum_data: File.new(File.join(example_dir, 'GSS-BLANK.CDF')))
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'GSS-1R.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, 'GSS-2R.CDF')))
     end
     if example_num == '2'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'urine')
@@ -143,7 +168,24 @@ class SubmissionsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def submission_params
-      params.require(:submission).permit(:database, :internal_standard, :status, database_subset: [],
+      # Update submission params with spectral data
+      spectra_attributes = []
+      if params[:standards_spectrum]
+        spectra_attributes << { category: 'standards', spectrum_data: params[:standards_spectrum] }
+      end
+      if params[:blank_spectrum]
+        spectra_attributes << { category: 'blank', spectrum_data: params[:blank_spectrum] }
+      end
+      if params[:sample_spectra]
+        params[:sample_spectra].each do |sample_spectrum|
+          spectra_attributes << { category: 'sample', spectrum_data: sample_spectrum }
+        end
+      end
+
+      params[:submission][:spectra_attributes] = spectra_attributes
+      params.require(:submission).permit(:database, :internal_standard, :status, :mf_score_threshold,
+                                         :profile_library, :calibration,
+                                         database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
 end

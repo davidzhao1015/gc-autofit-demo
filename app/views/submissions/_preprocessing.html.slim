@@ -9,7 +9,7 @@ h2 Status
 - if @submission.processing?
 
   .well-content.intro
-    h2.status-text = @submission.display_status
+    h3.status-text = @submission.display_status
     p
       | Your spectra are being preprocessed.
         You can bookmark this page and check back later.
@@ -17,7 +17,7 @@ h2 Status
 - elsif @submission.failed?
 
   .container-fluid.alert.alert-danger
-    h2.status-text The job failed!
+    h3.status-text The job failed!
     p = @submission.error.html_safe
     p
       - if Rails.env.development?
@@ -26,15 +26,23 @@ h2 Status
 
 - else @submission.complete?
   .well-content.intro
-    h2.status-text Preprocessing Complete
-    p
-      | Check your results over. If they look ok, click the profile button
+    h3.status-text Preprocessing Complete
+    - unless @submission.profile?
+      p
+        | Check over the alkane standards. Click on a standard to change its value.
+          If they look ok, click the profile button
+      a.btn.btn-primary.btn-lg.center-block[href='#{profile_submission_path(@submission)}' style='width:150px;'] Profile
 
   h2 Alkane Standards
-  = image_tag @submission.standards.plot.url
+  #alkane-viewer[data-submission-id="#{@submission.secret_id}" data-spectra-path="#{submission_spectrum_url(@submission, @submission.standards, 'json')}"]
 
-  h2 Blank
-  = image_tag @submission.blank.plot.url
+  - if @submission.blank
+    h2 Blank
+    = image_tag @submission.blank.plot.url
 
+  - @submission.samples.each do |sample|
+    h2 = sample.name
+    = image_tag sample.plot.url
 
-/= render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @submission.standards, 'json')
+= render '/submissions/alkane_dialog'
+

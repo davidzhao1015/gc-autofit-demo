@@ -13,8 +13,15 @@ class SpectraController < ApplicationController
   def show
     # @submission = @spectrum.submission
     respond_to do |format|
-      # format.csv { send_file(@spectrum.formatted_bayesil_path, filename: @spectrum.csv_filename, type: 'text/csv') }
-      format.json { send_file(@spectrum.json_results.path, type: 'text/json') }
+      format.csv { send_file(@spectrum.csv_file, filename: @spectrum.name, type: 'text/csv') }
+      format.json do
+        if @spectrum.json_results.present?
+          send_file(@spectrum.json_results.path, type: 'text/json')
+        else
+          render json: { error: 'File does not exist' }#, status: :unprocessable_entity
+        end
+      end
+        # format.json { render json: @spectrum.errors, status: :unprocessable_entity }
       format.js
       format.html { redirect_to submission_path(@submission, anchor: 'tab_results', spectrum: @spectrum.id)}
     end

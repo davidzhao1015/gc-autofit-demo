@@ -54,6 +54,8 @@ $ ->
     # Save check-state
     $('input:checkbox', dialog).each ->
       $(this).data('checked-state', this.checked)
+    # Select edited database
+    $('#radio-database-' + dialog.data('db')).prop('checked', true).change()
     $(dialog).modal('hide')
 
   # Dialog Closed
@@ -61,7 +63,7 @@ $ ->
   $('.custom-db-list').on 'hide.bs.modal', ->
     $('.custom-db-list input:checkbox').each ->
       $(this).prop('checked', $(this).data('checked-state'))
-    check_custom_list_count()
+    check_custom_list_count($(this))
 
   # Select All
   $('.db-button-all').on 'click', ->
@@ -79,10 +81,10 @@ $ ->
 
   # Update and Show/Hide "Edit list"
   # If no items are selected, the first radio button will be selected
-  check_custom_list_count = ->
+  check_custom_list_count = (dialog) ->
     # update_custom_list_count()
-    # TODO: change color of edit button
-    # $('#custom-db-edit').toggle(custom_db_count() > 0)
+    db = dialog.data('db')
+    $('.custom-db-edit[href="' + db + '"]').toggleClass('db-edited', custom_db_count(dialog) > 0)
 
   # Update number of metabolites selected
   update_custom_list_count = (dialog)->

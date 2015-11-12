@@ -13,5 +13,10 @@
 //= require wishart
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
+// Must load spectra before ms_dialog
+//= require spectra
+//= require ms_dialog
+// Must load preprocessing before alkane_dialog
+//= require preprocessing
 //= require_tree .
 

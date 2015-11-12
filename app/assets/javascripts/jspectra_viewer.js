@@ -68,6 +68,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.tick_count     = JSV.default_for(options.tick_count, 10);
     this.tick_length    = JSV.default_for(options.tick_length, 10);
     this.tick_precision = JSV.default_for(options.tick_precision, 3);
+    this.axis_x_tick_format = d3.format(JSV.default_for(options.axis_x_tick_format, '.g'));
+    this.axis_y_tick_format = d3.format(JSV.default_for(options.axis_y_tick_format, '.g'));
     this.axis_x_title   = JSV.default_for(options.axis_x_title, 'ppm');
     this.axis_y_title   = JSV.default_for(options.axis_y_title, 'Intensity');
     this.axis_y_show    = JSV.default_for(options.axis_y_show, false);
@@ -98,8 +100,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.id = JSV.default_for(options.id, JSV.unique_id('jsv-', 1, current_ids));
 
     // Space required for axes
-    this.axis_y_gutter = this.axis_y_show ? 60 : 0;
-    this.axis_x_gutter = this.axis_x_show ? 50 : 0;
+    this.axis_y_gutter = this.axis_y_show ? JSV.default_for(options.axis_y_gutter, 60) : 0;
+    this.axis_x_gutter = this.axis_x_show ? JSV.default_for(options.axis_x_gutter, 50) : 0;
 
     // Delete contents of container and add title
     var header = this.title ? '<h3>' + this.title + '</h3>' : ''
@@ -906,7 +908,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     var y_gutter = JSV.pixel(this.axis_y_gutter);
     var x_gutter = JSV.pixel(this.axis_x_gutter);
     // Clear plot graphics from the X axis area
-    this.context.clearRect(scale.x.range()[1], scale.y.range()[0], scale.x.range()[0] + y_gutter, x_gutter);
+    this.context.clearRect(scale.x.range_min(), scale.y.range_max(), scale.x.range_max() + y_gutter, x_gutter);
     // Clear plot graphics from the Y axis area
     var x = this.axis_x_reverse ? scale.x.range_max() : 0;
     this.context.clearRect(x, scale.y.range_min(), y_gutter, scale.y.range_max() + x_gutter);
@@ -938,7 +940,9 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       context.moveTo(scale.x(tick_x), scale.y.range()[0]);
       context.lineTo(scale.x(tick_x), scale.y.range()[0] + tick_length);
       context.stroke();
-      context.fillText(d3.round(tick_x, self.tick_precision), scale.x(tick_x), scale.y.range()[0] + tick_length);
+      // context.fillText(d3.round(tick_x, self.tick_precision), scale.x(tick_x), scale.y.range()[0] + tick_length);
+      rounded_tick_x = d3.round(tick_x, self.tick_precision);
+      context.fillText(self.axis_x_tick_format(rounded_tick_x), scale.x(tick_x), scale.y.range()[0] + tick_length);
     });
     // Draw x label
     if (this.axis_x_title) {
@@ -968,7 +972,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     context.font = this.font;
     var max_label_width = 0;
     // Determine number of decimal places
-    var decimal_places = d3.max( scale.y.ticks(this.tick_count).map(function(tick_y) { return JSV.decimalPlaces(tick_y); }) );
+    // var decimal_places = d3.max( scale.y.ticks(this.tick_count).map(function(tick_y) { return JSV.decimalPlaces(tick_y); }) );
 
     // Draw ticks and text
     scale.y.ticks(this.tick_count).forEach(function(tick_y) {
@@ -976,7 +980,8 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
       context.moveTo(scale.x.range()[0], scale.y(tick_y));
       context.lineTo(scale.x.range()[0] + tick_length, scale.y(tick_y));
       context.stroke();
-      context.fillText(tick_y.toFixed(decimal_places), text_x, scale.y(tick_y));
+      // context.fillText(tick_y.toFixed(decimal_places), text_x, scale.y(tick_y));
+      context.fillText(sv.axis_y_tick_format(tick_y), text_x, scale.y(tick_y));
       if (sv.axis_y_title) {
         var label_width = Number(context.measureText(tick_y).width);
         if (label_width > max_label_width) max_label_width = label_width;
@@ -986,17 +991,24 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     if (this.axis_y_title) {
       var margin = JSV.pixel(4);
       var gutter = JSV.pixel(this.axis_y_gutter);
-      var font_height = /(\d+)pt/.exec(this.axis_title_font)[1];
+      var font_height = /(\d+\.?\d*)pt/.exec(this.axis_title_font)[1];
       // Width of text and ticks filling up the gutter
-      var draw_width = max_label_width + tick_length + Number(font_height) + margin;
+      var draw_width = max_label_width + Math.abs(tick_length) + Number(font_height) + margin + padding;
       if ( draw_width < gutter) {
         context.save();
         context.textAlign = 'center';
-        context.textBaseline = 'hanging';
+        context.textBaseline = 'middle';
         context.font = this.axis_title_font;
-        context.rotate(Math.PI / 2);
-        var label_y = -scale.x.range()[0] - gutter + margin;
-        var label_x = scale.y.range()[0]/2;
+        // Determine center point of label
+        var label_x = scale.x.range()[0] + ( ( gutter - margin - Number(font_height)/2 ) * direction );
+        var label_y = scale.y.range()[0]/2;
+        // Move to center
+        context.translate(label_x, label_y);
+        // Rotate Label
+        context.rotate(direction * Math.PI / 2);
+        // Move back to origin
+        context.translate(-label_x, -label_y);
+        // Draw label
         context.fillText(this.axis_y_title, label_x, label_y);
         context.restore();
       }
@@ -2367,14 +2379,16 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     this.sv = sv;
     this.highlighted_label;
     this.point_gap = JSV.default_for(options.point_gap, JSV.pixel(12));
+    this.label_color = JSV.default_for(options.label_color, '#5555DD');
     this.hover = JSV.default_for(options.hover, true);
     this.labels = new JSV.SVSet();
     this.visible_labels = new JSV.SVSet();
-    sv.on('label-click', function(label) {
-      console.log(label.text)
-    })
-    sv.svg.on('click', function() {
-      if (self.highlighted_label) {
+    // Test label-click
+    // sv.on('label-click', function(label) {
+    //   console.log(label.text)
+    // })
+    sv.svg.on('mousedown.label', function() {
+      if (self.highlighted_label && self.hover) {
         sv.trigger('label-click', self.highlighted_label);
       }
     });
@@ -2532,7 +2546,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     }
 
     // Draw the labels
-    context.fillStyle = '#5555DD';
+    context.fillStyle = this.label_color;
     for (var i=0, len=visible_labels.length; i < len; i++) {
       label = visible_labels[i];
       if (label === this.highlighted_label) {
@@ -2569,12 +2583,18 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
         label = this.visible_labels[i];
         if (label.rect.contains_pt(x, y)) {
           current_label = label;
+          break;
         }
       }
       if (old_label != current_label) {
         this.highlighted_label = current_label;
         this.sv.trigger('click-start');
         sv.full_draw();
+      }
+      if (this.highlighted_label) {
+        sv.svg.style('cursor', 'pointer');
+      } else {
+        sv.svg.style('cursor', 'move');
       }
     }
   }

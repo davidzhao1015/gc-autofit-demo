@@ -31,6 +31,17 @@ class APGCMS
       app_failed("There was a system call error (Is R and APGCMS installed?): #{error.to_s}")
     rescue Exception => error
       app_failed("There was an exception: #{error.to_s}")
+    ensure
+      if options[:log]
+        File.open(options[:log], 'a') do |f|
+          f.write("#{'-'*80}\nCOMMAND\n#{'-'*80}\n")
+          f.write(@command)
+          f.write("\n\n\n#{'-'*80}\nSTDOUT\n#{'-'*80}\n")
+          f.write(@stdout)
+          f.write("\n\n\n#{'-'*80}\nSTDERR\n#{'-'*80}\n")
+          f.write(@stderr)
+        end
+      end
     end
   end
 
