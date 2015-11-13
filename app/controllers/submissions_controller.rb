@@ -141,11 +141,13 @@ class SubmissionsController < ApplicationController
       submission.database = 'urine'
       submission.internal_standard = 'Cholesterol'
       submission.spectra.build(category: 'standards',
-                               spectrum_data: File.new(File.join(example_dir, 'Alkstd1.mzXML')))
+                               spectrum_data: File.new(File.join(example_dir, 'Alkstd.mzXML')))
       submission.spectra.build(category: 'blank',
-                               spectrum_data: File.new(File.join(example_dir, 'Blank1.mzXML')))
+                               spectrum_data: File.new(File.join(example_dir, 'Blank.mzXML')))
       submission.spectra.build(category: 'sample',
-                               spectrum_data: File.new(File.join(example_dir, 'Urine_ex1.mzXML')))
+                               spectrum_data: File.new(File.join(example_dir, 'C001.mzXML')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, 'C002.mzXML')))
     end
     if example_num == '3'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'saliva')
