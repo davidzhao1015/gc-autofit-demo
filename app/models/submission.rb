@@ -27,9 +27,11 @@ class Submission < ActiveRecord::Base
 
   has_attached_file :profile_library, path: ':input_dir/user_library.csv'
   has_attached_file :calibration, path: ':input_dir/user_calibration.csv'
+  has_attached_file :input_zip, path: ':input_dir/input.zip'
   validates_attachment_presence :profile_library, if: Proc.new { |sub| sub.database == 'upload' }
   validates_attachment_file_name :profile_library, :matches => [/csv\Z/]
   validates_attachment_file_name :calibration, :matches => [/csv\Z/]
+  validates_attachment_file_name :input_zip, :matches => [/zip\Z/]
 
 
   validates :secret_id, presence: true, uniqueness: true
@@ -204,25 +206,30 @@ class Submission < ActiveRecord::Base
   end
 
   def unzip_spectra
-    return unless self.zip_file.present?
-    FileUtils.mkdir_p(input_dir)
-    Zip::File.open(self.zip_file.path) do |zip_file|
-      zip_file.each do |entry|
-        ext = File.extname(entry.name)
-        name = File.basename(entry.name, '.*')
-        case name.downcase
-        when 'alkane' || ' alkstd'
-          dest_path = File.join(input_dir, "Alkstd.#{ext}")
-        when 'Blank' || 'Blk'
-          dest_path = File.join(input_dir, "Blank.#{ext}")
-        else
-          dest_path = File.join(input_dir, "#{name}.#{ext}")
+    # return unless self.input_zip_file.present?
+    return unless self.input_zip.queued_for_write[:original]
+    Dir.mktmpdir do |dir|
+      Zip::File.open(self.input_zip.queued_for_write[:original].path) do |zip_file|
+        zip_file.each do |entry|
+          ext = File.extname(entry.name).sub('.', '')
+          name = File.basename(entry.name, '.*')
+          next unless ext.downcase =~ /^(cdf|mzxml)$/
+          case name.downcase
+          when 'alkane', 'alkstd'
+            dest_path = File.join(dir, "Alkstd.#{ext}")
+            entry.extract(dest_path)
+            self.spectra.build(category: 'standards', spectrum_data: File.open(dest_path))
+          when 'blank', 'blk'
+            dest_path = File.join(dir, "Blank.#{ext}")
+            entry.extract(dest_path)
+            self.spectra.build(category: 'blank', spectrum_data: File.open(dest_path))
+          else
+            dest_path = File.join(dir, "#{name}.#{ext}")
+            entry.extract(dest_path)
+            self.spectra.build(category: 'sample', spectrum_data: File.open(dest_path))
+          end
         end
-        entry.extract(dest_path)
       end
-      # TODO: UNZIPPPING must be done in temp folder
-      # TODO: Then attach to
-      # self.spectra.build(category: '', spectrum_data: File.open(path))
     end
   end
 

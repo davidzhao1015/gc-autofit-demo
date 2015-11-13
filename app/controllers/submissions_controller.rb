@@ -190,7 +190,7 @@ class SubmissionsController < ApplicationController
       end
 
       params.require(:submission).permit(:database, :internal_standard, :status, :mf_score_threshold,
-                                         :profile_library, :calibration, :zip_file,
+                                         :profile_library, :calibration, :input_zip,
                                          database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
