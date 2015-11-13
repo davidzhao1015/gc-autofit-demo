@@ -184,7 +184,7 @@ class Submission < ActiveRecord::Base
           data = label['meta']['table_data']
           hmdbids[ data['HMDB ID'] ] = data['Name'] unless hmdbids[ data['id'] ].present?
 
-          concentrations[ data['HMDB ID'] ] = data['Concentration (mM)']
+          concentrations[ data['HMDB ID'] ] = data['Concentration (uM)']
         end
       end
       all_concs << concentrations

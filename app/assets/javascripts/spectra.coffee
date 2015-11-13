@@ -140,7 +140,7 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
-    standard_columns = ['HMDB ID', 'Name', 'RT', 'RI', 'Intensity', 'MatchFactor', 'Concentration (mM)']
+    standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'MatchFactor', 'Concentration (uM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()
