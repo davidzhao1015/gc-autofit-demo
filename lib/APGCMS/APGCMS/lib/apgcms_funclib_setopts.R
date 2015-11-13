@@ -27,7 +27,9 @@ helpMessage <- function() {
         --process='PREPROCESSING' or 'PROFILING'  # set a processing mode 
 
       Optional Arguments:
-        --lib.internal=NONE  # NONE, SERUM, URINE, SALIVA, ... default = NONE; 
+        --lib.internal=NONE  # NONE, SERUM, URINE, SALIVA, ... default=NONE; 
+        --selectedCmpd=NULL # List of HMDB IDs (comma separated), default=NULL (which means ALL) 
+                            # Selected HMDB IDs should be a subset of the selected internal library
         --useblank=TRUE   # boolean (TRUE/FALSE); toggle for using Blank Spectrum
         --MFscore=400     # set MF score threshold (Default: 400)
         --RIoffset=0.03   # set RI variation/offset (Default: 0.03)
@@ -37,17 +39,147 @@ helpMessage <- function() {
         --infoFileDir=<information_file_directory>  # Assign the directory of the information files (Alkane Standard 
                                                       and Blank Sample's Profiles). It is required for PROFILING process. 
 
+
         --help  # print this text
  
       Example:
       > Rscript test.R --infiledir='./data/sample_sep09' --userlib='user_profiledb.csv' --usercal='user_calibration.csv' 
                --internalstd='Ribitol' --process='PREPROCESSING' --useblank=TRUE --MFscore=400 --RIoffset=0.03  
-      > Rscript test.R --infiledir='./data/sample_sep09' --lib.internal='SERUM' --internalstd='Cholesterol' --process='PROFILING'
+
+      > Rscript test.R --infiledir='./data/sample_sep09' 
+               --lib.internal='SERUM' --selectedCmpd='HMDB00067,HMDB00094,HMDB00115,HMDB02142'
+               --internalstd='Cholesterol' --process='PROFILING'
                --outdir='/Users/gcms/example/output_profiling'
+               --useblank=TRUE --MFscore=400 --RIoffset=0.03
+               
       \n\n")
   
   q(save="no")  
 }
+
+
+# Define Global Variables
+# Parsing arguments
+parsingArgument <- function(args.in)
+{
+  argsDF <- as.data.frame(do.call("rbind", parseArgs(args.in)))
+  argsL <- as.list(as.character(argsDF$V2))
+  names(argsL) <- argsDF$V1
+  
+  # cat("argsDF:\n"); print(argsDF);
+  # cat("argsL:\n"); print(argsL);
+  
+  if(is.null(argsL$infiledir)) {
+    showErrMessage("  Error in argument:\n\t There is no input spectrum file directory")
+    helpMessage()
+  } else {
+    sampleFileDir <<- normalizePath(argsL$infiledir) # should be absolute path
+  }
+  
+  if(is.null(argsL$lib.internal)) {
+      USE_INTERNAL_LIBRARY <<- 'NONE' # argsL$lib.internal
+      
+      if(is.null(argsL$userlib)) {
+          showErrMessage("  Error in argument:\n\t There is no user defined library file")
+          helpMessage()
+      } else {
+          userLibFile <<- argsL$userlib
+      }
+      
+      if(is.null(argsL$usercal)) {
+          showErrMessage("  Error in argument:\n\t There is no user defined calibration curve file")
+          helpMessage()
+      } else {
+          userCalFile <<- argsL$usercal
+      }
+    
+  } else {
+      # NONE, SERUM, URINE, SILIVA, ... default = none
+      if (argsL$lib.internal %in% c('SERUM', 'URINE', 'SALIVA', 'MILK')) {
+          USE_INTERNAL_LIBRARY <<- argsL$lib.internal
+      
+          # get user selected compound list (HMDB IDs with comma separate)
+          if(! is.null(argsL$selectedCmpd))    {
+              USER_SELECTED_CMPDS <<- argsL$selectedCmpd;
+              # cat("\n\n## USER_SELECTED_CMPDS:\n"); print(USER_SELECTED_CMPDS);
+          } else {
+              USER_SELECTED_CMPDS <<- NULL;
+              # showErrMessage("  No USER_SELECTED_CMPDS: Using All Compounds in the Library\n");
+          }
+          
+      } else {
+          showErrMessage("  Error in argument:\n\t see the help to correctly use the internal library option (lib.internal)")
+          helpMessage()
+      } 
+  }
+  
+  # Internal Std in Library (HMDB ID or Compound Name; Final, Compound Name will be used for the analysis)
+  if(is.null(argsL$internalstd)) {
+    showErrMessage("  Error in argument:\n\t There is no internal standard compound. 
+                   If you want profile only, then please set with 'NONE' ")
+    helpMessage()
+  } else {
+    internalStd.in <<- argsL$internalstd
+  }
+  
+  
+  if(argsL$process %in% c('PREPROCESSING','PROFILING')) {
+    processOption <<- argsL$process;
+  } else {
+    showErrMessage("  Error in argument:\n\t see the help to correctly use the process option")
+    helpMessage()
+  }
+  
+  # optional arguments
+  if(is.null(argsL$useblank) ) {
+    # showErrMessage("  Warning in argument:\n\t Blank file option is not assigned. Program will use default (TRUE)")
+    USE_BLANK_SPECTRUM <<- TRUE
+  } else {
+    USE_BLANK_SPECTRUM <<- as.logical(argsL$useblank)
+  }
+  
+  if(is.null(argsL$MFscore)) {
+    # showErrMessage("  Warning in argument:\n\t MFscore option is not assigned. Program will use default 400")
+    MF_THRESHOLD <<- MF_THRESHOLD_DEFAULT
+  } else {
+    MF_THRESHOLD <<- as.numeric(argsL$MFscore)
+  }
+  
+  if(is.null(argsL$RIoffset)) {
+    # showErrMessage("  Warning in argument:\n\t RI offset option (RIoffset) is not assigned. Program will use default 0.03")
+    RI.Variation <<- RI.VARIATION.DEFAULT     
+  } else {
+    RI.Variation <<- as.numeric(argsL$RIoffset)
+  }
+  
+  if(is.null(argsL$AlkaneRT)) {
+    user.AlkaneRT <<-  NULL
+  } else {
+    user.AlkaneRT <<- as.numeric(unlist(strsplit(argsL$AlkaneRT,",")))
+    if(ISDEBUG) { cat("## user.AlkaneRT:"); print(user.AlkaneRT) }
+  } 
+  
+  if(is.null(argsL$outdir)) {
+    # default output directory
+    user.outdir <<- paste(dirname(sampleFileDir), "/", sub("_input","",basename(sampleFileDir)), '_result', sep='')
+  } else {
+    user.outdir <<- argsL$outdir # expected full path
+    if(ISDEBUG) { cat("## user.outdir:"); print(user.outdir) }
+  }
+  
+  # In profiling process, it needs to have the Alkane and Blank information from the Preprocessing process.
+  if( processOption == 'PROFILING' ) {
+    # cat("\n\n## argsL$infoFileDir:"); print(argsL$infoFileDir)
+    if(is.null(argsL$infoFileDir)) {
+      showErrMessage("  Error in argument (--infoFileDir):\n\t Alkane Standard and Blank Profiled Information are required \n\t with '--infoFileDir' option")
+      helpMessage()
+    } else {
+      infoFileDir <<- normalizePath(argsL$infoFileDir)
+      if(ISDEBUG) { cat("\n\n## infoFileDir (will be created):"); print(infoFileDir) }
+    }
+  }
+}
+
 
 showErrMessage <- function(s) {
   cat("\n################################################################################\n")  
@@ -102,7 +234,7 @@ getLibInfo <- function(fname.lib)
 ## infileDir <- dirCDFSample
 get_file_list <- function(infileDir, procStatus) {
   
-  if(DEBUG) cat("'get_file_list' from ", infileDir,"\n\n")
+  if(DEBUG) cat("## 'get_file_list' from ", infileDir,"\n\n")
   
   ## .CDF or .mzXML    
   file_list_tmp <- list.files(path = infileDir, pattern=".mzXML|.CDF", ignore.case=TRUE, full.names=TRUE);

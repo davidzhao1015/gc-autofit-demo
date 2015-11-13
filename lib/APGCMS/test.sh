@@ -13,8 +13,9 @@ ln -s "../../../example/serum/GSS-1R.CDF" "${FILES}/GSS-1R.CDF"
 
 # Prepoocessing
 Rscript "${APGCMS_DIR}/APGCMS/apgcms_main.R" --infiledir="${FILES}" \
-  --lib.internal='SERUM' --internalstd='Ribitol' --useblank=TRUE --process='PREPROCESSING' \
-  --outdir="${OUT_DIR}/preprocessing"
+  --lib.internal='SERUM' \
+  --internalstd='Ribitol' --useblank=TRUE --process='PREPROCESSING' \
+  --outdir="${OUT_DIR}/preprocessing" 
 
 # Profiling
 Rscript "${APGCMS_DIR}/APGCMS/apgcms_main.R" --infiledir="${FILES}" \

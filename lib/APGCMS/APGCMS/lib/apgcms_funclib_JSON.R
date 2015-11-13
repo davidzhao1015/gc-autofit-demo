@@ -62,9 +62,7 @@ spectrumToJSON.profile <- function(data.in)
 {   
   #  d <- data.frame(x, y, text)
   d <- data.in  
-  names(d)[c(4,6,2)] <- c("x","y","text")
-  
-  # d2 <- data.frame(hmdbid, name)    
+  names(d)[c(3,5,2)] <- c("x","y","text") # RT_min, Intensity, Compound With TMS
   
   name.value <- function(i) {
     quote <- '';
@@ -75,16 +73,13 @@ spectrumToJSON.profile <- function(data.in)
     paste('"', i, '" : ', quote, d[,i], quote, sep='')
   }
   
-  name.value.old <- function(i) {
-    quote <- '';
-    if(class(d[, i])!='numeric' && class(d[, i])!= 'integer'){ 
-      quote <- '"';
-    }
-    
-    paste('"', i, '" : ', quote, d[,i], quote, sep='')
-  }
-  
   xytext <- apply(sapply(c("x","y","text"), name.value), 1, function(x) { paste(x, collapse=',\t') })
+  # cat("\n\n# json data:\n"); print(names(d))
+  
+  # cat("\n\n## JSON data:\n");
+  # print(names(d));
+  # print(head(d));
+  # stop()
   
   meta <- apply(d, 1, 
                 function(x) {                       
@@ -92,19 +87,20 @@ spectrumToJSON.profile <- function(data.in)
                         '\t\t\t\t"table_data": {\n', 
                         '\t\t\t\t\t "HMDB ID": "', x[1], '",\n',
                         '\t\t\t\t\t "Name": "', x[2], '",\n', 
-                        '\t\t\t\t\t "RT": "', x[4], '",\n', 
-                        '\t\t\t\t\t "RI": "', x[5], '",\n', 
-                        '\t\t\t\t\t "Intensity": "', x[6], '",\n', 
+                        '\t\t\t\t\t "RT(min)": "', x[3], '",\n', 
+                        '\t\t\t\t\t "RI": "', x[4], '",\n', 
+                        '\t\t\t\t\t "Intensity": "', x[5], '",\n',
+                        '\t\t\t\t\t "Irons": "', x[6], '",\n', 
                         '\t\t\t\t\t "MatchFactor": "', x[7], '",\n', 
-                        '\t\t\t\t\t "TScore": "', x[9], '",\n', 
-                        '\t\t\t\t\t "Area": "', x[10], '",\n', 
-                        '\t\t\t\t\t "RT(start)": "', x[11], '",\n', 
-                        '\t\t\t\t\t "RT(end)": "', x[12], '",\n',
-                        '\t\t\t\t\t "Concentration (mM)": "', x[15], '"\n',
+                        '\t\t\t\t\t "TScore": "', x[8], '",\n', 
+                        '\t\t\t\t\t "Area": "', x[9], '",\n', 
+                        '\t\t\t\t\t "RT(start)": "', x[10], '",\n', 
+                        '\t\t\t\t\t "RT(end)": "', x[11], '",\n',
+                        '\t\t\t\t\t "Concentration (uM)": "', x[14], '"\n',
                         '\t\t\t\t},\n',
                         '\t\t\t\t"ms_data" : {\n',
-                        '\t\t\t\t\t "m/z": [', x[13], '],\n', 
-                        '\t\t\t\t\t "Intensity": [', x[14], ']\n',
+                        '\t\t\t\t\t "m/z": [', x[12], '],\n', 
+                        '\t\t\t\t\t "Intensity": [', x[13], ']\n',
                         '\t\t\t\t}\n',
                         '\t\t\t}\n',
                         sep='') 
@@ -124,6 +120,8 @@ spectrumToJSON.profile <- function(data.in)
 # final_PeakProfile_blank$RT, final_PeakProfile_blank$Intensity, final_PeakProfile_blank$Compound,
 # mz_data)
 
+## Main for Creating JSON file 
+## ------------------------------------------------------------------------------------------------
 create_json_file <- function(ofilename, spectrum.x, spectrum.y, profiled.table)
 {
   ## xy_data: x, y      
@@ -158,8 +156,8 @@ spectrumToJSON.profile.alkane <- function(data.in)
   d <- data.in  
   d$Cn <- paste('C',d[,"Cn"],sep='')
   
-  # ALKRT, Intensity, Cn
-  names(d)[c(1,3,2)] <- c("x","y","text")
+  # ALKRTmin, Intensity, Cn
+  names(d)[c(4,3,2)] <- c("x","y","text")
   
   name.value <- function(i) {
     quote <- '';

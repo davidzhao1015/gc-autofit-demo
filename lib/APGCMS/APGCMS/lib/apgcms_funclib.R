@@ -115,27 +115,28 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
       ## NOT USED for ACTUAL PROCESS
       ## For internal Works including library and calibration curves    
       ##########################################################################    
-    {
-      if( FALSE & DEBUG ) {
-        ## for Zerihun to easy to find a peak
-        ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_selectedPeaks_RTRI.csv", sep='')
-        write.csv(peak_samples_ri, file=ofilename, quote=FALSE)
-      }
-      
-      ## Temporary procedure
-      if ( FALSE & DEBUG ) {
-        ## this is for making calibration curve of the Organic Acid
-        profiled_peaks <- getPeakInfo_OrganicAcid(peak_samples_ri, xset.asample, RI.Variation)
-        ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_PeaksAreaInfo.csv", sep='')
-        write.csv(profiled_peaks, file=ofilename, quote=FALSE)
-      }
+     {
+          if( FALSE & DEBUG ) {
+            ## for Zerihun to easy to find a peak
+            ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_selectedPeaks_RTRI.csv", sep='')
+            write.csv(peak_samples_ri, file=ofilename, quote=FALSE)
+          }
+          
+          ## Temporary procedure
+          if ( FALSE & DEBUG ) {
+            ## this is for making calibration curve of the Organic Acid
+            profiled_peaks <- getPeakInfo_OrganicAcid(peak_samples_ri, xset.asample, RI.Variation)
+            ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_PeaksAreaInfo.csv", sep='')
+            write.csv(profiled_peaks, file=ofilename, quote=FALSE)
+          }
     }
     
     ## identification using RI and m/z with intensity (Scores)
     if (print.on) {  cat("\t >> Identifying peaks \n") }
     ## Including Additional Information: Area, RTstart & RTend
     profiled_peaks <- compoundIdentify3(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=not_PRINT_MZINT4DB)
-    # head(profiled_peaks)    
+    # cat("\n## profiled_peaks:\n"); print(head(profiled_peaks))    
+
     if (DEBUG) {
       ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_profiledPeaksTMP.csv", sep='')
       write.csv(profiled_peaks, file=ofilename, quote=TRUE)
@@ -199,9 +200,7 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
     if ( internalStd != 'NONE' & checkInternalStd == TRUE ) {
         
         if (print.on) { cat("\t >> Quantifying identified peaks\n") }
-        # unitConv 1 - uM, 1000 - mM ( Serum and Urine -> should be same unit (uM))
-        # quantifiedResult <- quantification(final_PeakProfile, lib.peakcal, internalStd, f.sample, stype=SampleType, unitConv=1000) # 1 or 1000 mM, uM
-        quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType, unitConv="mM") 
+        quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType) 
         # nrow(quantifiedResult)  
         
         if (print.on & DEBUG) {
@@ -209,7 +208,7 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
           print(quantifiedResult)
           # hmdbID, Area, Concentration 
         }
-        
+
         # if (print.on) { cat("\t >> Generating FinalReport for", basename(f.sample), "\n") }
         if (print.on) { cat("\t >> Generating FinalReport\n") }
         finalReport <- genFinalReport(final_PeakProfile.screened, quantifiedResult) 
@@ -220,7 +219,6 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
         finalReport <- cbind(finalReport, Concentration2) 
         if (print.on & DEBUG) { cat("# finalReport:\n"); print(finalReport); }
         
-        names(finalReport) 
         finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
         finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
         rownames(finalReport.All) <- c(1:nrow(finalReport.All))
@@ -228,38 +226,30 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
         finalReport.json <- finalReport.All # for the JSON file generation
               
         ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
-        # names(finalReport.All)
-        finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                                              "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
-        if (print.on & DEBUG) { 
-          cat("finalReport All:\n"); print(head(finalReport.All)); 
-        }
-        
+        finalReport.All <- finalReport.All[,c("SeqIndex","HMDB_ID","Compound","CompoundWithTMS","RT_min","RT","RI","Intensity",
+                                              "mzMaxInts","MatchFactor","RI.Similarity","Area","RT.start","RT.end","Concentration2")]
+
         ## exclude NA or MP(Multiple Peak) cases  
-        finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]   
+        # finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]
+        finalReport.All <- finalReport.All[which( !is.na(finalReport.All$Concentration2) ), ]   
         
-        # outColnames <- c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
         outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                         "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+                         "Irons","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
         write.table(finalReport.All[,-1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
+        
         if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
         
         # making JSON file for Profiled Peak View
-        # because of the multiple core
-        # if (CREATE_JSON_FILE) {      
-        finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), -c(3,4,11:14,19,22:24)]
-        # ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_finalReport.json.csv", sep='')
-        # write.csv(finalReport.json, file=ofilename, quote=TRUE)
-        
+        finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), 
+                                             c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity","mzMaxInts","MatchFactor",
+                                           "TScore","Area","RT.start","RT.end","mz","mzInt","Concentration2")]
         ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
-        create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, finalReport.json )
-        # }
-        
+        create_json_file(ofilename, round(xset.asample$xraw@scantime/60, 3), xset.asample$xraw@tic, finalReport.json)
+
         ## concentration summary table
         tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
         na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
         if( na.length > 0 ) {
-            # cat("length(NA):", na.length, "\n")
             tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
         }
         if( length(which(tmp.Concentration$Concentration2 == "MP")) > 0 ) {
@@ -275,39 +265,30 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
         colnames(final_PeakProfile.screened)[1] <- "HMDB_ID"
         
         finalReport.All <- merge(cmpdlist, final_PeakProfile.screened, by = c('HMDB_ID','CompoundWithTMS'), sort=FALSE) 
-        # finalReport.All <- merge(cmpdlist, final_PeakProfile, by = c('HMDB_ID','CompoundWithTMS'), sort=FALSE) 
         finalReport.All <- finalReport.All[order(as.numeric(as.character(finalReport.All$SeqIndex))), ]
         rownames(finalReport.All) <- c(1:nrow(finalReport.All))
-        # PeakNo <- c(1:nrow(finalReport.All))
-        # finalReport <- cbind(PeakNo, finalReport)
-        # rownames(finalReport) <- c(1:nrow(finalReport))
-        
-        # if(DEBUG) {  cat("finalReport.All:\n"); print(head(finalReport.All)) }
+
         Concentration2 <- NA
         finalReport.All <- cbind(finalReport.All, Concentration2)
         finalReport.json <- finalReport.All # for the JSON file generation
         
         ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
-        # finalReport <- finalReport[,-c(3,4,12,13,14,15,19,22)]
         finalReport.All <- finalReport.All[,c("SeqIndex", "HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                                              "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
+                                              "mzMaxInts","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
                 
-        outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                         "MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+        outColnames <- c("HMDB_ID","Compound","CompoundWithTMS","RT_min","RT","RI","Intensity",
+                         "Irons","MatchFactor","RI.Similarity","Area","RT.start","RT.end","Concentration")
         
         # outColnames <- c("PeakNo","Compound","HMDB ID","RT(min)","RT","RI","Intensity","MatchFactor","RI.Similarity","Area","RT.start","RT.end", "Concentration")
         write.table(finalReport.All[, -1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
         
         # making JSON file for Profiled Peak View
         # because of the multiple core
-        # if (CREATE_JSON_FILE) {      
-        # finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), -c(3,4,11:14,19,22:23)]
-        finalReport.json <- finalReport.json[, -c(3,4,11:14,19,22:23)] ## all NA because of no calibration
+        finalReport.json <- finalReport.json[, -c(3,4,11:14,19,22:24)] ## all NA because of no calibration
         cat("### finalReport.json: ###\n"); print(head(finalReport.json))
                 
         ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
-        create_json_file(ofilename, xset.asample$xraw@scantime, xset.asample$xraw@tic, finalReport.json )
-        # }
+        create_json_file(ofilename, round(xset.asample$xraw@scantime/60, 3), xset.asample$xraw@tic, finalReport.json )
 
         # if some of sample does not have Internal Standard, all the concentration will be null
         # this is only for combined results
@@ -816,7 +797,10 @@ getMZIntensityofEachPeak2 <- function(xset.one, peak_rt_vec) {
     # peakArea <- getPeakArea2(xset.one$xraw, peak_rt_vec[i], peakRange$RTmin, peakRange$RTmax) 
     # cat("### peak Area:", peakArea, "peak.scanidx:", peak.scanidx, peakRange$RTmin, peakRange$RTmax, "\n")
 
-    mzIntensity <- getScan(xset.one, peak.scanidx) # *** give all m/z & intensity spectrum         
+    mzIntensity <- as.data.frame(getScan(xset.one, peak.scanidx)) # *** give all m/z & intensity spectrum         
+    # convert m/z into integer
+    mzIntensity$mz <- toIntMZ.sample(mzIntensity$mz)
+
     ## @@@ ## switch with TIC instead of sum of intensity
     # peakIntensity <- sum(mzIntensity[,"intensity"])
     peakIntensity <- xset.one@tic[peak.scanidx]
@@ -825,6 +809,7 @@ getMZIntensityofEachPeak2 <- function(xset.one, peak_rt_vec) {
                                              , peakIntensity=peakIntensity, peakArea=peakArea
                                              , peakRTStart=round(peakRange$RTmin/60,3), peakRTEnd=round(peakRange$RTmax/60,3) 
                                              , peakType = peakRange$peakType)
+    
     # scan<-getScan(xr, 1) # *** give all m/z & intensity spectrum
     # head(scan1)
     # plotScan(xr, 4) 
@@ -862,7 +847,7 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
   # cat("peak_mzInt_list"); print(peak_mzInt_list)
   
   ## @@@@@@
-  ## used for mz/int DB update
+  ## used for mz/int DB update in Internal Library
   if( print_mzInt ) {
         ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
         cat("PeakNO,rt,rt_min,RI,mz,intensity\n", file=ofile, append=FALSE)
@@ -881,27 +866,18 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
   }
   
   # get mass spectrum data for plotting mass spectrum (JSON format)
-  # call getMassSpec(peak_mzInt_list)  
-  getMassSpec <- function(mzIntList, rt)
+  getMassSpec <- function(mzs, mzInts, rt)
   {    
-      i <- 1
-      while(mzIntList[[i]]$rt != rt) {
-          i <- i + 1;
-      }
+      mzlist <- paste(noquote(mzs), collapse=",")
+      intList <- paste(mzInts, collapse=",")
       
-      mzlist <- paste(noquote(round(mzIntList[[i]]$mzInt[,"mz"],2)), collapse=",")
-      intList <- paste(mzIntList[[i]]$mzInt[,"intensity"], collapse=",")
-      
+      max.mzInts <- sort(mzInts, decreasing=TRUE)[c(1:3)]
+      mzMaxInts <- paste(c(mzs[which(max.mzInts[1] == mzInts)], mzs[which(max.mzInts[2] == mzInts)],
+                      mzs[which(max.mzInts[3] == mzInts)]), collapse=", ")
+
       # rt, m/z, intensity      
-      return (list(rt=rt, mzlist=mzlist, intList=intList))
+      return (list(rt=rt, mzlist=mzlist, intList=intList, mzMaxInts=mzMaxInts))
   }
-  
-  # if( FALSE) {
-  #   cat("peak_mzInt_list\n"); print(peak_mzInt_list)
-  #   for(k in 1:length(peak_mzInt_list)) {
-  #    cat(peak_mzInt_list[[k]]$rt/60,"\t",peak_mzInt_list[[k]]$peakArea,"\t",peak_mzInt_list[[k]]$peakRTStart,"\t",peak_mzInt_list[[k]]$peakRTEnd,"\n")
-  #   }
-  # }
   
   ## note: the length of each vector should be same. if not, the function will be stop and give message
   maxItensity <- max(asample.peakInfo[,'intensity'])  
@@ -980,8 +956,8 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 }
                 
                 # finding matched m/z for a peak
-                round.digit <- 0 # 0 or 2; not 1
-                lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec, round.digit)
+                # round.digit <- 0 # 0 or 2; not 1
+                lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec)
                 if (length(lst$MZS_vec_tmp)==0) { 
                     cat("# ERROR - compound:", alib.matched$CompoundWithTMS,"\n");
                     stop("No m/z matched")
@@ -1024,11 +1000,11 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 if ( (RI.similarity > 90) & (RIScore < RI.similarity) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                     TScore <- tmp.TScore
                     RIScore <- RI.similarity
-                    # nearRelPeakRTscore <- nearRelPeakRTscore.tmp
-                    
-                    # (list(rt=rt, mzlist=mzlist, intList=intList))
-                    aMzInt <- getMassSpec(peak_mzInt_list, RT.sample) 
-                    
+
+                    # get mass spectrum data for plotting mass spectrum (JSON format)
+                    # and three mzs with highest Intensity
+                    aMzInt <- getMassSpec(sample_mzs_vec, sample_mz_int_vec, RT.sample) 
+
                     identified <- c(
                         hmdbID=as.character(lib.matched[k,]$HMDB_ID),
                         CompoundWithTMS=as.character(lib.matched[k,]$CompoundWithTMS),
@@ -1048,8 +1024,11 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                         RT.start= peakRTStart,
                         RT.end= peakRTEnd,
                         peakType = peakType,
+                        #mz = sample_mzs_vec,
+                        #mzInt = sample_mz_int_vec
                         mz = aMzInt$mzlist,
-                        mzInt = aMzInt$intList
+                        mzInt = aMzInt$intList,
+                        mzMaxInts = aMzInt$mzMaxInts
                     )
                     # print(identified)
                 }
@@ -1157,8 +1136,8 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
               }
               
               # finding matched m/z for a peak
-              round.digit <- 0 # 0 or 2; not 1
-              lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec, round.digit)
+              # round.digit <- 0 # 0 or 2; not 1
+              lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec)
               if (length(lst$MZS_vec_tmp)==0) { 
                 cat("# ERROR - compound:", alib.matched$CompoundWithTMS, "\n");
                 stop("No m/z matched")
@@ -1169,11 +1148,6 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 }
               }
               #lst20 <- find_similar_peaks(ref.mzInt20$mz, ref.mzInt20$intensity, sample.mzInt20$mz, sample.mzInt20$intensity, round.digit)
-              
-              cat("\n\n ### lst:\n")
-              print(lst)
-              print(str(lst))
-              stop()              
               
               ## Match Factor (1000)
               # MFscore <- get_mathc_factor(MZS_vec, INTS_vec, mzs_vec, mz_int_vec)
@@ -1368,8 +1342,7 @@ getPeakArea2 <- function(xr, peak.rt, peak.rtmin, peak.rtmax)  {
 # mzs_vec <- sample_mzs_vec
 # mz_int_vec <- sample_mz_int_vec
 
-# round.digit will be taken off because of m/z values was changed to integer 
-find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, round.digit=0, mzCutoff=70) {
+find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, mzCutoff=70) {
     MZS_vec_tmp <- c()
     INTS_vec_tmp <- c()
     mzs_vec_tmp <- c()
@@ -1377,7 +1350,6 @@ find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, round.dig
     
     # recommended to use over m/z > 70 only
     if (TRUE) {
-        # mzCutoff <- 40
         cutOffLen.mzs <- length(mzs_vec[which(mzs_vec < mzCutoff)])
         mzs_vec <- mzs_vec[-c(1:cutOffLen.mzs)]
         mz_int_vec <- mz_int_vec[-c(1:cutOffLen.mzs)]
@@ -1388,7 +1360,6 @@ find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, round.dig
     }    
     
     for(i in 1:length(mzs_vec)) {
-        #  sample_mz <- round(mzs_vec[i], round.digit) # this will be used for M in Match Factor (MF) calcuration    
         sample_mz <- mzs_vec[i] # this will be used for M in Match Factor (MF) calcuration    
         for(j in 1:length(MZS_vec)) {
             ## if( MZS_vec[j] - mz_off_set  <= mzs_vec[i] &&  mzs_vec[i] <= MZS_vec[j] + mz_off_set){
@@ -1443,7 +1414,7 @@ calcMFscore <- function(ref_MZS_vec, ref_INT_vec, qry_mzs_vec, qry_int_vec) {
       c <- c + MF.weight * ref_MZS_vec[i] * (ref_INT_vec[i] * qry_int_vec[i]) ** 0.5    
     }
     
-    MF_score <- round((1000 * c ** 2)/ (a * b), 3)
+    MF_score <- round((1000 * c ** 2)/ (a * b), 1)
     
     return(MF_score)
 }
@@ -1459,7 +1430,7 @@ arrangeProfiledPeaks2 <- function(profiled_peaks)
       tmpdata <- profiled_peaks[which(profiled_peaks$Compound == unique_complist[j]), ]    
       tmpdata <- tmpdata[order(as.double(as.character(tmpdata$TScore)), decreasing=TRUE), ] 
       final.comp <- tmpdata[1, ]
-      if(! TRUE) { cat("compd:", unique_complist[j], "\n"); cat("tmpdata:\n"); print(tmpdata);  cat("final.comp:\n"); print(final.comp) }
+      if(FALSE) { cat("compd:", unique_complist[j], "\n"); cat("tmpdata:\n"); print(tmpdata);  cat("final.comp:\n"); print(final.comp) }
       profiled_final <- rbind(profiled_final, final.comp)
     }  
     profiled_final <- profiled_final[order(as.double(as.character(profiled_final$RI)), decreasing=FALSE), ] 
@@ -1486,7 +1457,7 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
     # cat("### libVec:\n"); print(libVec);
     
     if(nrow(libVec) == 1) {
-        conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept);  
+        conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept) * 1000; # unit: uM 
     } else {
         # cat("## Error to find a record in library\n\n");
         conc <- "NA"
@@ -1529,9 +1500,9 @@ getSamePeakArea <- function(profiled_peaks) {
 # profiled.result <- final_PeakProfile.screened
 # lib <- lib.peak
 # stype <- ORGANIC_ACID  
-# unitConv <- "mM"/"uM"
+# unit <- uM"
 # internalStdCmpd <- "Ribitol"
-quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sample_file, stype, unitConv="mM") {
+quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sample_file, stype) {
   
     if (DEBUG) { cat("## quantification input peaks:", nrow(profiled.result), "\n") }
 
@@ -1573,7 +1544,7 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
                 
         if ( (hmdbID != internalStd.hmdbID) ) {  
             if(area_ratio > 0) {
-                calc <- calibration(lib.curve, hmdbID, area_ratio) # / unitConv  # unitConv 1 - uM, 1000 - mM
+                calc <- calibration(lib.curve, hmdbID, area_ratio) # unit uM
                 calc <- ifelse(calc < 0, 0, calc)  
             } else {
                 calc <- 0
