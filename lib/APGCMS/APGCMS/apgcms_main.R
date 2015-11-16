@@ -26,6 +26,7 @@
 options(echo=FALSE) # if you want see commands in output file
 options("width"=120)
 options(warn = -1) # ignore the warnings
+# options(warn = 2) # ignore the warnings
 
 library(parallel) # for using multiple cores
 

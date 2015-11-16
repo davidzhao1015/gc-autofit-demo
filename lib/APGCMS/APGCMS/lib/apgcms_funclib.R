@@ -1457,7 +1457,7 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
     # cat("### libVec:\n"); print(libVec);
     
     if(nrow(libVec) == 1) {
-        conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept) * 1000; # unit: uM 
+        conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept) 
     } else {
         # cat("## Error to find a record in library\n\n");
         conc <- "NA"
@@ -1466,12 +1466,13 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
 }
 
 # area: after divided by internal standard area
+# return: uM conc
 calcConcentration <- function(area, slope, intercept)
 {  
   if ( (area - intercept) > 0 ) {
-      round( (area - intercept) / slope , 3);
+      round( (area - intercept) * 1000 / slope , 2);
   } else {
-      round( 0.0001 / slope , 3);
+      round( 0.0001 / slope , 2); # < LOD generation
   }
 }
 
@@ -1581,24 +1582,27 @@ genFinalReport <- function(profiled.result, quantified.result) {
         # hmdbID <- "HMDB00162"
         tmpdata <- profiled.result[which(profiled.result$hmdbID == hmdbID), ]  
         tmpdata <- tmpdata[order(as.integer(as.character(tmpdata$Intensity)), decreasing=TRUE), ] 
-        
+
         Concentration <- -999 # Multiple Peaks
         final.comp <- cbind(tmpdata, Concentration)
         conc <- quantified.result[which(quantified.result$hmdbID == hmdbID), "Concentration"]
-        # cat("conc:", conc,"\n") 
+
         if (conc == "ISTD") {
+            final.comp[1,"Concentration"] <- conc
+        } else if (conc == "NA") {
             final.comp[1,"Concentration"] <- conc
         } else {
             final.comp[1,"Concentration"] <- as.double(conc)
         }  
-          # final.comp
         profiled_final <- rbind(profiled_final, final.comp)
     }  
+
     if ( length(profiled_final[which(profiled_final$Concentration == -999), "Concentration"]) > 0 ) {
         profiled_final[which(profiled_final$Concentration == -999), "Concentration"] <- "MP" # Multiple Peaks
     }
-    
+
     profiled_final <- profiled_final[order(as.numeric(as.character(profiled_final$RT))), ]
+
     return(profiled_final)
 }
 
