@@ -39,6 +39,18 @@ class Spectrum < ActiveRecord::Base
     end
   end
 
+  def csv_file_name
+    basename = File.basename(self.name, '.*')
+    case self.category
+    when 'blank'
+      "#{basename}_profiled.csv"
+    when 'standards'
+      "#{basename}_PeakList.csv"
+    else
+      "#{basename}_profiled.csv"
+    end
+  end
+
   def sample_name
     case self.category
     when 'blank'
