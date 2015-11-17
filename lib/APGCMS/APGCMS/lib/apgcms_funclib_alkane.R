@@ -155,21 +155,25 @@ userAssignedAlkanePeakCn <- function(peak.list, user.AlkaneRT)
     }
 
     peak.list.assigned <- as.data.frame(peak.list)
+    # cat("\n\n## peak.list.assigned\n"); print(peak.list.assigned)
+    
     for (i in 1:nrow(peak.list.assigned)) {        
         if(is.na(user.AlkaneRT[i]) | (user.AlkaneRT[i] == "NA") ) {
-              # cat(i," has NA:", peak_alkane_std$Cn[i], "\n")
               peak.list.assigned$Cn[i]<- -99
         } else {
-              # cat(i," has value:", peak_alkane_std$Cn[i], "\n")
               peak.list.assigned$Cn[i] <- user.AlkaneRT[i]
         }
     }
-
+    # cat("\n\n## peak.list.assigned with User assigned\n"); print(peak.list.assigned)
+    
     # cat("Excluding mis-identified Cns:",length(which(peak_alkane_std$Cn == -99)),"\n")    
     if( length(which(peak.list.assigned$Cn == -99)) > 0 ) {
         peak.list.assigned <- peak.list.assigned[- which(peak.list.assigned$Cn == -99), ]
     }
-    if (DEBUG) { cat("## alkane peaks (after adjustment with user define values):\n"); print(round(peak.list.assigned,2)) }
+    if (DEBUG) { 
+        cat("## alkane peaks (after adjustment with user define values):\n") 
+        print(peak.list.assigned) 
+    }
     
     if( length(which(table(peak.list.assigned$Cn) > 1)) > 0 ) {
         showErrMessage(" Error in user defined alkane:\n\t there are same carbon numbers. It should be unique values")
@@ -792,6 +796,11 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   #  if (DEBUG) { cat("## final_peakProfile_alkane after filtering with >", intensityThreshold, ":\n"); print(final_PeakProfile_alkane) }
   #}
   
+  if( ! is.null(user.AlkaneRT) ) {
+    final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, user.AlkaneRT)
+    if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
+  } 
+  
   alkane.peaks.unique <- getUniqueAlkanePeakList(final_PeakProfile_alkane, offset.RT=50)
   alkane.peaks.cleaned <- cleaningFalseAlkanePeaks(alkane.peaks.unique, offset.RT=50) 
   
@@ -806,9 +815,9 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
     alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
   }
 
-  if( ! is.null(user.AlkaneRT) ) {
-    alkane.peaks.profiled <- userAssignedAlkanePeakCn(alkane.peaks.profiled, user.AlkaneRT)
-  }
+#  if( ! is.null(user.AlkaneRT) ) {
+#    alkane.peaks.profiled <- userAssignedAlkanePeakCn(alkane.peaks.profiled, user.AlkaneRT)
+#  }
   
   alkaneInfo <- check_alkane_std(alkane.peaks.profiled)
   

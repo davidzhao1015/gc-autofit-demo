@@ -9,7 +9,7 @@ mkdir -p $FILES
 ln -s "../../../example/urine/Alkstd.mzXML" "${FILES}/Alkstd.mzXML"
 ln -s "../../../example/urine/Blank.mzXML" "${FILES}/Blank.mzXML"
 ln -s "../../../example/urine/C001.mzXML" "${FILES}/C001.mzXML"
-# ln -s "../../../example/urine/C002.mzXML" "${FILES}/C002.mzXML"
+ln -s "../../../example/urine/C002.mzXML" "${FILES}/C002.mzXML"
 # ln -s "../../../example/urine/C003.mzXML" "${FILES}/C003.mzXML"
 
 # Prepoocessing

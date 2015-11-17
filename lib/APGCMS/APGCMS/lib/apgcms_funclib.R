@@ -12,6 +12,7 @@
 
 # library(xcms)
 suppressMessages(require(xcms));
+options(warn=-1)
 
 # Generate Spectrum Plots
 # fname.list <- fileList$sampleFiles
@@ -72,7 +73,24 @@ generateSpectrumPlot.multicore <- function(nCluster, fnames) {
    cat("Done -", length(fnames),"Samples's Image Files were Generation\n", file="Done_ImageFiles.txt", append=FALSE)      
 }
 
-
+# to give more kind/understandable string in concentration
+replaceShort2LongString <- function(tbl)
+{
+  
+    tbl$Concentration2 <- as.character(unlist(tbl$Concentration2)) 
+  
+    if (nrow(tbl[which(tbl$Concentration2 == "<LOD"),]) > 0) {
+        tbl[which(tbl$Concentration2 == "<LOD"), "Concentration2"] <- "<LOD (Limit Of Detection)"
+    }
+    if (nrow(tbl[which(tbl$Concentration2 == "MP"),]) > 0) {
+        tbl[which(tbl$Concentration2 == "MP"), "Concentration2"] <- "Multiple peaks (merged with the first peak)"
+    }
+    if (nrow(tbl[which(tbl$Concentration2 == "ISTD"),]) > 0) {
+        tbl[which(tbl$Concentration2 == "ISTD"), "Concentration2"] <- "Internal Standard"
+    }
+    
+    return (tbl)
+}
 
 ### 
 ###  Updated May21, 2015
@@ -232,9 +250,12 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
         ## exclude NA or MP(Multiple Peak) cases  
         # finalReport.All <- finalReport.All[which( (!is.na(finalReport.All$Concentration2)) & (finalReport.All$Concentration2 != "MP") ), ]
         finalReport.All <- finalReport.All[which( !is.na(finalReport.All$Concentration2) ), ]   
-        
+
+        # change short string to long string
+        finalReport.All <- replaceShort2LongString(finalReport.All) 
+
         outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                         "Irons","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+                         "Ions","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
         write.table(finalReport.All[,-1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
         
         if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
@@ -252,8 +273,8 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
         if( na.length > 0 ) {
             tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
         }
-        if( length(which(tmp.Concentration$Concentration2 == "MP")) > 0 ) {
-            tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "MP"), ]
+        if( length(which(tmp.Concentration$Concentration2 == "Multiple peaks (merged with the first peak)")) > 0 ) {
+            tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "Multiple peaks (merged with the first peak)"), ]
         }
         
         colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )
@@ -277,7 +298,7 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
                                               "mzMaxInts","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration2")]                  
                 
         outColnames <- c("HMDB_ID","Compound","CompoundWithTMS","RT_min","RT","RI","Intensity",
-                         "Irons","MatchFactor","RI.Similarity","Area","RT.start","RT.end","Concentration")
+                         "Ions","MatchFactor","RI.Similarity","Area","RT.start","RT.end","Concentration")
         
         # outColnames <- c("PeakNo","Compound","HMDB ID","RT(min)","RT","RI","Intensity","MatchFactor","RI.Similarity","Area","RT.start","RT.end", "Concentration")
         write.table(finalReport.All[, -1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
@@ -300,8 +321,8 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
               # cat("length(NA):", na.length, "\n")
               tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
             }
-            if ( length(which(tmp.Concentration$Concentration2 == "MP")) > 0 ) {
-              tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "MP"), ]
+            if ( length(which(tmp.Concentration$Concentration2 == "Multiple peaks (merged with the first peak)")) > 0 ) {
+              tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "Multiple peaks (merged with the first peak)"), ]
             }
         }
         colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )        
@@ -1024,8 +1045,6 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                         RT.start= peakRTStart,
                         RT.end= peakRTEnd,
                         peakType = peakType,
-                        #mz = sample_mzs_vec,
-                        #mzInt = sample_mz_int_vec
                         mz = aMzInt$mzlist,
                         mzInt = aMzInt$intList,
                         mzMaxInts = aMzInt$mzMaxInts
@@ -1077,6 +1096,7 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## if no matched RI from library because of no alkane    
       if ( RI.sample < 0 ) {    
           if (DEBUG) {
+              cat("## peak", j ,"th RT:", peak_rt_vec[j],"\n")
               cat("\n### NO RI was used because of no matched alkane\n\n")
           }
           # This part covers the peak which does not have alkane
@@ -1190,6 +1210,8 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 TScore <- tmp.TScore
                 RIScore <- RI.similarity
                 ## nearRelPeakRTscore <- nearRelPeakRTscore.tmp
+
+                aMzInt <- getMassSpec(sample_mzs_vec, sample_mz_int_vec, RT.sample) 
                 
                 identified <- c(
                     hmdbID=as.character(lib.matched[k,]$HMDB_ID),
@@ -1205,15 +1227,17 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                     matchMZnum=matchMZnum,
                     sampleMZnum=sampleMZnum,
                     nearRelPeakRTscore=NULL,
-                    #matchMZrate20=matchMZrate20,
-                    #MFscore20=MFscore20,
                     TScore=round(TScore, 2),
                     Area=peakArea,
                     RT.start= peakRTStart,
                     RT.end= peakRTEnd,
-                    peakType = peakType
+                    peakType = peakType,
+                    mz = aMzInt$mzlist,
+                    mzInt = aMzInt$intList,
+                    mzMaxInts = aMzInt$mzMaxInts
                 )              
               }
+              
               
               ## to verify result
               tmp.identified <- c(
@@ -1228,8 +1252,6 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 matchMZnum=matchMZnum,
                 sampleMZnum=sampleMZnum,
                 nearRelPeakRTscore=NULL,
-                #matchMZrate20=matchMZrate20,
-                #MFscore20=MFscore20,
                 TScore=round(tmp.TScore, 2),
                 Area=peakArea,
                 RT.start= peakRTStart,
@@ -1342,13 +1364,13 @@ getPeakArea2 <- function(xr, peak.rt, peak.rtmin, peak.rtmax)  {
 # mzs_vec <- sample_mzs_vec
 # mz_int_vec <- sample_mz_int_vec
 
-find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, mzCutoff=70) {
+find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, mzCutoff=50) {
     MZS_vec_tmp <- c()
     INTS_vec_tmp <- c()
     mzs_vec_tmp <- c()
     mz_int_vec_tmp <- c()
     
-    # recommended to use over m/z > 70 only
+    # recommended to use over m/z > 50 only
     if (TRUE) {
         cutOffLen.mzs <- length(mzs_vec[which(mzs_vec < mzCutoff)])
         mzs_vec <- mzs_vec[-c(1:cutOffLen.mzs)]
@@ -1364,6 +1386,7 @@ find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, mzCutoff=
         for(j in 1:length(MZS_vec)) {
             ## if( MZS_vec[j] - mz_off_set  <= mzs_vec[i] &&  mzs_vec[i] <= MZS_vec[j] + mz_off_set){
             # if( round(MZS_vec[j], round.digit) == sample_mz ){
+
             if( MZS_vec[j] == sample_mz ) {
                 MZS_vec_tmp[length(MZS_vec_tmp)+1] <- sample_mz
                 INTS_vec_tmp[length(INTS_vec_tmp)+1] <- INTS_vec[j]
@@ -1459,8 +1482,12 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
     if(nrow(libVec) == 1) {
         conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept) 
     } else {
-        # cat("## Error to find a record in library\n\n");
-        conc <- "NA"
+        if(nrow(libVec) > 1) {
+            cat("\n\n## Error to find a record in library (more than 2):", hmdbID,"\n\n");
+            print(dbLib[which(as.character(dbLib$HMDB_ID) == hmdbID), ]);
+        }
+        if(DEBUG) cat("\n\n## Error to find a record in library:", hmdbID,"\n\n");
+        conc <- "NA" # no calibration
     }
     return(conc)
 }

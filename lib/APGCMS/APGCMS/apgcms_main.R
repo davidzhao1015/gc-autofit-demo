@@ -87,10 +87,6 @@ if( USE_INTERNAL_LIBRARY == 'NONE') {
     }
 }  
 
-# print(lib.peak[,c(1:3)])
-# print(lib.calicurv)
-# stop()
-
 ## load library for the functions
 source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and definitions
 source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
@@ -141,6 +137,7 @@ if (processOption == 'PREPROCESSING') {
     fname.lib.alkane <- file.path(lib_dir, LibFile.Alkane)
     
     # peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT==TRUE) 
+
     peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=FALSE) 
 
     if(DEBUG) { cat("final alkane profiled:\n"); print(peak_alkane_std) }
@@ -164,9 +161,9 @@ if (processOption == 'PREPROCESSING') {
         ## RI calculation using Alkane Std
         peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
         profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
-        # cat("\n\n## profiled_peaks_blank\n"); print(head(profiled_peaks_blank))
+        if (DEBUG) { cat("\n\n## profiled_peaks_blank\n"); print(head(profiled_peaks_blank)) }
         colnames(profiled_peaks_blank)[1] <- "HMDB_ID"
-
+        
         if( DEBUG ) {
             ofilename <- paste(specFilename.blank,"_profiledPeaksTMP.tsv", sep='')
             write.table(profiled_peaks_blank, file=ofilename, quote=TRUE, row.names=FALSE, sep="\t")
@@ -186,7 +183,7 @@ if (processOption == 'PREPROCESSING') {
                                          Concentration="NA")
         ofilename <- paste(specFilename.blank,"_profiled.csv", sep='')
         outColnames <- c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                         "Irons","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+                         "Ions","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
         write.table(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
 
         if (CREATE_JSON_FILE) {

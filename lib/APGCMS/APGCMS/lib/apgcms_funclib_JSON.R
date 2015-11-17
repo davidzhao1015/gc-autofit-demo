@@ -90,7 +90,7 @@ spectrumToJSON.profile <- function(data.in)
                         '\t\t\t\t\t "RT(min)": "', x[3], '",\n', 
                         '\t\t\t\t\t "RI": "', x[4], '",\n', 
                         '\t\t\t\t\t "Intensity": "', x[5], '",\n',
-                        '\t\t\t\t\t "Irons": "', x[6], '",\n', 
+                        '\t\t\t\t\t "Ions": "', x[6], '",\n', 
                         '\t\t\t\t\t "MatchFactor": "', x[7], '",\n', 
                         '\t\t\t\t\t "TScore": "', x[8], '",\n', 
                         '\t\t\t\t\t "Area": "', x[9], '",\n', 

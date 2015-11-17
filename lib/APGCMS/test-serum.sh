@@ -9,7 +9,7 @@ mkdir -p $FILES
 ln -s "../../../example/serum/ALKSTD.CDF" "${FILES}/ALKSTD.CDF"
 ln -s "../../../example/serum/GSS-BLANK.CDF" "${FILES}/GSS-BLANK.CDF"
 ln -s "../../../example/serum/GSS-1R.CDF" "${FILES}/GSS-1R.CDF"
-# ln -s "../../../example/serum/GSS-2R.CDF" "${FILES}/GSS-2R.CDF"
+ln -s "../../../example/serum/GSS-2R.CDF" "${FILES}/GSS-2R.CDF"
 
 # Prepoocessing
 Rscript "${APGCMS_DIR}/APGCMS/apgcms_main.R" --infiledir="${FILES}" \
