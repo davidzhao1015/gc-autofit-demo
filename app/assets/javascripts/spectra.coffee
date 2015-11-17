@@ -4,7 +4,8 @@ $(window).load ->
 
 
   $('.results-table').DataTable({
-    'paging': false
+    'paging': false,
+    'order': [[ 2, 'asc' ]]
   })
 
   $('#spectra-viewer').each ->
@@ -18,7 +19,7 @@ $(window).load ->
       axis_y_show: true,
       axis_y_lock: 0.04,
       axis_x_reverse: false,
-      axis_x_title: 'Retention Time (Seconds)',
+      axis_x_title: 'Retention Time (Minutes)',
       axis_y_title: 'Intensity',
       axis_y_tick_format: '.1e',
       axis_y_gutter: 80,
@@ -140,7 +141,7 @@ $(window).load ->
         load_spectrum(path_base + '.json')
       return false
 
-    standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'MatchFactor', 'Concentration (uM)']
+    standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'Ions', 'MatchFactor', 'Concentration (uM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()

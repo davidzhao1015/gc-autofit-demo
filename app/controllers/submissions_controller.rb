@@ -1,6 +1,7 @@
 class SubmissionsController < ApplicationController
 
   before_action :set_submission, only: [:show, :edit, :profile, :update, :save_alkane_standards, :destroy]
+  before_action :set_upload_format, only: [:create, :update]
 
   # GET /submissions
   # GET /submissions.json
@@ -44,7 +45,6 @@ class SubmissionsController < ApplicationController
   def create
     @submission = Submission.new(submission_params)
     @submission.status = 'validating'
-    @upload_spectra_format = params[:upload_spectra_format]
     if @submission.internal_standard == 'Other'
       @custom_internal_standard = params[:custom_internal_standard]
       @submission.internal_standard = @custom_internal_standard
@@ -166,6 +166,10 @@ class SubmissionsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_submission
       @submission = Submission.find_by_secret_id(params[:id])
+    end
+
+    def set_upload_format
+      @upload_spectra_format = params[:upload_spectra_format]
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
