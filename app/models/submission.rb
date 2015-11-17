@@ -106,6 +106,10 @@ class Submission < ActiveRecord::Base
     ['queued', 'processing'].include?(self.status)
   end
 
+  def running?
+    self.status == 'processing'
+  end
+
   # def processed?
   #   PROCESSED.include?(self.status)
   # end

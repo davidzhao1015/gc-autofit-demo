@@ -20,5 +20,5 @@
            class='#{"spectrum-active" if sample.finalized?}']
           td = sample.name
           td.runtime = sample.display_runtime
-          td.status-text = sample.display_status
+          td.status-text = display_status(sample)
 

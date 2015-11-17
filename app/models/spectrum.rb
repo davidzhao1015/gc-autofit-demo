@@ -121,6 +121,10 @@ class Spectrum < ActiveRecord::Base
     self.status == 'failed'
   end
 
+  def running?
+    self.status == 'profiling'
+  end
+
   def has_message?
     self.failed?
   end

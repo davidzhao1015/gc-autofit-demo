@@ -9,7 +9,7 @@ h2 Status
 - if @submission.processing?
 
   .well-content.intro
-    h3.status-text = @submission.display_status
+    h3.status-text = display_status(@submission, true)
     p
       | Your spectra are being preprocessed.
         You can bookmark this page and check back later.
