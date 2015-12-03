@@ -60,57 +60,72 @@ spectrumToJSON.fullSpectrum.old <- function(d)
 
 spectrumToJSON.profile <- function(data.in)
 {   
-  #  d <- data.frame(x, y, text)
-  d <- data.in  
-  names(d)[c(3,5,2)] <- c("x","y","text") # RT_min, Intensity, Compound With TMS
-  
-  name.value <- function(i) {
-    quote <- '';
-    if(class(d[, i])!='numeric' && class(d[, i])!= 'integer'){ 
-      quote <- '"';
+    #  d <- data.frame(x, y, text)
+    d <- data.in  
+    names(d)[c(3,5,2)] <- c("x","y","text") # RT_min, Intensity, Compound With TMS
+    
+    # define a function for making a string 
+    # ==========================================================================
+    name.value <- function(i) {
+      quote <- '';
+      if(class(d[, i])!='numeric' && class(d[, i])!= 'integer'){ 
+        quote <- '"';
+      }
+      
+      paste('"', i, '" : ', quote, d[,i], quote, sep='')
     }
     
-    paste('"', i, '" : ', quote, d[,i], quote, sep='')
-  }
-  
-  xytext <- apply(sapply(c("x","y","text"), name.value), 1, function(x) { paste(x, collapse=',\t') })
-  # cat("\n\n# json data:\n"); print(names(d))
-  
-  # cat("\n\n## JSON data:\n");
-  # print(names(d));
-  # print(head(d));
-  # stop()
-  
-  meta <- apply(d, 1, 
-                function(x) {                       
-                  paste('\t\t"meta": {\n',
-                        '\t\t\t\t"table_data": {\n', 
-                        '\t\t\t\t\t "HMDB ID": "', x[1], '",\n',
-                        '\t\t\t\t\t "Name": "', x[2], '",\n', 
-                        '\t\t\t\t\t "RT(min)": "', x[3], '",\n', 
-                        '\t\t\t\t\t "RI": "', x[4], '",\n', 
-                        '\t\t\t\t\t "Intensity": "', x[5], '",\n',
-                        '\t\t\t\t\t "Ions": "', x[6], '",\n', 
-                        '\t\t\t\t\t "MatchFactor": "', x[7], '",\n', 
-                        '\t\t\t\t\t "TScore": "', x[8], '",\n', 
-                        '\t\t\t\t\t "Area": "', x[9], '",\n', 
-                        '\t\t\t\t\t "RT(start)": "', x[10], '",\n', 
-                        '\t\t\t\t\t "RT(end)": "', x[11], '",\n',
-                        '\t\t\t\t\t "Concentration (uM)": "', x[14], '"\n',
-                        '\t\t\t\t},\n',
-                        '\t\t\t\t"ms_data" : {\n',
-                        '\t\t\t\t\t "m/z": [', x[12], '],\n', 
-                        '\t\t\t\t\t "Intensity": [', x[13], ']\n',
-                        '\t\t\t\t}\n',
-                        '\t\t\t}\n',
-                        sep='') 
-                } )
-  
-  objs <- paste('\t\t{\t', xytext, ",\n\t", meta, '\t\t}', sep='')
-  res <- paste(objs, collapse=',\n')
-  res <- paste('\t"labels": [\n', res, '\n\t]')
-  
-  return(res)
+    str.meta <- function(x) { 
+      # cat("### inside of function:\n"); print(typeof(x))
+      
+      paste('\t\t"meta": {\n',
+            '\t\t\t\t"table_data": {\n', 
+            '\t\t\t\t\t "HMDB ID": "', x[1], '",\n',
+            '\t\t\t\t\t "Name": "', x[2], '",\n', 
+            '\t\t\t\t\t "RT(min)": "', x[3], '",\n', 
+            '\t\t\t\t\t "RI": "', x[4], '",\n', 
+            '\t\t\t\t\t "Intensity": "', x[5], '",\n',
+            '\t\t\t\t\t "Ions": "', x[6], '",\n', 
+            '\t\t\t\t\t "MatchFactor": "', x[7], '",\n', 
+            '\t\t\t\t\t "TScore": "', x[8], '",\n', 
+            '\t\t\t\t\t "Area": "', x[9], '",\n', 
+            '\t\t\t\t\t "RT(start)": "', x[10], '",\n', 
+            '\t\t\t\t\t "RT(end)": "', x[11], '",\n',
+            '\t\t\t\t\t "Concentration (uM)": "', x[14], '"\n',
+            '\t\t\t\t},\n',
+            '\t\t\t\t"ms_data" : {\n',
+            '\t\t\t\t\t "m/z": [', x[12], '],\n', 
+            '\t\t\t\t\t "Intensity": [', x[13], ']\n',
+            '\t\t\t\t}\n',
+            '\t\t\t}\n',
+            sep='') 
+    }
+    # ==========================================================================
+    
+    if( nrow(d) > 1) {
+        xytext <- apply(sapply(c("x","y","text"), name.value), 1, function(x) { paste(x, collapse=',\t') })
+        # cat("\n\n# json data:\n"); print(names(d))
+        
+        # cat("\n\n## JSON data:\n");
+        # print(names(d));
+        # print(head(d));
+        # stop()
+        
+        meta <- apply(d, 1, str.meta) 
+
+    } else if (nrow(d) == 1) {
+        # xytext <- apply(sapply(c("x","y","text"), name.value), 1, function(x) { paste(x, collapse=',\t') })
+        xytext <- paste(sapply(c("x","y","text"), name.value), collapse=',\t')
+        meta <- str.meta(lapply(d, as.character))
+      
+    } else {
+        return(res=NULL)
+    }
+    objs <- paste('\t\t{\t', xytext, ",\n\t", meta, '\t\t}', sep='')
+    res <- paste(objs, collapse=',\n')
+    res <- paste('\t"labels": [\n', res, '\n\t]')
+    
+    return(res)
 }
 
 # xy_data:x,y

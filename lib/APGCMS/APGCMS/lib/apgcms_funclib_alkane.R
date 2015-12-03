@@ -192,7 +192,8 @@ extractAlkaneStdInfo <- function(file.alkane) {
   #### xset <- xcmsSet(file.alkane, method='centWave',ppm=1,snthresh=10,peakwidth=c(1,10))
   ## profMethod: bin, binlin, binlinbase, or intlin.
   # xset <- xcmsRaw(file.alkane, profstep=1, profmethod='bin', scanrange=NULL)  ## without smooth  
-  xset <- xcmsRaw(file.alkane, profstep=1, profmethod='binlin', scanrange=NULL) ## smooth  
+  xset <- xcmsRaw(file.alkane, profstep=1, profmethod='binlin', scanrange=NULL) ## smooth 
+
   return(xset)  
 }
 
@@ -215,7 +216,7 @@ extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7) 
     sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
     # png(filename = paste("Plot_", ctype,"_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
     png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 12)
-    plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
+        plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
     dev.off()
   # }
   
@@ -227,7 +228,7 @@ extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7) 
   ## use TIC instead of EIC
   if(ctype=="TIC") {
     rt_peak <- extract_RT_forEachPeak(rt_int_matrix, offset, ctype="TIC", xset); 
-    # cat("rt_peak:\n"); print(rt_peak)
+    cat("\n## rt_peak:\n"); print(rt_peak)
     
     ## exclude noise peaks
     idx.max <- which(rt_peak$intensity == max(rt_peak$intensity)) ## C20
@@ -760,7 +761,10 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   # lib.peak.alkane <- read.csv(file=file.path(lib_dir, LibFile.Alkane), head=TRUE, sep=",", quote = "\"");
   lib.peak.alkane <- read.csv(file=lib.fname.alkane, head=TRUE, sep=",", quote = "\"");
   # names(lib.peak.alkane)
-  if(nrow(lib.peak.alkane) == 0) stop("Cannot load the m/z & intensity library for Alkane")
+  if(nrow(lib.peak.alkane) == 0) {
+      showErrMessage("Cannot load the m/z & intensity library for Alkane")
+      q(save="no")  
+  }
   
   ## Extracting peak list for alkane standard 
   xset.alkane <- extractAlkaneStdInfo(sample.fname.alkane)
@@ -776,6 +780,12 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   # peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset, RunPlotOnly)
   peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset)
   if (DEBUG) { cat("## peaks.alkane:\n"); print(peaks.alkane) }
+  
+  if ( (length(xset.alkane@scanindex) != length(unique(xset.alkane@scanindex)) )
+        & (nrow(peaks.alkane) < 10) ) { 
+        showErrMessage(ERRCODE001)
+        q(save="no")  
+  }
   
   ## cleanning false peaks before profiling using RT
   peaks.alkane <- cleanning_alkaneFaslePeaks(peaks.alkane, RT.offset=50)  # offset: 20~60
@@ -797,9 +807,9 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   #}
   
   if( ! is.null(user.AlkaneRT) ) {
-    final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, user.AlkaneRT)
-    if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
-  } 
+      final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, user.AlkaneRT)
+      if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
+  }
   
   alkane.peaks.unique <- getUniqueAlkanePeakList(final_PeakProfile_alkane, offset.RT=50)
   alkane.peaks.cleaned <- cleaningFalseAlkanePeaks(alkane.peaks.unique, offset.RT=50) 
@@ -812,11 +822,11 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
   if (DEBUG) { cat("## alkane peaks:\n"); print(round(alkane.peaks.profiled,2)) }
   
   if (setAdjustAlkanePeakCn) {
-    alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
+      alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
   }
 
 #  if( ! is.null(user.AlkaneRT) ) {
-#    alkane.peaks.profiled <- userAssignedAlkanePeakCn(alkane.peaks.profiled, user.AlkaneRT)
+#     alkane.peaks.profiled <- userAssignedAlkanePeakCn(alkane.peaks.profiled, user.AlkaneRT)
 #  }
   
   alkaneInfo <- check_alkane_std(alkane.peaks.profiled)

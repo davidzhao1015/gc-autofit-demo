@@ -152,6 +152,17 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
     ## identification using RI and m/z with intensity (Scores)
     if (print.on) {  cat("\t >> Identifying peaks \n") }
     ## Including Additional Information: Area, RTstart & RTend
+    
+    # If a spectrum has problem, return null
+    if ( length(unique(xset.asample$xraw@scanindex)) < length(xset.asample$xraw@scanindex) * 0.9  ) { 
+        # cat("length(xset.alkane@scanindex):\n"); print(length(xset.asample$xraw@scanindex));
+        # cat("length(unique(xset.alkane@scanindex)):\n"); print(length(unique(xset.asample$xraw@scanindex)));
+        
+        showErrMessage(paste("WARNING: Unable to detect peaks in the spectrum.\n\t Please verify the Spectrum of", 
+                             f.sample.basename))
+        return (NULL)
+    }
+    
     profiled_peaks <- compoundIdentify3(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=not_PRINT_MZINT4DB)
     # cat("\n## profiled_peaks:\n"); print(head(profiled_peaks))    
 
@@ -335,9 +346,19 @@ quantifictionFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.mat
 mergeConcTable <- function( conc.list )
 {
       # column names: HMDB_ID, Compound, sample_ID
+      if( is.null(conc.list[[1]])) {
+          showErrMessage("WARNING: No identification and quantification because of problem in the spectrum.\n\t Please verify the Spectrum !!!")
+      } 
       conc.all <- conc.list[[1]]
+        
       for (i in 2:length(conc.list))  {
-        conc.all <- merge(conc.all, conc.list[[i]], by=c("HMDB_ID","Compound"), sort=FALSE, all=TRUE)
+        if( !is.null(conc.all) & !is.null(conc.list[[i]]) ) {
+            conc.all <- merge(conc.all, conc.list[[i]], by=c("HMDB_ID","Compound"), sort=FALSE, all=TRUE)
+        } else if ( is.null(conc.all) & !is.null(conc.list[[i]]) ) {
+            conc.all <- conc.list[[i]]
+        } else {
+            showErrMessage("WARNING: No identification and quantification because of problem in the spectrum.\n\t Please verify the Spectrum !!!")
+        }
       }
       return (conc.all)
 }
@@ -385,10 +406,11 @@ extract_RT_forEachPeak <- function(rt_int_matrix, offset=7, ctype="EIC", xset=NU
     }
     # rtint.o <- rt_int_matrix
     rt_int_matrix <- data.frame(rt=xset@scantime, intensity=xset@tic)
+    # cat("## rt_int_matrix:\n"); print(head(rt_int_matrix))
+    
   } 
   
-  # cat("## xset:\n")
-  # print(str(xset))
+  # cat("## xset:\n");  print(str(xset))
   
   ## to reduce size, using cut off values is very important to remain significant peak      
   dstat <- summary(rt_int_matrix[,"intensity"])      
@@ -536,9 +558,14 @@ extractSampleInfo2 <- function(aSampleFile) {
   xraw <- xcmsRaw(aSampleFile, profstep=1, scanrange=NULL) 
   ## peaks <- findPeaks.centWave(xraw, ppm=30, peakwidth=c(5,10), snthresh=10, prefilter=c(3,100), fitgauss=TRUE)
   peaks <- NULL
-  # xset.samples <- xcmsSet(file_list[-1],method='centWave',ppm=1,snthresh=1,peakwidth=c(1,10),scanrange=c(1,3800))
-  # peak.ranges <- findPeaks.centWave(xset.samples, ppm=25, peakwidth=c(1,10), snthresh=10, prefilter=c(3,100), fitgauss=FALSE)
   xset <- list( xraw=xraw, peaks=peaks )
+  
+  # unused in new updates
+  if( ! TRUE ) {
+      xset.samples <- xcmsSet(aSampleFile, method='centWave',ppm=1,snthresh=1,peakwidth=c(1,10),scanrange=c(1,3800))
+      peak.ranges <- findPeaks.centWave(xset.samples, ppm=25, peakwidth=c(1,10), snthresh=10, prefilter=c(3,100), fitgauss=FALSE)
+      cat("\n\n## findPeaks:\n"); print(peak.ranges)
+  }  
   
   return(xset)  
 }
@@ -863,10 +890,9 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
   peak_rt_vec <- asample.peakInfo[, "rt"] 
   ## get rt/mz/intensity/area/... for each peak
   peak_mzInt_list <- getMZIntensityofEachPeak2(xset.one, peak_rt_vec)
-  
-  # cat("peak_rt_vec\n"); print(peak_rt_vec)
-  # cat("peak_mzInt_list"); print(peak_mzInt_list)
-  
+  # cat("peak_rt_vec\n"); print(head(peak_rt_vec))
+  # cat("peak_mzInt_list"); print(peak_mzInt_list[1:3])
+
   ## @@@@@@
   ## used for mz/int DB update in Internal Library
   if( print_mzInt ) {
@@ -945,6 +971,12 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
           peakRTEnd <-  peak_mzInt_list[[j]]$peakRTEnd
           peakType <- peak_mzInt_list[[j]]$peakType
         
+          # if the number of m/z of a sample peak < 10, then just skip this peak 
+          if (length(sample_mzs_vec) < 10) {
+              if(FALSE & DEBUG) { cat("### sample_mzs_vec < 10:\n"); print(sample_mzs_vec) }
+              next
+          }
+            
           ## step 2) for selected candidate compounds, calculate scores like Match Factor and others?
           if (length(lib.matched$RI) > 0) {          
               # cat("\n##### Peak ", j, " - Sample's RT:", RT.sample, "(", round(RT.sample/60, 2), ")  RI:", RI.sample, "\n"
@@ -958,7 +990,7 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
               ## nearRelPeakRT.min <- min(abs(lib.matched$relativePeakRT - relativePeakRT))
           
               identified.trace <- NULL; ## for trace
-              for(k in 1:length(lib.matched$RI)) {  ## repeat for selected candidates
+              for(k in 1:length(lib.matched$RI)) {  ## repeat for selected candidates of Library 
                 # k<-1
                 ## calculate scores (MF_Score, Prob, ...)      
                 alib.matched <- lib.matched[k,]
@@ -980,14 +1012,19 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 # round.digit <- 0 # 0 or 2; not 1
                 lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec)
                 if (length(lst$MZS_vec_tmp)==0) { 
-                    cat("# ERROR - compound:", alib.matched$CompoundWithTMS,"\n");
-                    stop("No m/z matched")
+                    if(DEBUG) {
+                        cat("## Warning: No matched mass (m/z) - compound:", as.character(alib.matched$CompoundWithTMS),"\n");
+                    }
+                    # stop("No m/z matched")
+                    next # skip following because no matched mass (m/z)
                 } else {
-                    if (DEBUG & FALSE) {         
+                    if (FALSE & DEBUG) {         
                         cat("## Match Factor) # of m/z matched:", length(lst$MZS_vec_tmp), " ref m/z:", length(ref_MZS_vec)
                             , " sample m/z:", length(sample_mzs_vec), "\n")
+                        cat("# RT:", round(peakRT/60,2),"\n")
                     }
                 }
+            
                 
                 ## Match Factor (1000)
                 # MFscore <- get_mathc_factor(MZS_vec, INTS_vec, mzs_vec, mz_int_vec)
@@ -1014,11 +1051,14 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                 ## tmp.TScore =  0.7 * RI.similarity + 0.3 * MFscore/10 
                 tmp.TScore =  0.3 * MFscore/10 + 0.2 * RI.similarity + 0.5*matchMZrate
                 
-                ## cat(MFscore, nearRelPeakRTscore.tmp, RI.similarity, tmp.TScore, "\n")
+                if(FALSE & DEBUG) {
+                    cat("## Scores:", MFscore, RI.similarity, tmp.TScore, "\n")
+                }
                 
                 # if ( nearRelPeakRTscore < nearRelPeakRTscore.tmp 
                 # RI.similarity: 70 --> 90 (Dec 16, 2014)
-                if ( (RI.similarity > 90) & (RIScore < RI.similarity) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
+                if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (cor.spearman > 0.50) & (matchMZnum > 10)
+                        & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                     TScore <- tmp.TScore
                     RIScore <- RI.similarity
 
@@ -1095,7 +1135,7 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## ========================================================
       ## if no matched RI from library because of no alkane    
       if ( RI.sample < 0 ) {    
-          if (DEBUG) {
+          if (FALSE & DEBUG) {
               cat("## peak", j ,"th RT:", peak_rt_vec[j],"\n")
               cat("\n### NO RI was used because of no matched alkane\n\n")
           }
@@ -1284,9 +1324,13 @@ compoundIdentify3 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       
   } # for each peak  
   
-  rownames(identifiedList) <- c(1:nrow(identifiedList))
+  
+  if(! is.null(identifiedList)) {
+      rownames(identifiedList) <- c(1:nrow(identifiedList))
+  }
+  
   if( DEBUG ) {
-      cat("identifiedList:\n"); print(identifiedList)
+      cat("identifiedList:\n"); print(head(identifiedList))
       # cat("lib.peak:\n"); print(lib.peak[, c("HMDB_ID","Compound","CompoundWithTMS")])
   }
   
@@ -1381,8 +1425,16 @@ find_similar_peaks <- function(MZS_vec, INTS_vec, mzs_vec, mz_int_vec, mzCutoff=
         INTS_vec <- INTS_vec[-c(1:cutOffLen.MZS)]
     }    
     
+    if (length(mzs_vec) == 0) {
+        if(DEBUG) {
+            cat("## No m/z of a peak of sample spectrum\n")
+        }
+        return(list(MZS_vec_tmp=MZS_vec_tmp, INTS_vec_tmp=INTS_vec_tmp, mzs_vec_tmp=mzs_vec_tmp, 
+                  mz_int_vec_tmp=mz_int_vec_tmp))
+    }
     for(i in 1:length(mzs_vec)) {
         sample_mz <- mzs_vec[i] # this will be used for M in Match Factor (MF) calcuration    
+        # cat("sample_mz:"); print(sample_mz);
         for(j in 1:length(MZS_vec)) {
             ## if( MZS_vec[j] - mz_off_set  <= mzs_vec[i] &&  mzs_vec[i] <= MZS_vec[j] + mz_off_set){
             # if( round(MZS_vec[j], round.digit) == sample_mz ){

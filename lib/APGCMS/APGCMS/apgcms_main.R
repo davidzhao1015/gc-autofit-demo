@@ -194,11 +194,21 @@ if (processOption == 'PREPROCESSING') {
         # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
         if( (internalStd != "NONE") && !is.null(internalStd) ) {
               rmCompoundStr <- internalStd
+              # check whether or not exist the Internal Standard
+              if (nrow(final_PeakProfile_blank[which(final_PeakProfile_blank$Compound == rmCompoundStr), ]) == 0) {
+                  if(DEBUG) {
+                    cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
+                  }
+                  xset.blank <- NULL
+                  USE_BLANK_SPECTRUM <- FALSE
+              }
+              
               final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
               
               if( nrow(final_PeakProfile_blank) == 0  ) {
-                  # stop("There is no Internal Standard in the Blank file")
-                  cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
+                  if(DEBUG) {
+                    cat("## Warning: There is no coumpounds in Blank.\n## >> Running without Blank ! \n")
+                  }
                   xset.blank <- NULL
                   USE_BLANK_SPECTRUM <- FALSE
               }
@@ -245,7 +255,7 @@ if (processOption == 'PREPROCESSING') {
 ## =======================================================================================
 ## peak identifying for samples
 ## =======================================================================================
-cat("\n## Processing Sample Spectra Files ...\n")
+# cat("\n## Processing Sample Spectra Files ...\n")
 # print(head(lib.peak[,c(1:5)]))
 
 HMDBID <- as.character(unique(lib.peak[, c('HMDB_ID')]))
@@ -262,7 +272,8 @@ if ( processOption == "PREPROCESSING" ) {
     ## BLANK
   
     ## Image Plot generation      
-    cat("\n## Spectrum plot generation only ...\n")
+    cat("\n#####################################################################\n")
+    cat("## Spectrum plot generation only ...\n\n")
 
     # Multi Core or Single Core => now 2015 10 05, only sing core
     generateSpectrumPlot(fileList$sampleFiles)
@@ -287,7 +298,8 @@ if ( processOption == "PREPROCESSING" ) {
     ## PROFILING & Quantification as optional
   
     ## Loading the Generated Alkane & Blank Profile Information in PREPROCESSING 
-    cat("\n## Profiling and quantifying for each sample...\n")
+    cat("\n#####################################################################\n")
+    cat("## Profiling and quantifying for each sample ...\n\n")
 
     checkInternalStd <- FALSE    
     if (DEBUG) { beg = Sys.time() }
@@ -316,12 +328,14 @@ if ( processOption == "PREPROCESSING" ) {
     }
     
     ## merge concentration for all samples
+    # conc.each <- conc.each[-which(is.null(conc.each))]
     if (length(conc.each) >= 2) {
         final.Concentration <- mergeConcTable( conc.each )
     } else {
         # final.Concentration <- conc.each;
         final.Concentration <- as.data.frame(conc.each);
     }
+    
 
     ## Collect concentrations only and combine all samples
     ## ==================================================================================================
