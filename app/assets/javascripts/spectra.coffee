@@ -170,6 +170,8 @@ $(window).load ->
       table.draw()
       sv.draw()
 
+  hmdb_link = (id) ->
+      '<a target="_blank" class="wishart-link-out" href="http://www.hmdb.ca/metabolites/' + id + '">' + id + ' <span class="glyphicon glyphicon-new-window"> </span></a>'
 
 
 
