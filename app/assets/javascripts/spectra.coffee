@@ -161,7 +161,10 @@ $(window).load ->
 
         row_data = [ ]
         standard_columns.forEach (column) ->
-          row_data.push(data[column])
+          if column == 'HMDB ID'
+            row_data.push(hmdb_link(data[column]))
+          else
+            row_data.push(data[column])
         row_node = table.row.add(row_data).node()
         # Add table row id
         $(row_node).attr('id', data['HMDB ID'])
