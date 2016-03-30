@@ -44,9 +44,7 @@ $(window).load ->
             sv.scale.initialized = false
             # increase y max so top of highest peak and name is visible
             y_value_max = d3.max(data.xy_data.y)
-            console.log(y_value_max)
             adjusted_y_value_max = y_value_max * 1.2
-            console.log(adjusted_y_value_max)
             sv.boundary.update({x: data.xy_data.x, y:data.xy_data.y.concat(adjusted_y_value_max)})
             sv.scale.update({x: data.xy_data.x, y:data.xy_data.y.concat(adjusted_y_value_max)})
             sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})

@@ -28,6 +28,11 @@ $(window).load ->
         url: $(this).data('spectra-path')
         success: (data) ->
           if data && data.xy_data
+            # increase y max so top of highest peak and name is visible
+            y_value_max = d3.max(data.xy_data.y)
+            adjusted_y_value_max = y_value_max * 1.2
+            alkane_sv.boundary.update({x: data.xy_data.x, y:data.xy_data.y.concat(adjusted_y_value_max)})
+            alkane_sv.scale.update({x: data.xy_data.x, y:data.xy_data.y.concat(adjusted_y_value_max)})
             alkane_sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
             alkane_sv.draw()
         # Error handling not working for some reason
