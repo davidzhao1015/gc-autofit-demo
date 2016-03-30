@@ -40,10 +40,15 @@ $(window).load ->
             saved_domains = [sv.scale.x.domain(), sv.scale.y.domain()]
             viewer_was_not_empty = sv.spectra().length > 0
             sv.remove_all_spectra()
-            sv.boundary.initialized = false;
-            sv.scale.initialized = false;
-            sv.boundary.update(data.xy_data)
-            sv.scale.update(data.xy_data)
+            sv.boundary.initialized = false
+            sv.scale.initialized = false
+            # increase y max so top of highest peak and name is visible
+            y_value_max = d3.max(data.xy_data.y)
+            console.log(y_value_max)
+            adjusted_y_value_max = y_value_max * 1.2
+            console.log(adjusted_y_value_max)
+            sv.boundary.update({x: data.xy_data.x, y:data.xy_data.y.concat(adjusted_y_value_max)})
+            sv.scale.update({x: data.xy_data.x, y:data.xy_data.y.concat(adjusted_y_value_max)})
             sv.add_spectrum({xy_line: data.xy_data, labels: data.labels, tolerance: 0.001})
             if (viewer_was_not_empty)
               sv.set_domain('x', saved_domains[0])
