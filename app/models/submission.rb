@@ -16,7 +16,8 @@ class Submission < ActiveRecord::Base
     'upload' => 'Upload Your Library'
 
   }
-  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Other ]
+  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Other ]
+  # INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Other ]
 
   has_many :spectra, dependent: :destroy
   has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
@@ -188,7 +189,7 @@ class Submission < ActiveRecord::Base
           data = label['meta']['table_data']
           hmdbids[ data['HMDB ID'] ] = data['Name'] unless hmdbids[ data['id'] ].present?
 
-          concentrations[ data['HMDB ID'] ] = data['Concentration (uM)']
+          concentrations[ data['HMDB ID'] ] = data['Concentration (mM)']
         end
       end
       all_concs << concentrations

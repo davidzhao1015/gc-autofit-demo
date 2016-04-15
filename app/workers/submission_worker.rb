@@ -20,19 +20,19 @@ class SubmissionWorker
       standards = submission.standards
       if standards
         standards.json_results = File.open(File.join(submission.preprocessing_dir, 'Alkstd_spectrum.json') )
-        standards.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Alkstd.png') )
+        standards.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_TIC_Alkstd.png') )
         standards.save!
       end
       # Save Blank
       blank = submission.blank
       if blank
         blank.json_results = File.open(File.join(submission.preprocessing_dir, 'Blank_spectrum.json') )
-        blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_EIC_Blank.png') )
+        blank.plot = File.open(File.join(submission.preprocessing_dir, 'Plot_TIC_Blank.png') )
         blank.save!
       end
       # Link Samples
       submission.samples.each do |sample|
-        sample.plot = File.open(File.join(submission.preprocessing_dir, "Plot_EIC_Sample_#{sample.id}.png") )
+        sample.plot = File.open(File.join(submission.preprocessing_dir, "Plot_TIC_Sample_#{sample.id}.png") )
         sample.save!
       end
     else
