@@ -68,8 +68,8 @@ spectrumToJSON.profile <- function(data.in)
     # ==========================================================================
     name.value <- function(i) {
       quote <- '';
-      if(class(d[, i])!='numeric' && class(d[, i])!= 'integer'){ 
-        quote <- '"';
+      if(class(d[, i])!='numeric' && class(d[, i])!= 'integer') { 
+          quote <- '"';
       }
       
       paste('"', i, '" : ', quote, d[,i], quote, sep='')
@@ -77,7 +77,7 @@ spectrumToJSON.profile <- function(data.in)
     
     str.meta <- function(x) { 
       # cat("### inside of function:\n"); print(typeof(x))
-      
+    
       paste('\t\t"meta": {\n',
             '\t\t\t\t"table_data": {\n', 
             '\t\t\t\t\t "HMDB ID": "', x[1], '",\n',
@@ -85,17 +85,15 @@ spectrumToJSON.profile <- function(data.in)
             '\t\t\t\t\t "RT(min)": "', x[3], '",\n', 
             '\t\t\t\t\t "RI": "', x[4], '",\n', 
             '\t\t\t\t\t "Intensity": "', x[5], '",\n',
-            '\t\t\t\t\t "Ions": "', x[6], '",\n', 
-            '\t\t\t\t\t "MatchFactor": "', x[7], '",\n', 
-            '\t\t\t\t\t "TScore": "', x[8], '",\n', 
-            '\t\t\t\t\t "Area": "', x[9], '",\n', 
-            '\t\t\t\t\t "RT(start)": "', x[10], '",\n', 
-            '\t\t\t\t\t "RT(end)": "', x[11], '",\n',
-            '\t\t\t\t\t "Concentration (uM)": "', x[14], '"\n',
+            '\t\t\t\t\t "TargetIon": "', x[10], '",\n',
+            '\t\t\t\t\t "Q.Ion": "', x[11], '",\n', 
+            '\t\t\t\t\t "MatchFactor": "', x[6], '",\n', 
+            '\t\t\t\t\t "AreaRatio": "', x[14], '",\n', 
+            '\t\t\t\t\t "Concentration (mM)": "', x[17], '"\n',
             '\t\t\t\t},\n',
             '\t\t\t\t"ms_data" : {\n',
-            '\t\t\t\t\t "m/z": [', x[12], '],\n', 
-            '\t\t\t\t\t "Intensity": [', x[13], ']\n',
+            '\t\t\t\t\t "m/z": [', x[15], '],\n', 
+            '\t\t\t\t\t "Intensity": [', x[16], ']\n',
             '\t\t\t\t}\n',
             '\t\t\t}\n',
             sep='') 

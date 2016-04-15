@@ -63,18 +63,25 @@ setwd(dirProfileResult)  ## Set working directory
 
 if(ISDEBUG) cat("## dirProfileResult:"); print(dirProfileResult)
 
+# loading libraries
 if( USE_INTERNAL_LIBRARY == 'NONE') {    
     lib.peak <- getLibInfo(userLibFile)
     lib.calicurv <- getLibInfo(userCalFile)
 } else{  
     SampleType <- setSampleType(USE_INTERNAL_LIBRARY)
+    CalCurveType <- setCalCurveType(USE_INTERNAL_LIBRARY, internalStd.in, USE_NEW_CALCURVE)
+    # cat("internalStd.in:", internalStd.in, "\n")
+    # cat("USE_NEW_CALCURVE:", USE_NEW_CALCURVE,"\n")
+    # cat("CalCurveType:", CalCurveType,"\n")
     
-    ## load libraries (profiling and calibration curve)
+    ## load libraries (profiling/identification)
     fname.lib.peak <- file.path(file.path(lib_dir, LibFile[SampleType]))
     lib.peak <- getLibInfo(fname.lib.peak)
     
-    fname.lib.calicurve <- file.path(file.path(lib_dir, LibCaliCurveFile[SampleType]))
+    ## load calibration curve library
+    fname.lib.calicurve <- file.path(file.path(lib_dir, LibCaliCurveFile[CalCurveType]))
     lib.calicurv <- getLibInfo(fname.lib.calicurve)
+    # cat(fname.lib.calicurve)
     
     ## making Subset of Internal Library 
     ## if USER_SELECTED_CMPDS is not NULL (user selected some compounds of internal library)
@@ -98,7 +105,8 @@ if (internalStd.in == "NONE")  {
     internalStd <- "NONE"
 } else {  
     internalStd <- getInternalStdCmpdName(lib.peak, internalStd.in)
-    # cat("internalStd:"); print(internalStd.in)
+    # cat("# internalStd (in main 102):", internalStd,"\n")
+    
     if ( is.null(internalStd) ) {
         cat("\n\n## Error: Cannot find a matched Internal Standard [", internalStd.in,"] in the library\n")
     } else {
@@ -118,7 +126,6 @@ if (DEBUG) { cat("Input Files:\n"); print(fileList) }
 ## xset_list <- extract_xset_list(file_vec, mzStep) # xset_list$alkane & xset_list&samples 
 cat("\n## [", processOption, "] Extracting Raw data ...\n")
 
-
 ####################################################################################
 # in Preprocessing
 # Alkane Std, Blank, and Spectrum plot of Samples
@@ -130,14 +137,12 @@ if (processOption == 'PREPROCESSING') {
     ## Alkane Peak Handling (Profiling & Spectrum Plot)
     ## =======================================================================================
   
-  
     source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
 
     # Alkane Peak Profiling
     fname.lib.alkane <- file.path(lib_dir, LibFile.Alkane)
     
     # peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT==TRUE) 
-
     peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=FALSE) 
 
     if(DEBUG) { cat("final alkane profiled:\n"); print(peak_alkane_std) }
@@ -156,12 +161,14 @@ if (processOption == 'PREPROCESSING') {
         cat("\n## Extracting peak list for Blank sample:", basename(fileList$blankFile), "\n")
         ## peak picking for samples using EIC(extracted ion chromatograms) for m/z values of interest. 
         # peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5, RunPlotOnly)
-        peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5)
+        peaks.blank <- extract_peak_list_blank(xset.blank, ctype="TIC", offset=1.5) # offset > 2 then use mean; offset < 2 then use median
 
         ## RI calculation using Alkane Std
         peak_blank_ri <- get_RI_for_samples2(peaks.blank, peak_alkane_std)    
-        profiled_peaks_blank <- compoundIdentify3(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
-        if (DEBUG) { cat("\n\n## profiled_peaks_blank\n"); print(head(profiled_peaks_blank)) }
+
+        ## compound Identification
+        profiled_peaks_blank <- compoundIdentify4(peak_blank_ri, xset.blank, lib.peak, alkaneInfo, RI.Variation, isBLANK=TRUE)
+        #if (DEBUG) { cat("\n\n## profiled_peaks_blank\n"); print(head(profiled_peaks_blank)) }
         colnames(profiled_peaks_blank)[1] <- "HMDB_ID"
         
         if( DEBUG ) {
@@ -172,18 +179,21 @@ if (processOption == 'PREPROCESSING') {
         final_PeakProfile_blank <- arrangeProfiledPeaks2(profiled_peaks_blank)
         if (DEBUG) { cat("\n\n## final_PeakProfile_blank\n"); print(head(final_PeakProfile_blank)) }
 
-        #!!!! should be included in arrangeProfiledPeaks2
         final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
         
         final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[, c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity",
-                                                        "mzMaxInts","MatchFactor","TScore","Area","RT.start","RT.end","mz","mzInt")], 
-                                                        Concentration="NA") # keep mass Spectrum Info (m/z, Intensity)
+                                              "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
+                                              "Area.EICTarget","Area.EICQualification","AreaRatio","mz","mzInt")], 
+                                              Concentration="NA") # keep mass Spectrum Info (m/z, Intensity)
         final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                                                                    "mzMaxInts","MatchFactor", "RI.Similarity","Area","RT.start","RT.end")], 
-                                         Concentration="NA")
+                                              "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
+                                              "Area.EICTarget","Area.EICQualification","AreaRatio")], 
+                                              Concentration="NA")
+
         ofilename <- paste(specFilename.blank,"_profiled.csv", sep='')
         outColnames <- c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                         "Ions","MatchFactor", "RI.Similarity","Area","RT.start","RT.end","Concentration")
+                                              "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
+                                              "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration") 
         write.table(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
 
         if (CREATE_JSON_FILE) {
@@ -261,6 +271,7 @@ if (processOption == 'PREPROCESSING') {
 HMDBID <- as.character(unique(lib.peak[, c('HMDB_ID')]))
 cmpdlist <- as.data.frame( lib.peak[, c("SeqIndex","HMDB_ID","Compound",'CompoundWithTMS')] )
 # cmpdlist
+# print(unique(cmpdlist$HMDB_ID))
 
 final.Concentration <- NULL
 nCores <- detectCores() - 1  # get the number of cores, -1 for other use
@@ -312,11 +323,12 @@ if ( processOption == "PREPROCESSING" ) {
         #                              internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, final_PeakProfile_blank=final_PeakProfile_blank)  
         # if(DEBUG) cat("## Profiling for each sample -- Done\n")
     } else {
+        # SINGLE CORE
         if(DEBUG) cat("\n\n## Profiling with single core\n")
-        conc.each <- lapply(fileList$sampleFiles, quantifictionFunc, print.on=TRUE, 
+        conc.each <- lapply(fileList$sampleFiles, quantificationFunc, print.on=TRUE, 
                             use.blank=USE_BLANK_SPECTRUM, threshold.matchFactor=MF_THRESHOLD, 
                             internalStd=internalStd, lib.calicurv=lib.calicurv, cmpdlist=cmpdlist, 
-                            final_PeakProfile_blank=final_PeakProfile_blank)        
+                            final_PeakProfile_blank=final_PeakProfile_blank, PRINT_MZINT4DB=TRUE)        
     }
    
     if (DEBUG) { 
@@ -336,6 +348,7 @@ if ( processOption == "PREPROCESSING" ) {
         final.Concentration <- as.data.frame(conc.each);
     }
     
+    # cat("final.Concentration:\n"); print(final.Concentration)
 
     ## Collect concentrations only and combine all samples
     ## ==================================================================================================
@@ -348,10 +361,19 @@ if ( processOption == "PREPROCESSING" ) {
             cat("\n## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
             ## order by RI as in library; merge compound name with RI and sort by RI
 
+            if(nrow(final.Concentration) == 0) {
+                if (DEBUG) {
+                    cat("\n\n## final.Concentration\n"); print(final.Concentration)
+                    cat("nrow:", nrow(final.Concentration), "\n")
+                }
+                stop("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n")
+            }
+            
+            if(DEBUG) cat("\n\n## merging Concentration\n");
             final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
-            # cat("\n ### final.Concentration:\n"); print(final.Concentration)
+            if(DEBUG) { cat("\n ### final.Concentration:\n"); print(final.Concentration) }
             final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
-            # cat("\n ### final.Concentration (sort):\n"); print(final.Concentration)
+            if(DEBUG) { cat("\n ### final.Concentration (sort):\n"); print(final.Concentration) }
                     
             rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
             final.Concentration <- final.Concentration[ , - rm.SeqIndex]

@@ -201,62 +201,67 @@ extractAlkaneStdInfo <- function(file.alkane) {
 # xset <- xset.alkane
 # extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7, plotFile=TRUE)  {
 ## this will generate PLOT image and RT Peaks 
-extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="EIC", offset=7)  {
+extract_peak_list_alkane2 <- function(xset, numOfAlkane, ctype="TIC", offset=7)  {
   
-  ## This is the important part to detect peak correctly; it depends on mzrange
-  # mzrange <- t(range(xset@peaks[,"mz"]))            
-  mzrange <- t(range(xset@mzrange))
-  rtrange <- t(range(xset@scantime))
-  # eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange, rt="corrected")
-  # eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange, rt="raw")  
-  eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange)   ## when xset is xcmsRaw class
-  
-  # EIC plot generate & save  
-  # if ( plotFile ) {
-    sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
-    # png(filename = paste("Plot_", ctype,"_", sampleFile,".png", sep=''), width = 1000, height = 800, units = "px", pointsize = 10)
-    png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 12)
-        plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
-    dev.off()
-  # }
-  
-  ## get the RT and Intensity from EIC object
-  rt_int_matrix <- eic_obj@eic[1][[1]][[1]]         
-  if (is.null(rt_int_matrix[, "intensity"])) stop(paste("rt_int_matrix is null in ", xset@filepaths[1]))
-  
-  ## select significant peaks & screening apexes only to mapping compounds
-  ## use TIC instead of EIC
-  if(ctype=="TIC") {
-    rt_peak <- extract_RT_forEachPeak(rt_int_matrix, offset, ctype="TIC", xset); 
-    cat("\n## rt_peak:\n"); print(rt_peak)
-    
-    ## exclude noise peaks
-    idx.max <- which(rt_peak$intensity == max(rt_peak$intensity)) ## C20
-    
-    # calculate Thresholds with the smallest significant peak' intensity 
-    peakIntSorted <- sort(rt_peak[1:idx.max-1, "intensity"], decreasing=TRUE)
-    minPeakIntensity <- peakIntSorted[10] # assume the peak start from C10        
-    threshold <- round(0.5 * minPeakIntensity, 0)    
-    idx.remove <- which(rt_peak[1:idx.max, "intensity"] < threshold)
-    if(length(idx.remove) > 0) {
-      if(DEBUG) {
-        cat("## Alkane Standard Peaks: some peaks are removed\n")
-        cat("\t = threshold intensity:", threshold, "\n")
+      ## This is the important part to detect peak correctly; it depends on mzrange
+      # mzrange <- t(range(xset@peaks[,"mz"]))            
+      # mzrange <- t(range(xset@mzrange))
+      # rtrange <- t(range(xset@scantime))
+
+      # eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange)   ## when xset is xcmsRaw class
+
+      # TIC plot generate & save  
+      #if ( plotFile ) { # generate all the time
+        sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
+        ## plot TIC instead of EIC (Jan. 19, 2016) 
+        #png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 12)
+        #    plotEIC(xset, mzrange=mzrange, rtrange=rtrange) ## same as chemstation
+        #dev.off()
+        png(filename = paste("Plot_TIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 12)
+            plotTIC(xset)
+        dev.off()
+      # }
+      
+      ## get the RT and Intensity from EIC object
+      # rt_int_matrix <- eic_obj@eic[1][[1]][[1]]         
+      # if (is.null(rt_int_matrix[, "intensity"])) stop(paste("rt_int_matrix is null in ", xset@filepaths[1]))
+      rt_int_matrix <- NULL  
+      
+      ## select significant peaks & screening apexes only to mapping compounds
+      ## use TIC instead of EIC
+      if(ctype=="TIC") {
+        rt_peak <- extract_RT_forEachPeak(rt_int_matrix, offset, ctype="TIC", xset); 
+        if(DEBUG) { cat("\n## rt_peak:\n"); print(rt_peak)}
+        
+        ## exclude noise peaks
+        idx.max <- which(rt_peak$intensity == max(rt_peak$intensity)) ## C20
+        
+        # calculate Thresholds with the smallest significant peak' intensity 
+        peakIntSorted <- sort(rt_peak[1:idx.max-1, "intensity"], decreasing=TRUE)
+        minPeakIntensity <- peakIntSorted[10] # assume the peak start from C10        
+        threshold <- round(0.5 * minPeakIntensity, 0)    
+        idx.remove <- which(rt_peak[1:idx.max, "intensity"] < threshold)
+        if(length(idx.remove) > 0) {
+          if(DEBUG) {
+            cat("## Alkane Standard Peaks: some peaks are removed\n")
+            cat("\t = threshold intensity:", threshold, "\n")
+          }
+          rt_peak <- rt_peak[-idx.remove, ]   
+          rownames(rt_peak) <- c(1:nrow(rt_peak))
+        }
+      } else {
+        if(DEBUG) { cat("## ctype=EIC \n\n"); stop("#########\n\n"); }
+
+        rt_peak <- extract_RT_forEachPeak(rt_int_matrix, offset, ctype); 
+        if (DEBUG) print(rt_peak/60);    
       }
-      rt_peak <- rt_peak[-idx.remove, ]   
-      rownames(rt_peak) <- c(1:nrow(rt_peak))
-    }
-  } else {
-    rt_peak <- extract_RT_forEachPeak(rt_int_matrix, offset, ctype); 
-    if (DEBUG) print(rt_peak/60);    
-  }
-  
-  if( FALSE )  {
-    sampleName <- basename(xset@filepath);  
-    plot(round(rt_peak[,1]/60,1), rt_peak[,2], type="h", xaxp=c(12,60,n=48), xlim=c(12,60), ylim=c(0,max(rt_peak[,2])), main=sampleName ) 
-  }
-  
-  return(rt_peak)
+      
+      if( FALSE )  {
+        sampleName <- basename(xset@filepath);  
+        plot(round(rt_peak[,1]/60,1), rt_peak[,2], type="h", xaxp=c(12,60,n=48), xlim=c(12,60), ylim=c(0,max(rt_peak[,2])), main=sampleName ) 
+      }
+      
+      return(rt_peak)
 }
 
 # peak.list <- peaks.alkane    
@@ -307,7 +312,6 @@ check_alkane_std <- function(alkane_std_rt) {
 }
 
 
-
 ## peak identification
 # alkane.peakInfo <- peaks.alkane
 # xset.one <- xset.alkane
@@ -327,7 +331,7 @@ peakIdentify.alkane <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
   peak_mzInt_list <- getMZIntensityofEachPeak2(xset.one, peak_rt_vec)
   
   ## note: the length of each vector should be same. if not, the function will be stop and give message
-  maxItensity <- max(alkane.peakInfo[,'intensity'])  
+  maxIntensity <- max(alkane.peakInfo[,'intensity'])  
   rtRange <- range(xset.one@scantime)  
   
   # get mz/int vec for all standard peaks in alkane library
@@ -425,6 +429,39 @@ peakIdentify.alkane <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
   return( as.data.frame(identifiedList) )
 }
 
+# get m/z, intensity,
+getMZIntensityofEachPeak.Alkane <- function(xset.one, peak_rt_vec) {
+  
+      mzIntList <- list()
+      nPeakRT <- length(peak_rt_vec)
+      nScanIndex <- max(xset.one@scanindex)
+      
+      # repeat each RT 
+      for ( i in 1:nPeakRT) {    
+            # i <- 322
+            peak.scanidx <- which(xset.one@scantime == peak_rt_vec[i]) 
+            # if(DEBUG) cat("i:", i, "peak.scanidx:", peak.scanidx, "\n")
+            
+            if ( length(peak.scanidx) == 0) {
+                  cat("There is no matched RT - rt:", peak_rt_vec[i], " --- skipped\n")
+                  # stop("There is no matched RT in xcmsRaw data") 
+                  next
+            }
+                    
+            # get all m/z & intensity from spectrum         
+            mzIntensity <- as.data.frame(getScan(xset.one, peak.scanidx))
+            # convert m/z into integer
+            mzIntensity$mz <- toIntMZ.sample(mzIntensity$mz)
+
+            ## switch with TIC instead of sum of intensity
+            peakIntensity <- xset.one@tic[peak.scanidx]
+
+            mzIntList[[length(mzIntList)+1]] <- list(peak_index=i, rt=peak_rt_vec[i], mzInt=mzIntensity, peakIntensity=peakIntensity)
+      }
+
+      return (mzIntList)
+}
+
 
 ## peak identification wiht molecular weight
 # alkane.peakInfo <- peaks.alkane
@@ -433,64 +470,157 @@ peakIdentify.alkane <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
 # print_mzInt=FALSE; to make library update 
 peakIdentify.alkane2 <- function(alkane.peakInfo, xset.one, lib.peak.alkane, print_mzInt=FALSE)
 {
-  # get m/z and intensity using xcmsRaw() for a sample spectra
-  
-  ## varifying peak compound check
-  ## get peaks' RIs and RTs 
-  ## get m/z and intensity  
-  ## for RT, it should be used raw RT instead of corrected
-  # cat("asample.peakInfo:\n"); print(asample.peakInfo)
-  peak_rt_vec <- alkane.peakInfo[, "rt"] 
-  ## get rt/mz/intensity/area/... for each peak
-  peak_mzInt_list <- getMZIntensityofEachPeak2(xset.one, peak_rt_vec)
-  if (FALSE & DEBUG) { 
-    cat("peak_mzInt_list:\n"); print(peak_mzInt_list) 
-  }
-  ## @@@@@@
-  ## used for mz/int DB update
-  if( print_mzInt ) {
-    ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
-    cat("PeakNO,rt,rt_min,mz,intensity\n", file=ofile, append=FALSE)
-    for (i in 1:length(peak_mzInt_list))  {
-      peakrt <- as.character(peak_mzInt_list[[i]]$rt)
-      # peakri <- as.character(asample.peakInfo[i,"RI"])
-      peakmz <- paste(noquote(round(peak_mzInt_list[[i]]$mzInt[,"mz"],2)), collapse=" ")
-      peakmzint <- paste(peak_mzInt_list[[i]]$mzInt[,"intensity"], collapse=" ")
+      # get m/z and intensity using xcmsRaw() for a sample spectra
       
-      oinfo <- paste(c(i, peakrt, round(as.numeric(peakrt)/60,2), peakmz, peakmzint), collapse=",")
-      cat(oinfo, "\n", file=ofile, append=TRUE)
-    }    
-  }
+      ## varifying peak compound check
+      ## get peaks' RIs and RTs 
+      ## get m/z and intensity  
+      ## for RT, it should be used raw RT instead of corrected
+      # cat("asample.peakInfo:\n"); print(asample.peakInfo)
+      peak_rt_vec <- alkane.peakInfo[, "rt"] 
+      ## get rt/mz/intensity/area/... for each peak
+      peak_mzInt_list <- getMZIntensityofEachPeak.Alkane(xset.one, peak_rt_vec)
+      if (FALSE & DEBUG) { 
+        cat("## peak_mzInt_list:\n"); print(peak_mzInt_list) 
+      }
+
+      ## @@@@@@
+      ## used for mz/int DB update
+        if( DEBUG & print_mzInt ) {
+            ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
+            cat("PeakNO,rt,rt_min,mz,intensity\n", file=ofile, append=FALSE)
+        }
+
+        mzlist <- list()
+        for (i in 1:length(peak_mzInt_list))  {
+              peakrt <- as.character(peak_mzInt_list[[i]]$rt)
+              # peakri <- as.character(asample.peakInfo[i,"RI"])
+              ## peakmz <- paste(noquote(round(peak_mzInt_list[[i]]$mzInt[,"mz"],2)), collapse=" ")
+              ## peakmzint <- paste(peak_mzInt_list[[i]]$mzInt[,"intensity"], collapse=" ")
+
+              ## test  
+              peakmz <- round(peak_mzInt_list[[i]]$mzInt[,"mz"],2)
+              peakmzint <- peak_mzInt_list[[i]]$mzInt[,"intensity"]
+
+              # peakmz.sigidx <- which(peakmzint > mean(peakmzint, trim=0.1))
+              peakmz.sigidx <- which(peakmzint > median(peakmzint))
+              mzlist[i] <- list(peakmz[peakmz.sigidx])
+
+              if(FALSE) { 
+                  cat("\n## RT:", peakrt,"\n");
+                  cat("## avg peakmzint:", mean(peakmzint), "\n");
+                  # idx.sig <- which(peakmzint > mean(peakmzint))
+                  idx.sig <- which(peakmzint > median(peakmzint))
+                  cat("## > avg index:\n"); print(idx.sig)
+                  cat("## peakmz > avg intensity:\n"); print(peakmz[idx.sig]);
+                  cat("## peakmzint > avg intensity:\n"); print(peakmzint[idx.sig]);
+
+                  # png(filename = paste("Plot_EIC_onePeak_",peakrt,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 12)
+                  # plot(peakmz, peakmzint, main=round(peak_mzInt_list[[i]]$rt/60,2), pch=20, col="blue")
+                  # abline(h=mean(peakmzint, trim=0.1))
+                  # dev.off()
+              }
+              
+            if( DEBUG & print_mzInt ) {
+                  oinfo <- paste(c(i, peakrt, round(as.numeric(peakrt)/60,2), peakmz, peakmzint), collapse=",")
+                  cat(oinfo, "\n", file=ofile, append=TRUE)
+            }
+        }    
+
+        ## finding common Ions as well as unique Ions; save the result into a file.
+        if ( FALSE ) {
+            ofile <- "/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/mzlist_alkane.txt";
+            ostr <- "## Common m/z in Alkane Spectrum:\n"
+            commonMZ <- Reduce(intersect, mzlist)
+            ostr <- paste(ostr, paste(commonMZ, collapse= " "),"\n\n");
+            for(i in 1:length(peak_mzInt_list)) {  
+                uniqueMZ <- setdiff(mzlist[[i]], commonMZ);
+                ostr <- paste(ostr, "## unique IONs at RT:", round(peak_mzInt_list[[i]]$rt/60,2), peak_mzInt_list[[i]]$rt, "\n")
+                ostr <- paste(ostr, paste(uniqueMZ, collapse=" "), "\n\n");
+            }
+            cat(ostr, file=ofile, append=FALSE);
+        }
   
-  ## note: the length of each vector should be same. if not, the function will be stop and give message
-  maxItensity <- max(alkane.peakInfo[,'intensity'])  
-  rtRange <- range(xset.one@scantime)  
+        # unique m/z to use molecular weight 
+        commonMZ <- Reduce(intersect, mzlist)
+        for(i in 1:length(mzlist)) {  
+            uniqueMZ <- setdiff(mzlist[[i]], commonMZ);
+            mzlist[[i]] <- as.numeric(unlist(uniqueMZ))
+            # cat( "## unique IONs at RT:", round(peak_mzInt_list[[i]]$rt/60,2), peak_mzInt_list[[i]]$rt, "\n")
+            # cat( paste(mzlist[[i]], collapse=" "), "\n\n");
+        }
+
+        ## note: the length of each vector should be same. if not, the function will be stop and give message
+        maxIntensity <- max(alkane.peakInfo[,'intensity'])  
+        rtRange <- range(xset.one@scantime)  
+
+        # get mz/int vec for all standard peaks in alkane library
+        mzIntLib <- list()
+        for(i in 1:nrow(lib.peak.alkane)) {  ## repeat for selected candidates
+            alib <- lib.peak.alkane[i,]
+
+            ref_MZS_vec <- as.numeric(unlist(strsplit(as.character(alib$MZ), split=" ")))
+            ref_INT_vec <- as.numeric(unlist(strsplit(as.character(alib$Intensity), split=" ")))
+            ref_MW <- alib$MW
+
+            mzIntLib[[length(mzIntLib)+1]] <- list(index=i, Compound=alib$Compound, Cn=alib$Cn,
+                                                   MW=ref_MW, MZvec=ref_MZS_vec, INTvec=ref_INT_vec)     
+        }
+        if (DEBUG) {
+            cat("mzIntLib:\n"); print(mzIntLib)  
+        }
   
-  # get mz/int vec for all standard peaks in alkane library
-  mzIntLib <- list()
-  for(i in 1:nrow(lib.peak.alkane)) {  ## repeat for selected candidates
-    alib <- lib.peak.alkane[i,]
+      ## for each peak of alkane spectrum
+      ## identifying compounds using each peak's m.z/intensity with alkane library
+      # peakTotal <- length(peak_rt_vec)
+      identifiedList <- NULL # collecting identified information for all peaks in a sample spectrum
+      length.mzIntLib <- length(mzIntLib)
+      for (j in 1:length(mzlist)) { 
+            # j <- 2
+            identified <- NULL
+            
+            ## will only use m/z and intensity
+            # use peak location/index for no alkane covering
+            RT.sample <- as.numeric(alkane.peakInfo[j,"rt"])      
+
+            k <- length.mzIntLib
+            # cat("k:", k," RT:", RT.sample, "MW:", mzIntLib[[k]]$MW, "Cn",mzIntLib[[k]]$Cn,"\n");
+            # cat("mzlist[[j]]:\n"); print(mzlist[[j]]);
+            while( (k > 1) & !(mzIntLib[[k]]$MW %in% mzlist[[j]] )) {
+                if(DEBUG) cat("\t ## k:", k, " mzIntLib[[k]]$MW:", mzIntLib[[k]]$MW, "\n")
+                k <- k-1
+            }
+            if(DEBUG) {
+                cat("k:", k," RT:", RT.sample, "MW:", mzIntLib[[k]]$MW, "Cn",mzIntLib[[k]]$Cn,"\n");
+            }
+            
+            if(k > 0) {
+                identified <- c(
+                      ALKRT=RT.sample,
+                      ALKRTmin=round(RT.sample/60, 3),
+                      Cn=mzIntLib[[k]]$Cn,
+                      # Compound=as.character(mzIntLib[[k]]$Compound),
+                      MW=mzIntLib[[k]]$MW,
+                      Intensity=alkane.peakInfo[j,'intensity']  
+                 )              
+                 identifiedList <- rbind(identifiedList, identified)
     
-    ref_MZS_vec <- as.numeric(unlist(strsplit(as.character(alib$MZ), split=" ")))
-    ref_INT_vec <- as.numeric(unlist(strsplit(as.character(alib$Intensity), split=" ")))
-    ref_MW <- alib$MW
-    
-    mzIntLib[[length(mzIntLib)+1]] <- list(index=i, Compound=alib$Compound, Cn=alib$Cn,
-                                           MW=ref_MW, MZvec=ref_MZS_vec, INTvec=ref_INT_vec)     
-  }
-  # cat("mzIntLib:\n"); print(mzIntLib)  
-  
-  ## for each peak of alkane spectrum
-  ## identifying compounds using each peak's m.z/intensity with alkane library
-  peakTotal <- length(peak_rt_vec)
-  identifiedList <- NULL # collecting identified information for all peaks in a sample spectrum
-  for (j in 1:peakTotal) {
-    # j <- 2
-    identified <- NULL
-    
-    ## will only use m/z and intensity
-    # use peak location/index for no alkane covering
-    RT.sample <- as.numeric(alkane.peakInfo[j,"rt"])      
+                 ## return identified compounds with additional informations 
+                 ## such as (RT, RI, Intensity, Area (RT start/end), Similarity Measures)
+            } else {
+                if(DEBUG) {
+                    cat("## Skipped a Peak [peakIdentify.alkane2] because of not in alkane library \n\t RT:", RT.sample, "(", round(RT.sample/60,2), ")\n")
+                }
+            }
+      }
+      rownames(identifiedList) <- c(1:nrow(identifiedList))
+      
+      cat("identifiedList:\n"); print(identifiedList);
+
+      return( as.data.frame(identifiedList) )
+
+  if(FALSE) {
+
     # sample_mzs_vec <- round(peak_mzInt_list[[j]]$mzInt[,"mz"], 0) ## from xcmsRaw
     sample_mzs_vec <- toIntMZ.sample(peak_mzInt_list[[j]]$mzInt[,"mz"]) ## from xcmsRaw
     sample_mz_int_vec <- peak_mzInt_list[[j]]$mzInt[,"intensity"] ## from xcmsRaw
@@ -554,11 +684,13 @@ peakIdentify.alkane2 <- function(alkane.peakInfo, xset.one, lib.peak.alkane, pri
       }
     } ## end of for nrow(lip.peak.alkane)
   }
-  rownames(identifiedList) <- c(1:nrow(identifiedList))
+  # rownames(identifiedList) <- c(1:nrow(identifiedList))
+
   # print(identifiedList)
   ## return identified compounds with additional informations 
   ## such as (RT, RI, Intensity, Area (RT start/end), Similarity Measures)    
-  return( as.data.frame(identifiedList) )
+
+  # return( as.data.frame(identifiedList) )
 }
 
 
@@ -581,7 +713,7 @@ peakIdentify.alkane.old <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
   # print(peak_mzInt_list)
   
   ## note: the length of each vector should be same. if not, the function will be stop and give message
-  maxItensity <- max(alkane.peakInfo[,'intensity'])  
+  maxIntensity <- max(alkane.peakInfo[,'intensity'])  
   rtRange <- range(xset.one@scantime)  
   
   # get mz/int vec for all standard peaks in alkane library
@@ -710,43 +842,43 @@ arrangeProfiledPeaks2.alkane.old <- function(profiled_peaks, stype=NULL)
 ##
 estimateMissingAlkaneRT <- function(peak.list)
 {
-  # make estimated RT of Alkane
-   predAlkaneRT <- function(d, maxCn, lastCn)
-   {
-      if( FALSE ) {
-        ALKRT <- c(13.07, 16.27, 19.28, 22.0, 24.53, 26.88, 29.05, 31.1, 33.09, 34.89, 36.64)
-        Cn <- c(10,11,12,13,14,15,16,17,18,19,20)
-        # fit <- nls(ALKRT ~ a*exp(b*Cn), start=c(a=1, b=0.001))  
-        # fit <- nls(ALKRT ~ a+b*log(Cn), start=c(a=1, b=0.001))  
-      }
-      fit <- nls(ALKRT ~ a+b*log(Cn), data=d, start=c(a=1, b=0.01)) 
-      
-      Cn.newlist <- c( (maxCn+1):lastCn)      
-      predALK <- round(predict(fit, newdata=list(Cn=Cn.newlist)),2)
-      # print(predALK)
-      zeroIntensity <- rep(0, length(Cn.newlist))      
-      return(as.data.frame(cbind(ALKRT=predALK, Cn=Cn.newlist, Intensity=zeroIntensity)) )
-  }
-
-  if(max(peak.list[,'Cn']) < 36) {
-    if(DEBUG) {cat("## Estimated Higher Alkane Cn's RT (>= 36) \n")}
-    alkane.ext <- predAlkaneRT(as.data.frame(peak.list), max(peak.list[,"Cn"]), 36)
-    peak.list.ext <- rbind(peak.list[,c("ALKRT", "Cn", "Intensity")], alkane.ext)      
-    if(DEBUG) { cat("alkane.extended\n"); print(peak.list.ext) }
+    # make estimated RT of Alkane
+     predAlkaneRT <- function(d, maxCn, lastCn)
+     {
+        if( FALSE ) {
+            ALKRT <- c(13.07, 16.27, 19.28, 22.0, 24.53, 26.88, 29.05, 31.1, 33.09, 34.89, 36.64)
+            Cn <- c(10,11,12,13,14,15,16,17,18,19,20)
+            # fit <- nls(ALKRT ~ a*exp(b*Cn), start=c(a=1, b=0.001))  
+            # fit <- nls(ALKRT ~ a+b*log(Cn), start=c(a=1, b=0.001))  
+        }
+        fit <- nls(ALKRT ~ a+b*log(Cn), data=d, start=c(a=1, b=0.01)) 
+        
+        Cn.newlist <- c( (maxCn+1):lastCn)      
+        predALK <- round(predict(fit, newdata=list(Cn=Cn.newlist)),2)
+        # print(predALK)
+        zeroIntensity <- rep(0, length(Cn.newlist))      
+        return(as.data.frame(cbind(ALKRT=predALK, ALKRTmin=round(predALK/60,3), Cn=Cn.newlist, Intensity=zeroIntensity)) )
+    }
+  
+    if(max(peak.list[,'Cn']) < 36) {
+        if(DEBUG) {cat("## Estimated Higher Alkane Cn's RT (>= 36) \n")}
+        alkane.ext <- predAlkaneRT(as.data.frame(peak.list), max(peak.list[,"Cn"]), 36)
+        peak.list.ext <- rbind(peak.list[,c("ALKRT", "ALKRTmin", "Cn", "Intensity")], alkane.ext)      
+        if(DEBUG) { cat("alkane.extended\n"); print(peak.list.ext) }
+        
+        peak.list <- peak.list.ext
+    }
     
-    peak.list <- peak.list.ext
-  }
-  
-  if (min(peak.list[,'Cn']) > 10) {
-    if(DEBUG) {cat("## Estimated Lower Alkane Cn's RT (<= 10) \n")}
-
-    alkane.ext <- predAlkaneRT(as.data.frame(peak.list), 8, min(peak.list[,'Cn'])-1)
-    peak.list.ext <- rbind(alkane.ext, peak.list[,c("ALKRT", "Cn", "Intensity")])      
-    if( DEBUG ) {  cat("alkane.extended\n"); print(peak.list.ext) }
-    peak.list <- peak.list.ext
-  }
-  
-  return(peak.list)
+    if (min(peak.list[,'Cn']) > 10) {
+        if(DEBUG) {cat("## Estimated Lower Alkane Cn's RT (<= 10) \n")}
+    
+        alkane.ext <- predAlkaneRT(as.data.frame(peak.list), 8, min(peak.list[,'Cn'])-1)
+        peak.list.ext <- rbind(alkane.ext, peak.list[,c("ALKRT", "ALKRTmin", "Cn", "Intensity")])      
+        if( DEBUG ) {  cat("alkane.extended\n"); print(peak.list.ext) }
+        peak.list <- peak.list.ext
+    }
+    
+    return(peak.list)
 }
 
 
@@ -757,102 +889,90 @@ estimateMissingAlkaneRT <- function(peak.list)
 do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE) 
 {
   
-  ## load Compound Name RI, MZ and Intensity library 
-  # lib.peak.alkane <- read.csv(file=file.path(lib_dir, LibFile.Alkane), head=TRUE, sep=",", quote = "\"");
-  lib.peak.alkane <- read.csv(file=lib.fname.alkane, head=TRUE, sep=",", quote = "\"");
-  # names(lib.peak.alkane)
-  if(nrow(lib.peak.alkane) == 0) {
-      showErrMessage("Cannot load the m/z & intensity library for Alkane")
-      q(save="no")  
-  }
-  
-  ## Extracting peak list for alkane standard 
-  xset.alkane <- extractAlkaneStdInfo(sample.fname.alkane)
-  
-  # peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, show.plot, ctype="TIC", offset=7)
-  # if (SampleType == ORGANIC_ACID) {   
-  #    offset <- 7
-  #} else {   
-  #    offset <- 5 
-  #}
-  
-  offset <- 2.01
-  # peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset, RunPlotOnly)
-  peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset)
-  if (DEBUG) { cat("## peaks.alkane:\n"); print(peaks.alkane) }
-  
-  if ( (length(xset.alkane@scanindex) != length(unique(xset.alkane@scanindex)) )
-        & (nrow(peaks.alkane) < 10) ) { 
-        showErrMessage(ERRCODE001)
-        q(save="no")  
-  }
-  
-  ## cleanning false peaks before profiling using RT
-  peaks.alkane <- cleanning_alkaneFaslePeaks(peaks.alkane, RT.offset=50)  # offset: 20~60
-  if (DEBUG) { cat("## screened peaks.alkane:\n"); print(peaks.alkane) }
-  
-  # profiling with m/z & intensity
-  # option: print_mzInt (TRUE/FALSE) for library/DB update
-  profiled_peaks_alkane <- peakIdentify.alkane2(peaks.alkane, xset.alkane, lib.peak.alkane, print_mzInt=FALSE)
-  if (DEBUG) { cat("## profiled_peaks_alkane:\n"); print(profiled_peaks_alkane) }
-  
-  final_PeakProfile_alkane <- arrangeProfiledPeaks2.alkane(profiled_peaks_alkane, SampleType)
-  if (DEBUG) { cat("## final_peakProfile_alkane:\n"); print(final_PeakProfile_alkane) }
-  
-  # this is for the serum on Old GC
-  # if( FALSE ) {
-  #  intensityThreshold <- max(as.numeric(as.character(final_PeakProfile_alkane$Intensity))) / 10
-  #  final_PeakProfile_alkane <- final_PeakProfile_alkane [which(as.numeric(as.character(final_PeakProfile_alkane$Intensity)) > intensityThreshold), ]
-  #  if (DEBUG) { cat("## final_peakProfile_alkane after filtering with >", intensityThreshold, ":\n"); print(final_PeakProfile_alkane) }
-  #}
-  
-  if( ! is.null(user.AlkaneRT) ) {
-      final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, user.AlkaneRT)
-      if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
-  }
-  
-  alkane.peaks.unique <- getUniqueAlkanePeakList(final_PeakProfile_alkane, offset.RT=50)
-  alkane.peaks.cleaned <- cleaningFalseAlkanePeaks(alkane.peaks.unique, offset.RT=50) 
-  
-  alkane.peaks.profiled <- cbind(ALKRT=as.double(as.character(alkane.peaks.cleaned$RT))
-                                 , Cn=as.integer(as.character(alkane.peaks.cleaned$Cn))
-                                 , Intensity=as.integer(as.character(alkane.peaks.cleaned$Intensity))
-                                 , ALKRTmin=round(as.double(as.character(alkane.peaks.cleaned$RT))/60,3))
-  
-  if (DEBUG) { cat("## alkane peaks:\n"); print(round(alkane.peaks.profiled,2)) }
-  
-  if (setAdjustAlkanePeakCn) {
-      alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
-  }
+      ## load Compound Name RI, MZ and Intensity library 
+      # lib.peak.alkane <- read.csv(file=file.path(lib_dir, LibFile.Alkane), head=TRUE, sep=",", quote = "\"");
+      lib.peak.alkane <- read.csv(file=lib.fname.alkane, head=TRUE, sep=",", quote = "\"");
+      # names(lib.peak.alkane)
+      if(nrow(lib.peak.alkane) == 0) {
+          showErrMessage("Cannot load the m/z & intensity library for Alkane")
+          q(save="no")  
+      }
+      
+      ## Extracting peak list for alkane standard 
+      xset.alkane <- extractAlkaneStdInfo(sample.fname.alkane)
+      
+      offset <- 2.01
+      # peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset, RunPlotOnly)
+      peaks.alkane <- extract_peak_list_alkane2(xset.alkane, numOfAlkane, ctype="TIC", offset)
+      if (DEBUG) { cat("## peaks.alkane:\n"); print(peaks.alkane) }
+      
+      if ( (length(xset.alkane@scanindex) != length(unique(xset.alkane@scanindex)) )
+            & (nrow(peaks.alkane) < 10) ) { 
+            showErrMessage(ERRCODE001)
+            q(save="no")  
+      }
+      
+      ## cleanning false peaks before profiling using RT
+      peaks.alkane <- cleanning_alkaneFaslePeaks(peaks.alkane, RT.offset=50)  # offset: 20~60
+      if (DEBUG) { cat("## screened peaks.alkane:\n"); print(peaks.alkane) }
+      
+      # profiling with m/z & intensity & Molecular Weight
+      # option: print_mzInt (TRUE/FALSE) for library/DB update
+      
+      alkane.peaks.profiled <- peakIdentify.alkane2(peaks.alkane, xset.alkane, lib.peak.alkane, print_mzInt=FALSE)
+      if (DEBUG) { cat("## alkane.peaks.profiled:\n"); print(alkane.peaks.profiled) }
 
-#  if( ! is.null(user.AlkaneRT) ) {
-#     alkane.peaks.profiled <- userAssignedAlkanePeakCn(alkane.peaks.profiled, user.AlkaneRT)
-#  }
-  
-  alkaneInfo <- check_alkane_std(alkane.peaks.profiled)
-  
-  if (DEBUG) { cat("## alkane peaks (for the JSON file create):\n"); print(round(alkane.peaks.profiled,2)) }
-  
-  if (CREATE_JSON_FILE) {       
-    ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_spectrum.json", sep='')
-    # create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic,
-    #                  alkane.peaks.profiled[,"ALKRT"], alkane.peaks.profiled[,"Intensity"], paste('C',alkane.peaks.profiled[,"Cn"],sep='') )
-    create_json_file.alkane(ofilename, round(xset.alkane@scantime/60,3), xset.alkane@tic, alkane.peaks.profiled )
-  }
-  
-  ## Estimated missing alkane
-  userEstAlkaneRT<-TRUE
-  if( userEstAlkaneRT == TRUE ) {
-    if(DEBUG) {cat("\n## Use Estimated missing Alkane\n") }
-    alkane.peaks.profiled <- estimateMissingAlkaneRT(alkane.peaks.profiled)
-  }
-  
-  if (DEBUG) { cat("alkane:\n"); print(cbind(alkane.peaks.profiled[,c(2,1)], RTmin=round(alkane.peaks.profiled[,1]/60, 2))) }
-  
-  ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_alkanePeakList.csv", sep='')
-  write.csv(alkane.peaks.profiled, file=ofilename, quote=TRUE, row.names=FALSE)
-  
-  return(alkane.peaks.profiled)    
+      if (FALSE) {
+          profiled_peaks_alkane <- peakIdentify.alkane2(peaks.alkane, xset.alkane, lib.peak.alkane, print_mzInt=FALSE)
+          if (DEBUG) { cat("## profiled_peaks_alkane:\n"); print(profiled_peaks_alkane) }
+
+          final_PeakProfile_alkane <- arrangeProfiledPeaks2.alkane(profiled_peaks_alkane, SampleType)
+          if (DEBUG) { cat("## final_peakProfile_alkane:\n"); print(final_PeakProfile_alkane) }
+          
+          if( ! is.null(user.AlkaneRT) ) {
+              final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, user.AlkaneRT)
+              if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
+          }
+          
+          alkane.peaks.unique <- getUniqueAlkanePeakList(final_PeakProfile_alkane, offset.RT=50)
+          alkane.peaks.cleaned <- cleaningFalseAlkanePeaks(alkane.peaks.unique, offset.RT=50) 
+          
+          alkane.peaks.profiled <- cbind(ALKRT=as.double(as.character(alkane.peaks.cleaned$RT))
+                                         , Cn=as.integer(as.character(alkane.peaks.cleaned$Cn))
+                                         , Intensity=as.integer(as.character(alkane.peaks.cleaned$Intensity))
+                                         , ALKRTmin=round(as.double(as.character(alkane.peaks.cleaned$RT))/60,3))
+      }
+      
+      if (setAdjustAlkanePeakCn) {
+          alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
+      }
+
+      alkaneInfo <- check_alkane_std(alkane.peaks.profiled)
+
+      if (CREATE_JSON_FILE) {       
+        if (DEBUG) { cat("## alkane peaks - creating JSON file):\n") }
+        ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_spectrum.json", sep='')
+        # create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic,
+        #                  alkane.peaks.profiled[,"ALKRT"], alkane.peaks.profiled[,"Intensity"], paste('C',alkane.peaks.profiled[,"Cn"],sep='') )
+        create_json_file.alkane(ofilename, round(xset.alkane@scantime/60,3), xset.alkane@tic, alkane.peaks.profiled )
+      }
+      
+      ## Estimated missing alkane
+      userEstAlkaneRT<-TRUE
+      if( userEstAlkaneRT == TRUE ) {
+          if(DEBUG) {cat("\n## Estimating missing Alkanes\n") }
+          alkane.peaks.profiled <- estimateMissingAlkaneRT(alkane.peaks.profiled)
+      }
+      
+      if (DEBUG) { 
+          cat("alkane peak list - identified with estimated ones:\n"); 
+          print(cbind(alkane.peaks.profiled[,c(2,1)], RTmin=round(alkane.peaks.profiled[,1]/60, 2))) 
+      }
+      
+      ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_alkanePeakList.csv", sep='')
+      write.csv(alkane.peaks.profiled, file=ofilename, quote=TRUE, row.names=FALSE)
+      
+      return(alkane.peaks.profiled)    
 }
 # end of the do_AlkanePeakProfile() main
 

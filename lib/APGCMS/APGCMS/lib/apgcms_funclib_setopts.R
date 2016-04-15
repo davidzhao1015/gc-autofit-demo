@@ -38,15 +38,16 @@ helpMessage <- function() {
                                                       It is allowed to use the recursive directory creation 
         --infoFileDir=<information_file_directory>  # Assign the directory of the information files (Alkane Standard 
                                                       and Blank Sample's Profiles). It is required for PROFILING process. 
-
-
+        --CalCurveVersion='NEW'  # Cholesterol - New & Old Calibration Curves (Temporary to compare) 
         --help  # print this text
  
       Example:
-      > Rscript test.R --infiledir='./data/sample_sep09' --userlib='user_profiledb.csv' --usercal='user_calibration.csv' 
+      ## Processing
+      > Rscript apgcms_main.R --infiledir='./data/sample_sep09' --userlib='user_profiledb.csv' --usercal='user_calibration.csv' 
                --internalstd='Ribitol' --process='PREPROCESSING' --useblank=TRUE --MFscore=400 --RIoffset=0.03  
 
-      > Rscript test.R --infiledir='./data/sample_sep09' 
+      ## Profiling
+      > Rscript apgcms_main.R --infiledir='./data/sample_sep09' 
                --lib.internal='SERUM' --selectedCmpd='HMDB00067,HMDB00094,HMDB00115,HMDB02142'
                --internalstd='Cholesterol' --process='PROFILING'
                --outdir='/Users/gcms/example/output_profiling'
@@ -122,6 +123,19 @@ parsingArgument <- function(args.in)
     internalStd.in <<- argsL$internalstd
   }
   
+  # use calibration curve of Cholesterol (OLD or NEW); Only for Urine/Organic acids
+  # cat("argsL$CalCurveVersion:", argsL$CalCurveVersion,"\n")
+  if(is.null(argsL$CalCurveVersion) ) {
+    USE_NEW_CALCURVE <<- TRUE
+  } else {
+    if(argsL$CalCurveVersion == "NEW") {
+        USE_NEW_CALCURVE <<- TRUE  
+        if(ISDEBUG) { cat("## calibration curve: use NEW Urine/Organic Acid Calibration Curves") }
+    } else {
+        USE_NEW_CALCURVE <<- FALSE
+        if(ISDEBUG) { cat("## calibration curve: use OLD Urine/Organic Acid Calibration Curves") }
+    }
+  }
   
   if(argsL$process %in% c('PREPROCESSING','PROFILING')) {
     processOption <<- argsL$process;
@@ -144,7 +158,7 @@ parsingArgument <- function(args.in)
   } else {
     MF_THRESHOLD <<- as.numeric(argsL$MFscore)
   }
-  
+
   if(is.null(argsL$RIoffset)) {
     # showErrMessage("  Warning in argument:\n\t RI offset option (RIoffset) is not assigned. Program will use default 0.03")
     RI.Variation <<- RI.VARIATION.DEFAULT     
@@ -216,6 +230,39 @@ setSampleType <- function(internalLibType)
   return(SampleType)
 }
 
+## assign calibration curve library
+setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
+{
+    # cat("internalLibType:", internalLibType, "\n")
+    # cat("strInternalStd:", strInternalStd, "\n")
+    # cat("is_new_calcurve:", is_new_calcurve, "\n")
+
+    if (internalLibType == 'SERUM') {
+        calCurveType <- 1
+    } else if (internalLibType == 'URINE') {
+        if(length(grep('Cholesterol',strInternalStd)) > 0) {
+            if (is_new_calcurve == TRUE) {
+                calCurveType <- 2 # new calibration
+            } else {
+                calCurveType <- 3 # old calibration
+            }
+        } else if (length(grep('Succinic acid', strInternalStd)) > 0) {
+            calCurveType <- 4
+        } else {
+            showErrMessage("  Error in argument:\n\t see the help to correctly use the internal standard")
+            helpMessage()
+        }
+    } else if (internalLibType == 'SALIVA') {
+        calCurveType <- 5
+    } else if (internalLibType == 'MILK') {
+        calCurveType <- 6
+    } else {
+      showErrMessage("  Error in argument:\n\t see the help to correctly use the internal Calibration Curve option (lib.internal)")
+      helpMessage()
+    }
+  
+    return (calCurveType)
+}
 
 # get compound Info library
 getLibInfo <- function(fname.lib)
@@ -330,15 +377,19 @@ ucHMDB <- function (str) {
 # return Internal Standard Compound Name
 getInternalStdCmpdName <- function (alib, std.str) {
     if ( toupper(substring(std.str,1,4)) == "HMDB" ) {      
-        # cat("ucHMDB(std.str):\n"); print(ucHMDB(std.str))
         cmpdname <- as.character( alib[which(alib$HMDB_ID == ucHMDB(std.str)), "Compound"] )
-        cat("\n\n## Matched Internal Standard Compound for HMDB ID:", std.str,"is", cmpdname,"\n")
+        # cat("\n\n## Matched Internal Standard Compound for HMDB ID:", std.str,"is", cmpdname,"\n")
     } else {
-        # cat("ucfirst(std.str):\n"); print(ucfirst(std.str))
-        cmpdname <- as.character( alib[which(alib$Compound == ucfirst(std.str)), "Compound"] )
+        # cat("grep length:", length(grep("ISTD", std.str)), "\n")
+        if (length(grep("ISTD", std.str)) ==0) {
+            # cat("# Add (ISTD) to internal std compound name (in parameter)\n\n")
+            std.str <- paste(std.str, " (ISTD)", sep='')
+        }
+        cmpdname <- as.character( alib[which(tolower(alib$Compound) == tolower(std.str)), "Compound"] )
     } 
 
-    if (length(cmpdname) == 1) {  return (cmpdname) 
+    if (length(cmpdname) == 1) {  
+        return (cmpdname) 
     } else {  return ( NULL ) }
 }
 
