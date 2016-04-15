@@ -166,11 +166,11 @@ create_json_file.old <- function(ofilename, fullspec.x, fullspec.y, profile.x, p
 
 spectrumToJSON.profile.alkane <- function(data.in)
 {   
-  d <- data.in  
+  d <- data.in
   d$Cn <- paste('C',d[,"Cn"],sep='')
   
   # ALKRTmin, Intensity, Cn
-  names(d)[c(4,3,2)] <- c("x","y","text")
+  names(d)[c(2,5,3)] <- c("x","y","text")
   
   name.value <- function(i) {
     quote <- '';
@@ -182,7 +182,7 @@ spectrumToJSON.profile.alkane <- function(data.in)
   }
   
   xytext <- apply(sapply(c("x","y","text"), name.value), 1, function(x) { paste(x, collapse=',\t') })
-
+ 
   objs <- paste('\t\t{\t', xytext, '\t}', sep='')
   res <- paste(objs, collapse=',\n')
   res <- paste('\t"labels": [\n', res, '\n\t]')

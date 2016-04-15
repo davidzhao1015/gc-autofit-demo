@@ -26,7 +26,7 @@ h1 GC-AutoFit Analysis
     p 
       | To analyze GC-MS spectra with GC-AutoFit you must 
         provide information on the biofluid being analyzed and the spectral files in
-        <em>.CDF</em> or <em>.mzXML</em> format. Upto 33 spectra can be analyzed in one submission.
+        <em>.CDF</em> or <em>.mzXML</em> format. Upto 30 spectra are recommended to analyze in one submission.
 
     .example-section[data-no-turbolink]
       .float-text Run one of our examples:
@@ -99,7 +99,7 @@ h1 GC-AutoFit Analysis
             .form-help
               | The ZIP file must contain an alkane standards spectrum (e.g. Alkane.mzXML, ALKstd.mzXML),
                 an optional blank spectrum (e.g. Blank.mzXML, Blk.mzXML) and at least one sample spectrum.
-                All the spectral files must be .CDF or .mzXML. Up to 10 samples can be submitted.
+                All the spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
             br
             br
             .form-horizontal
@@ -110,7 +110,7 @@ h1 GC-AutoFit Analysis
                   = f.file_field :input_zip
           .tab-pane#separate-files[class="#{'active' if @upload_spectra_format == 'separate'}"]
             .form-help
-              | All spectral files must be .CDF or .mzXML. Up to 10 samples can be submitted.
+              | All spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
             br
             br
             .form-horizontal

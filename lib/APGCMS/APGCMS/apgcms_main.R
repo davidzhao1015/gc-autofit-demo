@@ -182,9 +182,11 @@ if (processOption == 'PREPROCESSING') {
         final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
         
         final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[, c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity",
-                                              "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
+                                              "MatchFactor","TScore","RI.Similarity","Corr.Spearman","TargetIon","QIon",
                                               "Area.EICTarget","Area.EICQualification","AreaRatio","mz","mzInt")], 
-                                              Concentration="NA") # keep mass Spectrum Info (m/z, Intensity)
+                                              Concentration2="NA") # keep mass Spectrum Info (m/z, Intensity)
+        
+        
         final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
                                               "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
                                               "Area.EICTarget","Area.EICQualification","AreaRatio")], 

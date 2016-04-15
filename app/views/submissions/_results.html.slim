@@ -1,6 +1,7 @@
 - if @spectrum
   = render 'spectra/spectra_viewer', json_path: submission_spectrum_url(@submission, @spectrum, 'json')
 
+    standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'TargetIon','Q.Ion', 'MatchFactor', 'AreaRatio', 'Concentration (mM)']
 #results-section
   table.results-table.table.table-striped.table-condensed
     thead
@@ -12,8 +13,8 @@
         th Intensity
         th Target Ion
         th Q. Ion
-        th Area Ratio
         th Match Factor
+        th Area Ratio
         th Concentration (mM)
     tbody
 
