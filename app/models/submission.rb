@@ -131,6 +131,10 @@ class Submission < ActiveRecord::Base
     File.join(preprocessing_dir, 'log.txt')
   end
 
+  def logger(text)
+    File.open(self.log_path, 'a+') { |f| f.puts(text) }
+  end
+
   def profiling_dir
     File.join(self.working_dir, 'profiling')
   end

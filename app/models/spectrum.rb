@@ -28,6 +28,10 @@ class Spectrum < ActiveRecord::Base
     File.join(sample_dir, 'log.txt')
   end
 
+  def logger(text)
+    File.open(self.log_path, 'a+') { |f| f.puts(text) }
+  end
+
   def csv_file
     case self.category
     when 'blank'

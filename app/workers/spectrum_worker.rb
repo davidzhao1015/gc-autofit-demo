@@ -35,9 +35,14 @@ class SpectrumWorker
       spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
     end
 
+  rescue StandardError => e
+    spectrum.status = "failed"
+    spectrum.error =  "There was a problem running GC-AutoFit."
+    spectrum.logger(e.message)
+    spectrum.logger(e.backtrace.join("\n"))
+  ensure
     spectrum.runtime = Time.now - start_time
     spectrum.save!
-
   end
 
 end

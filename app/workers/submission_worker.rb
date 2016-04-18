@@ -40,9 +40,14 @@ class SubmissionWorker
       submission.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
     end
 
+  rescue StandardError => e
+    submission.status = "failed"
+    submission.error =  "There was a problem running GC-AutoFit."
+    submission.logger(e.message)
+    submission.logger(e.backtrace.join("\n"))
+  ensure
     submission.runtime = Time.now - start_time
     submission.save!
-
   end
 
 end
