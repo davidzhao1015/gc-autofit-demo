@@ -9,6 +9,8 @@ Rails.application.routes.draw do
     resources :spectra
   end
 
+  get 'instructions' => 'home#instructions', :as => :instructions
+
   root :to => "submissions#new"
 
 
