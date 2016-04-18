@@ -246,7 +246,7 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
             } else {
                 calCurveType <- 3 # old calibration
             }
-        } else if (length(grep('Succinic acid', strInternalStd)) > 0) {
+        } else if (length(grep('Succinate-D4', strInternalStd)) > 0) {
             calCurveType <- 4
         } else {
             showErrMessage("  Error in argument:\n\t see the help to correctly use the internal standard")
@@ -378,11 +378,11 @@ ucHMDB <- function (str) {
 getInternalStdCmpdName <- function (alib, std.str) {
     if ( toupper(substring(std.str,1,4)) == "HMDB" ) {      
         cmpdname <- as.character( alib[which(alib$HMDB_ID == ucHMDB(std.str)), "Compound"] )
-        # cat("\n\n## Matched Internal Standard Compound for HMDB ID:", std.str,"is", cmpdname,"\n")
+        cat("\n\n## Matched Internal Standard Compound for HMDB ID:", std.str,"is", cmpdname,"\n")
     } else {
-        # cat("grep length:", length(grep("ISTD", std.str)), "\n")
+        cat("grep length:", length(grep("ISTD", std.str)), "\n")
         if (length(grep("ISTD", std.str)) ==0) {
-            # cat("# Add (ISTD) to internal std compound name (in parameter)\n\n")
+            cat("# Add (ISTD) to internal std compound name (in parameter)\n\n")
             std.str <- paste(std.str, " (ISTD)", sep='')
         }
         cmpdname <- as.character( alib[which(tolower(alib$Compound) == tolower(std.str)), "Compound"] )
