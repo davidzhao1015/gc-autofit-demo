@@ -1,1 +1,198 @@
-p Stuff
+h1 How to collect GC-MS Spectra for GC-AutoFit
+
+.well-content.intro
+  h2 How to collect GC-MS Spectra for GC-AutoFit (GC-MS Sample Preparation Protocols)
+
+  ul
+    li
+      p = link_to 'Preparing Serum Sample (PDF)', home_download_pdf_sopSerum_url 
+    li
+      p = link_to 'Preparing Organic Acids Sample (PDF)', home_download_pdf_sopOrgAcids_url 
+
+
+h1 How to use GC-AutoFit (General Instruction)
+
+.well-content.intro
+  h2 <b>General Instruction</b>
+  br/
+  
+  h3 <b>Required Spectrum Files for using GC-AutoFit</b>
+
+  p Three types of input files are required:
+  ul
+    li An Alkane Standard file (required) - e.g. Alkane.mzXML, ALKstd.mzXML
+    li A Blank Sample file (optional but recommended) - e.g. Blank.mzXML, Blk.mzXML
+    li Sample files (required)
+
+
+  h3 <b>Preparing Alkane Standards</b>
+
+  p 
+    | The retention times of alkane standard peaks are used for calculating the retention indices of each sample's peaks. The required range of alkane standards is from C10 up to at least C36, as shown below. 
+
+  // = image_tag('Alkane_profiled.png', size: "800x500") 
+  = image_tag('Alkane_profiled.png') 
+  
+  br/
+  br/
+  h3 <b>Converting File Formats (.CDF or .mzXML)</b>
+
+  p 
+    | GC-AutoFit expects a file in .CDF or .mzXML format as input. If you are using Agilent's .D  file format, you'll need to convert your input to .CDF or .mzXML format.
+
+  p Conversion Software:
+  ul
+    li Agilent ChemStation (http://www.chem.agilent.com)
+    li ProteoWizard (http://proteowizard.sourceforge.net)
+
+
+  br/
+  br/
+
+  h3 Choosing a Library and Internal Standard 
+  p
+    | You can choose to use one of internal libraries or upload your own library. You must select or submit an internal standard for quantification.
+
+  p 
+    | 1) Select Biofluid type to use an Internal Library or Select the 'Upload Your Library' to use your own library.
+
+  = image_tag('select_biofluid.png', style: 'border: 1px solid #000;' ) 
+
+  p 
+    | or
+
+  = image_tag('upload_userlib.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+  p 
+    | 2) When you select a Biofluid type (e.g. "Serum") for using internal library, you could see the list of metabolites in that library by click the blue icons on the right side of Biofluid. You can choose all the metabolites or select some of them.
+
+  = image_tag('listofcomps.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+  p 
+    | 3) To quantify a concentration, you must specify the compound name of the internal standard. You can select the one from the list or enter your own in the textbox by select 'Other'.  
+
+  = image_tag('select_ISTD.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+
+  h3 <b>Uploading Spectrum Files</b>
+
+  p
+    | There are two ways to upload files. The first is to upload the Alkane Standards, Blank, and Sample files individually. 
+
+  = image_tag('upload_separate.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+  p
+    | The second way is to upload a single zip file that includes all three types of spectrum files, named accordingly. 
+
+  = image_tag('upload_zip.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+
+  h3 <b>Checking Spectrum (Alkane Standard and Sample Spectra)</b>
+
+  p 
+    | This should be required before doing further profiling and quantifying. It includes Alkane Standard, Blank, and Samples. Also, quality control spectrum should be checked if you have.
+
+  = image_tag('check_spectrum.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+  h3 <b>Perform Profiling</b>
+
+  p
+    | If there is no issue for the spectrums, do perform the profiling by click the button named 'Profile'.
+
+  = image_tag('profile_button.png', style: 'border: 1px solid #000;' ) 
+
+  br/
+  br/
+  p
+    | Then, the status of profiling is appeared and refresing the profiling status as below image. 
+
+  = image_tag('profiling_status.png', style: 'border: 1px solid #000;' ) 
+
+
+  br/
+  br/
+  h3 <b>Getting Results for each Sample and the Final Concentration Table</b>
+
+  p
+    | GC-AutoFit program will generate a profiled table (.csv) and a plot with assigned metabolites for each spectrum. In this final step, it will generate the merged concentration tables for the all samples. 
+
+  br/
+  h4 Results page:
+  = image_tag('result_all.png', style: 'border: 1px solid #000;' ) 
+  br/
+  br/
+
+  h4 Porfiled table:
+  = image_tag('result_table.png', style: 'border: 1px solid #000;' ) 
+  br/
+  br/
+
+  h4 Spectrum plot (identified compound names, can be zoom in/out):
+  = image_tag('result_spectrum.png', style: 'border: 1px solid #000;' ) 
+  br/
+  br/
+
+  h4 Merged concentration table (download CSV file by click the 'Download Results'):
+  = image_tag('result_concentration.png', style: 'border: 1px solid #000;' ) 
+
+br/
+br/
+h2 <b>Instruction for using user's own library</b>
+
+.well-content.intro
+  p
+    | GC-AutoFit supports to use your own library and canlibration curve. In order to use this function, it is required to repare your own compound library and its calibration curve as following instruction.
+
+  h3 Compound profiling library:
+
+  p
+    | It required the below features as columns in CSV format file. It is supportssed to keep the same column name.
+
+  ul
+    li SeqIndex
+    li HMDB_ID 
+    li Compound : Compound name
+    li CompoundWithTMS : Compoundnd name with different TMS for detecting multiple peaks of a same compound
+    li RI : Retention Index 
+    li MZ : separated with space 
+    li Intensity : separatedd with space
+
+  <IMG src="../image/userlib_compound.png" height="180" width="800"> 
+
+
+  h3 Calibration curve:
+
+  p
+    | Concentration is quantified by linear model using the relative peak area in GC-AutoFit. It required the below features as columns in CSV format file. It is supposed to keep the same column name.
+
+  ul
+    li SeqIndex
+    li HMDB_ID 
+    li Compound : Compound name
+    li Intercept  
+    li Slope   
+
+  <IMG src="../image/userlib_calibration.srcpng" height="140" width="550"> 
+
+
+  h3 Upload User's Own Library
+
+  p
+    | Once you choose the "Your own Library" in Database field, you can upload your 'compound profiling library' and 'calibration curve' files. The compound name of the internal standard is also required to calculate an area ratio. 
+
+  <IMG src="../image/userlib_upload.png" height="140" width="550"> 
+
+
+

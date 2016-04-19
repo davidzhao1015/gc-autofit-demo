@@ -11,6 +11,9 @@ Rails.application.routes.draw do
 
   get 'instructions' => 'home#instructions', :as => :instructions
 
+  get "home/download_pdf_sopOrgAcids"
+  get "home/download_pdf_sopSerum"
+
   root :to => "submissions#new"
 
 

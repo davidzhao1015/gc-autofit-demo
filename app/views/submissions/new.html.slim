@@ -88,26 +88,13 @@ h1 GC-AutoFit Analysis
         .form-label
           = f.label :input_file, 'Upload Spectra:', class: 'control-label required'
           ul.nav.nav-pills.nav-pills-custom
-            li[class="#{'active' if @upload_spectra_format == 'zip'}"]
-              a.toggle-upload#toggle-upload-zip[href='#zip-file' data-toggle='tab'] Single ZIP File
-            li.text-only OR
             li[class="#{'active' if @upload_spectra_format == 'separate'}"]
               a.toggle-upload#toggle-upload-separate[href='#separate-files' data-toggle='tab'] Separate Files
+            li.text-only OR
+            li[class="#{'active' if @upload_spectra_format == 'zip'}"]
+              a.toggle-upload#toggle-upload-zip[href='#zip-file' data-toggle='tab'] Single ZIP File
         .tab-content
           = hidden_field_tag :upload_spectra_format, @upload_spectra_format
-          .tab-pane#zip-file[class="#{'active' if @upload_spectra_format == 'zip'}"]
-            .form-help
-              | The ZIP file must contain an alkane standards spectrum (e.g. Alkane.mzXML, ALKstd.mzXML),
-                an optional blank spectrum (e.g. Blank.mzXML, Blk.mzXML) and at least one sample spectrum.
-                All the spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
-            br
-            br
-            .form-horizontal
-              .form-group
-                .form-label
-                  = label :input_zip, 'ZIP file', class: 'control-label required col-sm-3'
-                .col-sm-9
-                  = f.file_field :input_zip
           .tab-pane#separate-files[class="#{'active' if @upload_spectra_format == 'separate'}"]
             .form-help
               | All spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
@@ -129,11 +116,24 @@ h1 GC-AutoFit Analysis
                   = label :samples, 'Samples', class: 'control-label required col-sm-3'
                 .col-sm-9
                   = file_field_tag :spectrum_data, multiple: true, name: 'sample_spectra[]'
+          .tab-pane#zip-file[class="#{'active' if @upload_spectra_format == 'zip'}"]
+            .form-help
+              | The ZIP file must contain an alkane standards spectrum (e.g. Alkane.mzXML, ALKstd.mzXML),
+                an optional blank spectrum (e.g. Blank.mzXML, Blk.mzXML) and at least one sample spectrum.
+                All the spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
+            br
+            br
+            .form-horizontal
+              .form-group
+                .form-label
+                  = label :input_zip, 'ZIP file', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = f.file_field :input_zip
 
       li
         .form-group
           .form-label
-            = f.label :mf_score_threshold, 'Provide a MF Score cutoff:', class: "control-label required"
+            = f.label :mf_score_threshold, 'Provide a MF(Match Factor) Score cutoff:', class: "control-label required"
             span.form-help
               | An integer between 0 - 999 but somewhere between 400 - 600 is recommended.
 
