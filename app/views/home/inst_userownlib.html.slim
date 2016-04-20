@@ -1,0 +1,72 @@
+h1 How to collect GC-MS Spectra for GC-AutoFit
+
+.well-content.intro
+  h2 How to collect GC-MS Spectra for GC-AutoFit (GC-MS Sample Preparation Protocols)
+
+  ul
+    li
+      p = link_to 'Preparing Serum Sample (PDF)', home_download_pdf_sopSerum_url 
+    li
+      p = link_to 'Preparing Organic Acids Sample (PDF)', home_download_pdf_sopOrgAcids_url 
+
+
+br/
+br/
+h1 <b>Instruction for using User's Own Library</b>
+
+.well-content.intro
+  p
+    | GC-AutoFit supports to use your own library and calibration curve. In order to use this function, it is required to prepare your own compound library and calibration curve as following instruction and format.
+
+  h2 <b>Compound profiling library:</b>
+
+  p
+    | It required the below features as columns in CSV format file. It should be keep the same column name.
+
+  ul
+    li SeqIndex
+    li HMDB_ID 
+    li Compound : Compound name
+    li CompoundWithTMS : Compoundnd name with different TMS for detecting multiple peaks of a same compound
+    li RI : Retention Index 
+    li TargetIon
+    li QIon
+    li MZ : separated with space 
+    li Intensity : separatedd with space
+
+  = image_tag("user_deflib.png")
+
+  br/
+  br/
+
+  h2 <b>Calibration curve:</b>
+
+  p
+    | Concentration is quantified by linear model using the relative peak area in GC-AutoFit. It required the below features as columns in CSV format file. It is supposed to keep the same column name.
+
+  ul
+    li SeqIndex
+    li HMDB_ID 
+    li Compound : Compound name
+    li Intercept  
+    li Slope   
+
+  <IMG src="../image/userlib_calibration.srcpng" height="140" width="550"> 
+  = image_tag("user_defcalcurves.png")
+
+  br/
+  br
+
+  h3 Upload User's Own Library
+
+  p
+    | Once you choose the "Upload Your Library" in Select Biofluid, you can upload your 'profile/identification library' and 'calibration curve' files. The compound name of the internal standard is also required to calculate an area ratio. 
+
+  <IMG src="../image/userlib_upload.png" height="140" width="550"> 
+
+  = image_tag("user_uploadlib.png")
+
+  br/
+  br/
+
+

@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   end
 
   get 'instructions' => 'home#instructions', :as => :instructions
+  get 'inst_userownlib' => 'home#inst_userownlib', :as => :inst_userownlib
 
   get "home/download_pdf_sopOrgAcids"
   get "home/download_pdf_sopSerum"

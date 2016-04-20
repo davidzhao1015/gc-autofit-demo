@@ -149,50 +149,5 @@ h1 How to use GC-AutoFit (General Instruction)
 
 br/
 br/
-h2 <b>Instruction for using user's own library</b>
-
-.well-content.intro
-  p
-    | GC-AutoFit supports to use your own library and canlibration curve. In order to use this function, it is required to repare your own compound library and its calibration curve as following instruction.
-
-  h3 Compound profiling library:
-
-  p
-    | It required the below features as columns in CSV format file. It is supportssed to keep the same column name.
-
-  ul
-    li SeqIndex
-    li HMDB_ID 
-    li Compound : Compound name
-    li CompoundWithTMS : Compoundnd name with different TMS for detecting multiple peaks of a same compound
-    li RI : Retention Index 
-    li MZ : separated with space 
-    li Intensity : separatedd with space
-
-  <IMG src="../image/userlib_compound.png" height="180" width="800"> 
-
-
-  h3 Calibration curve:
-
-  p
-    | Concentration is quantified by linear model using the relative peak area in GC-AutoFit. It required the below features as columns in CSV format file. It is supposed to keep the same column name.
-
-  ul
-    li SeqIndex
-    li HMDB_ID 
-    li Compound : Compound name
-    li Intercept  
-    li Slope   
-
-  <IMG src="../image/userlib_calibration.srcpng" height="140" width="550"> 
-
-
-  h3 Upload User's Own Library
-
-  p
-    | Once you choose the "Your own Library" in Database field, you can upload your 'compound profiling library' and 'calibration curve' files. The compound name of the internal standard is also required to calculate an area ratio. 
-
-  <IMG src="../image/userlib_upload.png" height="140" width="550"> 
-
 
 
