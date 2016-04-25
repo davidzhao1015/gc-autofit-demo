@@ -12,7 +12,7 @@ class Submission < ActiveRecord::Base
     #db      #display
     'serum' => 'Serum',
     'urine' => 'Urine',
-    # 'saliva' => 'Saliva',
+    'saliva' => 'Saliva',
     'upload' => 'Upload Your Library'
 
   }
