@@ -16,12 +16,12 @@ h1 <b>Instruction for using User's Own Library</b>
 
 .well-content.intro
   p
-    | GC-AutoFit supports to use your own library and calibration curve. In order to use this function, it is required to prepare your own compound library and calibration curve as following instruction and format.
+    | GC-AutoFit supports using your own library and calibration curve. In order to use this function, you must prepare your own compound library and calibration curve as per the following instructions.
 
   h2 <b>Compound profiling library:</b>
 
   p
-    | It required the below features as columns in CSV format file. It should be keep the same column name.
+    | The libary file must be in CSV format and contain the following column names:
 
   ul
     li SeqIndex
@@ -42,7 +42,7 @@ h1 <b>Instruction for using User's Own Library</b>
   h2 <b>Calibration curve:</b>
 
   p
-    | Concentration is quantified by linear model using the relative peak area in GC-AutoFit. It required the below features as columns in CSV format file. It is supposed to keep the same column name.
+    | GC-AutoFit quantifies metabolite concentrations using the relative peak area and a linear model described in the calibration curve file. This file must be in CSV format and contain the following columns: 
 
   ul
     li SeqIndex
@@ -51,7 +51,6 @@ h1 <b>Instruction for using User's Own Library</b>
     li Intercept  
     li Slope   
 
-  <IMG src="../image/userlib_calibration.srcpng" height="140" width="550"> 
   = image_tag("user_defcalcurves.png")
 
   br/
@@ -60,9 +59,7 @@ h1 <b>Instruction for using User's Own Library</b>
   h3 Upload User's Own Library
 
   p
-    | Once you choose the "Upload Your Library" in Select Biofluid, you can upload your 'profile/identification library' and 'calibration curve' files. The compound name of the internal standard is also required to calculate an area ratio. 
-
-  <IMG src="../image/userlib_upload.png" height="140" width="550"> 
+    | Choose the "Upload Your Library" in under Select Biofluid and upload your 'Profile library' and 'Calibration curve' files. The compound name of the internal standard is also required to calculate an area ratio. 
 
   = image_tag("user_uploadlib.png")
 

@@ -42,8 +42,11 @@ h1 How to use GC-AutoFit (General Instruction)
 
   p Conversion Software:
   ul
-    li Agilent ChemStation (http://www.chem.agilent.com)
-    li ProteoWizard (http://proteowizard.sourceforge.net)
+    li
+     a href='http://www.chem.agilent.com' Agilent ChemStation
+    li
+      a href='http://proteowizard.sourceforge.net' ProteoWizard
+
 
 
   br/
@@ -66,14 +69,14 @@ h1 How to use GC-AutoFit (General Instruction)
   br/
   br/
   p 
-    | 2) When you select a Biofluid type (e.g. "Serum") for using internal library, you could see the list of metabolites in that library by click the blue icons on the right side of Biofluid. You can choose all the metabolites or select some of them.
+    | 2) When you select a Biofluid type (e.g. "Serum") for the internal library, you can see the list of metabolites in that library by clicking the blue icon on the right side of Biofluid. You can choose all the metabolites or select a subset of them.
 
   = image_tag('listofcomps.png', style: 'border: 1px solid #000;' ) 
 
   br/
   br/
   p 
-    | 3) To quantify a concentration, you must specify the compound name of the internal standard. You can select the one from the list or enter your own in the textbox by select 'Other'.  
+    | 3) To quantify concentrations, you must specify the compound name of the internal standard. You can select one from the list or enter your own in the textbox by the choice 'Other'.  
 
   = image_tag('select_ISTD.png', style: 'border: 1px solid #000;' ) 
 
@@ -100,7 +103,7 @@ h1 How to use GC-AutoFit (General Instruction)
   h3 <b>Checking Spectrum (Alkane Standard and Sample Spectra)</b>
 
   p 
-    | This should be required before doing further profiling and quantifying. It includes Alkane Standard, Blank, and Samples. Also, quality control spectrum should be checked if you have.
+    |  Before profiling, check over the Alkane Standad, Blank and Sample spectra, including any quality control spectra you may have. If any of the Alkane Standard values are wrong, click on the value and correct it.
 
   = image_tag('check_spectrum.png', style: 'border: 1px solid #000;' ) 
 
@@ -109,14 +112,14 @@ h1 How to use GC-AutoFit (General Instruction)
   h3 <b>Perform Profiling</b>
 
   p
-    | If there is no issue for the spectrums, do perform the profiling by click the button named 'Profile'.
+    | If there are no issues with the spectra, start profiling by clicking the <em>Profile</em> button. 
 
   = image_tag('profile_button.png', style: 'border: 1px solid #000;' ) 
 
   br/
   br/
   p
-    | Then, the status of profiling is appeared and refresing the profiling status as below image. 
+    | You will be taken to the <em>Profiling</em> page where the status of your spectra will be shown. 
 
   = image_tag('profiling_status.png', style: 'border: 1px solid #000;' ) 
 
@@ -126,7 +129,7 @@ h1 How to use GC-AutoFit (General Instruction)
   h3 <b>Getting Results for each Sample and the Final Concentration Table</b>
 
   p
-    | GC-AutoFit program will generate a profiled table (.csv) and a plot with assigned metabolites for each spectrum. In this final step, it will generate the merged concentration tables for the all samples. 
+    | Once a sample has been profiled you can click on it and go to the <em>Results</em> tab to view the spectrum with assigned metabolites. The <em>Download CSV</em button below the spectrum can be used to download the profiled results.
 
   br/
   h4 Results page:
@@ -139,12 +142,14 @@ h1 How to use GC-AutoFit (General Instruction)
   br/
   br/
 
-  h4 Spectrum plot (identified compound names, can be zoom in/out):
+  h4 Spectrum plot (identified compound names, can be zoomed in/out):
   = image_tag('result_spectrum.png', style: 'border: 1px solid #000;' ) 
   br/
   br/
 
   h4 Merged concentration table (download CSV file by click the 'Download Results'):
+  p
+    | Once all of the samples have been profiled, you can click the <em>Download Results</em> link in the <em>Profiling</em> tab to get a concentration table for all the samples.
   = image_tag('result_concentration.png', style: 'border: 1px solid #000;' ) 
 
 br/
