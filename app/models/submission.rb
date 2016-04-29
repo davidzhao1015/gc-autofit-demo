@@ -224,11 +224,11 @@ class Submission < ActiveRecord::Base
           name = File.basename(entry.name, '.*')
           next unless ext.downcase =~ /^(cdf|mzxml)$/
           case name.downcase
-          when 'alkane', 'alkstd'
+          when /alk/
             dest_path = File.join(dir, "Alkstd.#{ext}")
             entry.extract(dest_path)
             self.spectra.build(category: 'standards', spectrum_data: File.open(dest_path))
-          when 'blank', 'blk'
+          when /blk/, /blank/
             dest_path = File.join(dir, "Blank.#{ext}")
             entry.extract(dest_path)
             self.spectra.build(category: 'blank', spectrum_data: File.open(dest_path))

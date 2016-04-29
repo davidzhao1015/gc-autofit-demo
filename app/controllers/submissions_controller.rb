@@ -33,7 +33,7 @@ class SubmissionsController < ApplicationController
     @submission.database = 'serum'
     @submission.internal_standard = 'Ribitol'
     @submission.mf_score_threshold = 400
-    @upload_spectra_format = 'zip'
+    @upload_spectra_format = 'separate'  # OR 'zip'
   end
 
   # GET /submissions/1/edit
