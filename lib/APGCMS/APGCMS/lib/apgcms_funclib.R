@@ -195,7 +195,8 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     if (print.on & DEBUG) { cat("## arranging profiled peaks \n")  }
     # final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks, SampleType)
     final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks)
-    if (print.on & DEBUG) { cat("final_PeakProfile:"); print(final_PeakProfile[,c(1:21)]) }
+    if (print.on & DEBUG) { cat("final_PeakProfile:\n"); print(final_PeakProfile[,c(1:21)]) }
+    
     
     # Subtract BLANK Peak Areas
     # if there is a blank sample, then substract the area from sample's area
@@ -240,7 +241,8 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         } 
       }
     }
-    if (print.on & DEBUG) { cat("\n\n## final_peakProfile after blank subtraction:\n"); print(final_PeakProfile[,c(1:24,27,28)])  }
+    
+    if (print.on & DEBUG) { cat("\n\n## final_peakProfile after blank subtraction:\n"); print(final_PeakProfile)  }
 
     final_PeakProfile.screened <- screeningWithMatchFactor(final_PeakProfile, threshold.matchFactor)
     if (DEBUG) {
@@ -268,7 +270,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         
         Concentration2 <- check.Concentration(finalReport$Concentration) 
         finalReport <- cbind(finalReport, Concentration2) 
-        if (print.on & DEBUG) { cat("# finalReport:\n"); print(finalReport [,c(1:24,27:30)]); }
+        if (print.on & DEBUG) { cat("# finalReport:\n"); print(finalReport); }
 
         finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
         finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
@@ -1315,7 +1317,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       ## used for mz/int DB update in Internal Library
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-      if(FALSE) {
+      if(!FALSE) {
             ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
             cat("PeakNO,rt,rt_min,RI,mz,intensity\n", file=ofile, append=FALSE)
             for (i in 1:length(peak_mzInt_list))  {
@@ -1602,11 +1604,14 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # tmp.TScore =  0.4 * RI.similarity + 0.3 * nearRelPeakRTscore.tmp + 0.3 * MFscore/10 
                       
                       ## tmp.TScore =  0.7 * RI.similarity + 0.3 * MFscore/10 
-                      tmp.TScore =  0.3 * MFscore/10 + 0.2 * RI.similarity + 0.5*matchMZrate
+                      # tmp.TScore =  0.3 * MFscore/10 + 0.2 * RI.similarity + 0.5*matchMZrate  ## ~ Apr 27, 2016
+                      tmp.TScore =  0.4 * MFscore/10 + 0.6 * RI.similarity + 0.3*cor.spearman + 0.1*matchMZrate
+                      
+                      hmdbID <- as.character(lib.matched[k,]$HMDB_ID)
                       
                       ## to verify result
                       tmp.identified <- c(
-                          hmdbID=as.character(lib.matched[k,]$HMDB_ID),
+                          hmdbID=hmdbID,
                           CompoundWithTMS=as.character(lib.matched[k,]$CompoundWithTMS),
                           RT_min=round(RT.sample/60, 3),
                           RT=RT.sample,
@@ -1635,12 +1640,11 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       )
 
                       identified.trace <- rbind(identified.trace, tmp.identified) 
-                      
-                      
+
                       # if ( nearRelPeakRTscore < nearRelPeakRTscore.tmp 
                       # RI.similarity: 70 --> 90 (Dec 16, 2014)
-                      if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (cor.spearman > 0.65) 
-                              & (matchMZnum > 10) & (matchMZrate > 60.0) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
+                      if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) & (matchMZrate > 60.0) 
+                              & (hmdbID == "HMDB_ISTD1" | cor.spearman > 0.65) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                           TScore <- tmp.TScore
                           RIScore <- RI.similarity
   
