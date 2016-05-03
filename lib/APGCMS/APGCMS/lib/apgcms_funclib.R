@@ -1317,7 +1317,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       ## used for mz/int DB update in Internal Library
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-      if(!FALSE) {
+      if(FALSE) {
             ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
             cat("PeakNO,rt,rt_min,RI,mz,intensity\n", file=ofile, append=FALSE)
             for (i in 1:length(peak_mzInt_list))  {
