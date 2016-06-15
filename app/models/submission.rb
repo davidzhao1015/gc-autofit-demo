@@ -16,8 +16,7 @@ class Submission < ActiveRecord::Base
     'upload' => 'Upload Your Library'
 
   }
-  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Other ]
-  # INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Other ]
+  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 NONE Other ]
 
   has_many :spectra, dependent: :destroy
   has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
@@ -273,8 +272,11 @@ class Submission < ActiveRecord::Base
       ids = metabolites.keys.map { |i| i.downcase }
       names = metabolites.values.map { |n| n.downcase }
       valid_standard = (standard =~ /^hmdb/) ? ids.include?(standard) : names.include?(standard)
-      unless valid_standard
-        errors[:base] << "Internal standard must be present in the selected library"
+      # add istd=NONE case
+      if standard != 'none'
+         unless valid_standard
+            errors[:base] << "Internal standard must be present in the selected library"
+         end
       end
     end
   end

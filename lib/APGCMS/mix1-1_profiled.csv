@@ -1,7 +1,0 @@
-HMDB_ID,Compound,CompoundWithTMS,RT_min,RT,RI,Intensity,Target Ions,Target Area,Q1 Ion,Q1 Area,Ratio (Q/T *100),MatchFactor,RI.Similarity,RT.start,RT.end
-HMDB00190,Lactic acid,Lactic acid,9.75,585.06,1071.31,174350,117,,191,,30,779.2,94.26,9.719,9.783
-HMDB00357,3-hydroxybutyric acid,3-hydroxybutyric acid,12.86,771.72,1174.30,9540403,117,,191,,83,806.4,98.64,12.805,13.053
-HMDB00202,Methylmalonic acid,Methylmalonic acid,14.42,865.25,1229.03,16171265,,,,,,805.3,98.99,14.344,14.561
-HMDB00254,Succinic acid,Succinic acid,16.88,1012.59,1324.95,17060608,247,,262,,5,800.2,98.22,16.838,16.94
-HMDB00254X,Succinic acid-ISTD,Succinic acid-ISTD,16.80,1008.01,1321.56,14649171,251,,266,,4,807.9,100,16.737,16.838
-HMDB00784,Azelaic acid,"Azelaic acid, bis-TMS",26.55,1592.81,1807.45,19386867,317,,201,,70,806.8,98.91,26.458,26.566

@@ -141,9 +141,8 @@ if (processOption == 'PREPROCESSING') {
 
     # Alkane Peak Profiling
     fname.lib.alkane <- file.path(lib_dir, LibFile.Alkane)
-    
-    # peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT==TRUE) 
-    peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=FALSE) 
+
+    peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=user.AlkaneRT, userEstAlkaneRT=TRUE) 
 
     if(DEBUG) { cat("final alkane profiled:\n"); print(peak_alkane_std) }
     alkaneInfo <- check_alkane_std(peak_alkane_std)
@@ -241,15 +240,15 @@ if (processOption == 'PREPROCESSING') {
     ## for Quantification Process, loading preprocessed information from saved files
     cat("\n##### Loading Preprocessed Information Files \n")
     infoFileDir.alkane <- paste(infoFileDir, "/alkaneInfo.Rdata", sep='')
-    # cat(infoFileDir.alkane,"\n")
+    cat(infoFileDir.alkane,"\n")
     file.exists(infoFileDir.alkane)
     
     infoFileDir.alkanePeak <- paste(infoFileDir, "/alkanePeakInfo.Rdata", sep='')
-    # cat(infoFileDir.alkanePeak,"\n")
+    cat(infoFileDir.alkanePeak,"\n")
     file.exists(infoFileDir.alkanePeak)
     
     infoFileDir.blank <- paste(infoFileDir, "/blankInfo.Rdata", sep='')
-    # cat(infoFileDir.blank,"\n")
+    cat(infoFileDir.blank,"\n")
     file.exists(infoFileDir.blank)
     
     load(infoFileDir.alkane)

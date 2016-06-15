@@ -7,12 +7,13 @@
 ## Install packages:
 ##    source("http://bioconductor.org/biocLite.R")
 ##    biocLite(module)
-##    biocLite("BiocUpgrade")
+##    biocLite() # update related packages
 ##    biocLite("xcms")
+##    sessionInfo() 
 
-# library(xcms)
-suppressMessages(require(xcms));
-options(warn=-1)
+## library(xcms)
+# suppressMessages(require(xcms));
+# options(warn=-1)
 
 # Generate Spectrum Plots
 # fname.list <- fileList$sampleFiles
@@ -236,17 +237,22 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
                 final_PeakProfile[sp.idx, 'Area.EICTarget']  <- 0
             }
             if(print.on & DEBUG) {
-              cat("\t subtracted sample area:", final_PeakProfile[sp.idx, 'Area.EICTarget'],"\n")
+                cat("\t subtracted sample area:", final_PeakProfile[sp.idx, 'Area.EICTarget'],"\n")
             } 
         } 
       }
     }
     
-    if (print.on & DEBUG) { cat("\n\n## final_peakProfile after blank subtraction:\n"); print(final_PeakProfile)  }
-
+    if (print.on & DEBUG) { 
+      cat("\n\n## final_peakProfile after blank subtraction:\n"); 
+      print(final_PeakProfile)
+      print(names(final_PeakProfile))
+    }
+    
+    if (DEBUG) { cat("\n\n## screeningWithMatchFactor with Match Factor Threshold (", threshold.matchFactor, ")\n") }
     final_PeakProfile.screened <- screeningWithMatchFactor(final_PeakProfile, threshold.matchFactor)
     if (DEBUG) {
-        # cat("# final_PeakProfile.screened\n"); print(final_PeakProfile.screened[,c(1:24,27,28)])
+        cat("# final_PeakProfile.screened\n"); print(final_PeakProfile.screened)
     } 
     
     ## Quantification        
@@ -291,6 +297,13 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
                          "TargetIon","QIon","MatchFactor","RI.Similarity","Corr.Spearman","matchMZrate",
                          "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration")
         write.table(finalReport.All[,-1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
+        
+        # check blank substraction
+        if(TRUE) {
+            ofname.tmp <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled_allFields.csv", sep='')
+            write.table(finalReport.All[,-1], file=ofname.tmp, quote=TRUE, row.names=FALSE, sep=",")
+        }
+        
 
 
         ###################################################################
@@ -390,7 +403,9 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     } else {
         ## No internal STD - Only Profile the Compound Names      
         # cat("\t >> Generating FinalReport for", basename(f.sample), "without Quantification \n\t\t because of no internal standard\n")
-        cat("\t >> Generating FinalReport: without Quantification (NO internal standard)\n")
+        cat("#########################################################################\n")
+        cat("### Generating FinalReport: without Quantification (NO internal standard)\n\n")
+        
         colnames(final_PeakProfile.screened)[1] <- "HMDB_ID"
         
         finalReport.All <- merge(cmpdlist, final_PeakProfile.screened, by = c('HMDB_ID','CompoundWithTMS'), sort=FALSE) 
@@ -1317,7 +1332,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       ## used for mz/int DB update in Internal Library
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-      if(FALSE) {
+      if(Flag.mzInt4DB) {
             ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
             cat("PeakNO,rt,rt_min,RI,mz,intensity\n", file=ofile, append=FALSE)
             for (i in 1:length(peak_mzInt_list))  {

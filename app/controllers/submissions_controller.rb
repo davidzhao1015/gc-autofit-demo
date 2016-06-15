@@ -30,8 +30,10 @@ class SubmissionsController < ApplicationController
   # GET /submissions/new
   def new
     @submission = Submission.new
-    @submission.database = 'serum'
-    @submission.internal_standard = 'Ribitol'
+    # @submission.database = 'serum'
+    @submission.database = 'urine'
+    # @submission.internal_standard = 'Ribitol'
+    @submission.internal_standard = 'Cholesterol'
     @submission.mf_score_threshold = 400
     @upload_spectra_format = 'separate'  # OR 'zip'
   end

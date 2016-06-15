@@ -114,14 +114,17 @@ adjustAlkanePeakCn <- function(peak.list, Cn.topIntensity=20)
     # If not, then the Cn of top intensity should be assigned with C20
     peak.list <- as.data.frame(peak.list)
     CnMaxIntensity <- peak.list[which(peak.list$Intensity == max(peak.list$Intensity)), "Cn"]
+
     if (CnMaxIntensity != Cn.topIntensity) {
         peak.list[which(peak.list$Intensity == max(peak.list$Intensity)), "Cn"] <- Cn.topIntensity
     } 
-
-    peak.list.adjusted <- cbind(peak.list, Cn_matched=peak.list[,"Cn"])  ## keep original matched Cn values (mz/intensity)
-    idx.c20 <- which(peak.list.adjusted[,"Cn"] == Cn.topIntensity)
-    if (DEBUG) cat("idx.c20:", idx.c20,"\n")
     
+    peak.list.adjusted <- cbind(peak.list, Cn_matched=peak.list[,"Cn"])  ## keep original matched Cn values (mz/intensity)
+    # cat("# peak.list.adjusted\n"); print(peak.list.adjusted)
+    
+    idx.c20 <- which((peak.list.adjusted[,"Cn"] == Cn.topIntensity) & (max(peak.list.adjusted$Intensity) == peak.list.adjusted$Intensity) )
+    if (DEBUG) cat("idx.c20:", idx.c20,"\n")
+
     k <- 1
     for(i in (idx.c20-1):1) {
         peak.list.adjusted[i,"Cn"] <- (20 - k)
@@ -885,8 +888,7 @@ estimateMissingAlkaneRT <- function(peak.list)
 #================================================================================
 # Alkane peak profiling MAIN ()
 #================================================================================
-# do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE, userEstAlkaneRT=FALSE) 
-do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=FALSE) 
+do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjustAlkanePeakCn=FALSE, userDefined.Cn=NULL, userEstAlkaneRT=FALSE) 
 {
   
       ## load Compound Name RI, MZ and Intensity library 
@@ -921,36 +923,28 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
       
       alkane.peaks.profiled <- peakIdentify.alkane2(peaks.alkane, xset.alkane, lib.peak.alkane, print_mzInt=FALSE)
       if (DEBUG) { cat("## alkane.peaks.profiled:\n"); print(alkane.peaks.profiled) }
-
-      if (FALSE) {
-          profiled_peaks_alkane <- peakIdentify.alkane2(peaks.alkane, xset.alkane, lib.peak.alkane, print_mzInt=FALSE)
-          if (DEBUG) { cat("## profiled_peaks_alkane:\n"); print(profiled_peaks_alkane) }
-
-          final_PeakProfile_alkane <- arrangeProfiledPeaks2.alkane(profiled_peaks_alkane, SampleType)
-          if (DEBUG) { cat("## final_peakProfile_alkane:\n"); print(final_PeakProfile_alkane) }
-          
-          if( ! is.null(user.AlkaneRT) ) {
-              final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, user.AlkaneRT)
-              if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
-          }
-          
-          alkane.peaks.unique <- getUniqueAlkanePeakList(final_PeakProfile_alkane, offset.RT=50)
-          alkane.peaks.cleaned <- cleaningFalseAlkanePeaks(alkane.peaks.unique, offset.RT=50) 
-          
-          alkane.peaks.profiled <- cbind(ALKRT=as.double(as.character(alkane.peaks.cleaned$RT))
-                                         , Cn=as.integer(as.character(alkane.peaks.cleaned$Cn))
-                                         , Intensity=as.integer(as.character(alkane.peaks.cleaned$Intensity))
-                                         , ALKRTmin=round(as.double(as.character(alkane.peaks.cleaned$RT))/60,3))
-      }
       
       if (setAdjustAlkanePeakCn) {
-          alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
+        alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
       }
-
+      if (DEBUG) { cat("## alkane.peaks.profiled:\n"); print(alkane.peaks.profiled) }
       alkaneInfo <- check_alkane_std(alkane.peaks.profiled)
-
+      
+      if( ! is.null(userDefined.Cn) ) {
+          final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, userDefined.Cn)
+          if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
+      }
+      
+      # alkane.peaks.unique <- getUniqueAlkanePeakList(final_PeakProfile_alkane, offset.RT=50)
+      # alkane.peaks.cleaned <- cleaningFalseAlkanePeaks(alkane.peaks.unique, offset.RT=50) 
+      
+      # alkane.peaks.profiled <- cbind(ALKRT=as.double(as.character(alkane.peaks.cleaned$RT))
+      #                                , Cn=as.integer(as.character(alkane.peaks.cleaned$Cn))
+      #                                , Intensity=as.integer(as.character(alkane.peaks.cleaned$Intensity))
+      #                               , ALKRTmin=round(as.double(as.character(alkane.peaks.cleaned$RT))/60,3))
+      
       if (CREATE_JSON_FILE) {       
-        if (DEBUG) { cat("## alkane peaks - creating JSON file):\n") }
+        if (DEBUG) { cat("\n## alkane peaks - creating JSON file\n") }
         ofilename <- paste(sub(".mzXML|.CDF","", basename(sample.fname.alkane), ignore.case = TRUE),"_spectrum.json", sep='')
         # create_json_file.alkane(ofilename, xset.alkane@scantime, xset.alkane@tic,
         #                  alkane.peaks.profiled[,"ALKRT"], alkane.peaks.profiled[,"Intensity"], paste('C',alkane.peaks.profiled[,"Cn"],sep='') )
@@ -958,7 +952,6 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
       }
       
       ## Estimated missing alkane
-      userEstAlkaneRT<-TRUE
       if( userEstAlkaneRT == TRUE ) {
           if(DEBUG) {cat("\n## Estimating missing Alkanes\n") }
           alkane.peaks.profiled <- estimateMissingAlkaneRT(alkane.peaks.profiled)
