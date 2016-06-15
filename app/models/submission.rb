@@ -223,9 +223,11 @@ class Submission < ActiveRecord::Base
           ext = File.extname(entry.name).sub('.', '')
           name = File.basename(entry.name, '.*')
           next unless ext.downcase =~ /^(cdf|mzxml)$/
+          next if name =~ /^\./
           case name.downcase
           when /alk/
             dest_path = File.join(dir, "Alkstd.#{ext}")
+            # Rails.logger.debug dest_path
             entry.extract(dest_path)
             self.spectra.build(category: 'standards', spectrum_data: File.open(dest_path))
           when /blk/, /blank/
