@@ -7,8 +7,10 @@
 showProgramInfo <- function(VersionStr)
 {
   # show version string
-  cat("\n\n##### GC-AutoFit: Automatic Profiling GC-MS Spectra #####\n")
-  cat("## Version:", VersionStr,"\n\n")
+  cat("\n\n#########################################################\n")
+  cat("##   GC-AutoFit: Automatic Profiling GC-MS Spectrum\n")
+  cat("##   Version:", VersionStr,"\n")
+  cat("#########################################################\n\n")
 }
 
 parseArgs <- function(x) {
@@ -250,20 +252,21 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
         } else if (length(grep('Succinate-D4', strInternalStd)) > 0) {
             calCurveType <- 4
         } else {
-            showErrMessage(paste("  Error in argument:\n",
-                                 "\t Please check internal standard that should be listed in the library.\n",
-                                 "\t You used:'", strInternalStd, "' (any typo?)", sep=''))
-            helpMessage()
+            stop(paste("  Error in argument:\n",
+                                 "\t Please check the internal standard [",strInternalStd,"]",
+                                 "\n\t that should be exist in the selected biofluid library [",internalLibType,"]."
+                                 , sep=''), call. = FALSE )
+            # helpMessage()
         }
     } else if (internalLibType == 'SALIVA') {
         calCurveType <- 5
     } else if (internalLibType == 'MILK') {
         calCurveType <- 6
     } else {
-      showErrMessage("  Error in argument:\n\t see the help to correctly use the internal Calibration Curve option (lib.internal)")
-      helpMessage()
+      stop("  Error in argument:\n\t see the help to correctly use the internal Calibration Curve option (lib.internal)"
+           , call. = FALSE)
     }
-  
+
     return (calCurveType)
 }
 
@@ -271,7 +274,7 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
 getLibInfo <- function(fname.lib)
 {    
     lib.table <- read.csv(file=fname.lib, head=TRUE, sep=",", quote = "\"");
-    if(nrow(lib.table) == 0) stop( paste("Cannot load the library",basename(fname.lib)) )
+    if(nrow(lib.table) == 0) stop( paste("Cannot load the library",basename(fname.lib)) , call. = FALSE )
     
     return(lib.table)  
 }
@@ -293,7 +296,7 @@ get_file_list <- function(infileDir, procStatus) {
     if (length(alk_file_index) == 0) {
       alk_file_index <- grep("ALK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);
       if (procStatus == "PREPROCESSING" & length(alk_file_index) == 0) {
-          stop("Could not find any Alkane Standard file (filename: ALK* or ALKSTD*)")
+          stop("Could not find any Alkane Standard file (filename: ALK* or ALKSTD*)", call. = FALSE )
       }    
     }
     blank_file_index <- grep("BLANK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);  
@@ -304,7 +307,7 @@ get_file_list <- function(infileDir, procStatus) {
       }    
     }
   } else {
-      stop("There is no CDF/mzXML files")
+      stop("There is no CDF/mzXML files", call. = FALSE )
   }
   
   ## BHAN: if more than two alkane files, then just use first one and exclude others.give message note
@@ -383,8 +386,8 @@ getInternalStdCmpdName <- function (alib, std.str) {
         cmpdname <- as.character( alib[which(alib$HMDB_ID == ucHMDB(std.str)), "Compound"] )
         cat("\n\n## Matched Internal Standard Compound for HMDB ID:", std.str,"is", cmpdname,"\n")
     } else {
-        cat("grep length:", length(grep("ISTD", std.str)), "\n")
-        if (length(grep("ISTD", std.str)) ==0) {
+        # cat("grep length:", length(grep("ISTD", std.str)), "\n")
+        if (length(grep("ISTD", std.str)) == 0) {
             cat("# Add (ISTD) to internal std compound name (in parameter)\n\n")
             std.str <- paste(std.str, " (ISTD)", sep='')
         }

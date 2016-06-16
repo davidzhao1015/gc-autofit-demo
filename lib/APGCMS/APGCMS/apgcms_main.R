@@ -61,10 +61,12 @@ dir.create(user.outdir, showWarnings=FALSE, recursive=TRUE) # expected full path
 dirProfileResult <- normalizePath(user.outdir)
 setwd(dirProfileResult)  ## Set working directory    
 
-if(ISDEBUG) cat("## dirProfileResult:"); print(dirProfileResult)
+if(ISDEBUG) { cat("## dirProfileResult:"); print(dirProfileResult) }
 
 # loading libraries
-if( USE_INTERNAL_LIBRARY == 'NONE') {    
+# cat("## internalStd.in:", internalStd.in,"\n")
+
+if( toupper(internalStd.in) == 'NONE') {    
     lib.peak <- getLibInfo(userLibFile)
     lib.calicurv <- getLibInfo(userCalFile)
 } else{  
@@ -99,23 +101,27 @@ source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and 
 source( file.path(lib_dir, libfunc.Alkane.file) )  ## loading packages, libraries, and definitions
 source( file.path(lib_dir, libfunc.JSON.file) )  ## loading packages, libraries, and definitions
 
+## set Debug Mode (TRUE / FALSE)
+setDebugMode(ISDEBUG);  
+
 # get Internal Standard Compound Name using input internal Std (compound name or HMDB ID)
 if (internalStd.in == "NONE")  {
     cat("\n\n## Internal Standard was not assigned. Proceed to profilie the compound only! \n")
     internalStd <- "NONE"
 } else {  
+    # if(DEBUG) { cat("\n\n## internalStd.in (in main 107):", internalStd.in,"\n\t Sample/Biofluid Type:", USE_INTERNAL_LIBRARY,"\n") }
     internalStd <- getInternalStdCmpdName(lib.peak, internalStd.in)
-    # cat("# internalStd (in main 102):", internalStd,"\n")
+    # if(DEBUG) { cat("\n\n## internalStd.matched (in main 109):", internalStd,"\n\t Sample/Biofluid Type:", USE_INTERNAL_LIBRARY,"\n") }
     
     if ( is.null(internalStd) ) {
-        cat("\n\n## Error: Cannot find a matched Internal Standard [", internalStd.in,"] in the library\n")
+      stop(paste("\n\t Cannot find the selected Internal Standard [", internalStd.in,"]",
+                  "\n\t in the library [ Biofluid type:",USE_INTERNAL_LIBRARY,"].",
+                  "\n\n\t Please use the correct Internal Standard with Biofluid type.")
+           , call. = FALSE)
     } else {
-        cat("\n\n## Internal Standard [", internalStd.in,"] is in the library\n")
+        cat("\n\n## Internal Standard [", internalStd,"] is in the library\n")
     }
 }
-
-## set Debug Mode (TRUE / FALSE)
-setDebugMode(ISDEBUG);  
 
 ## Get Sample mzXML/CDF file list from the input directory
 ## return: infile.alkane/blank/samples
@@ -367,7 +373,7 @@ if ( processOption == "PREPROCESSING" ) {
                     cat("\n\n## final.Concentration\n"); print(final.Concentration)
                     cat("nrow:", nrow(final.Concentration), "\n")
                 }
-                stop("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n")
+                stop("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n", call. = FALSE)
             }
             
             if(DEBUG) cat("\n\n## merging Concentration\n");

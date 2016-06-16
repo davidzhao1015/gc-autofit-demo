@@ -105,7 +105,6 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
 {
       # RunPlotOnly <- FALSE
       # PRINT_MZINT4DB <- FALSE 
-  
       f.sample.basename <- basename(f.sample)
       if(print.on) {
           # cat(paste("\n", i, ") Compound Profiling and Quantifying:", sep=''), f.sample.basename, "\n")
@@ -191,13 +190,11 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         write.csv(profiled_peaks, file=ofilename, quote=TRUE)
     }
     
-    
     ## -- select only the highest score peaks
     if (print.on & DEBUG) { cat("## arranging profiled peaks \n")  }
     # final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks, SampleType)
     final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks)
     if (print.on & DEBUG) { cat("final_PeakProfile:\n"); print(final_PeakProfile[,c(1:21)]) }
-    
     
     # Subtract BLANK Peak Areas
     # if there is a blank sample, then substract the area from sample's area
@@ -304,8 +301,6 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
             write.table(finalReport.All[,-1], file=ofname.tmp, quote=TRUE, row.names=FALSE, sep=",")
         }
         
-
-
         ###################################################################
         ## for making calibration curve, generting temporary summary files
         ###################################################################
@@ -2263,9 +2258,9 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     }
 
     if (length(area.internalStd) == 0 ) {
-      stop("
-           ## Error: Cannot find internal standard compound '", internalStdCmpd, "' in the library.
-           Please check the internal standard compound name both sample peak and library ") 
+      stop(paste("## Error: Cannot find internal standard compound '", internalStdCmpd, "' in the library.
+           Please check the internal standard compound name both sample peak and library ")
+           , call. = FALSE)
     }
     
     # hmdbIDwithArea: hmdbID, +Compound, +Concentration, Area,  NPeaks
@@ -2350,7 +2345,6 @@ genFinalReport <- function(profiled.result, quantified.result) {
 # check whether the internal standard is exist or not
 existInternalStd <- function(internalStd, profiledPeakSet, libDB)
 {
-   # cat("internalStd:", internalStd, "\n");
    # cat("profiledPeakSet:\n"); print(profiledPeakSet[,c(1:5)]);
    # cat("libDB:\n"); print(libDB[,c(1:5)]);
   
@@ -2361,16 +2355,38 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
       cat("#profiledPeakSet$CompoundWithTMS:\n")
       print(profiledPeakSet$CompoundWithTMS)
    }
-
+  
    if( ! (internalStd %in% profiledPeakSet$CompoundWithTMS) ) {
-      cat("\n\n## Warning: Can not find the internal standard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
-      return (FALSE)
+      # showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n")
+      stop(paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
+           , call. = FALSE )
    }
-   if( ! (internalStd %in% libDB$CompoundWithTMS) ) {
-     cat("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")     
-     return (FALSE)
-   }      
-   
+  
+   if (FALSE)  {
+       tryCatch({
+           if( ! (internalStd %in% profiledPeakSet$CompoundWithTMS) ) {
+             #showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
+             # showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n")
+             stop(paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
+                        , call. = FALSE )
+             # stop("\n\n## Warning: Can not find the internal standard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
+             # return (FALSE)
+           }
+           if( ! (internalStd %in% as.character(libDB$CompoundWithTMS)) ) {
+             # showErrMessage("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")
+             # showErrMessage("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n")
+             cat("\n\n## Warning:\n\t Cannot find the selected internal standard (",internalStd,") in the library database.\n")
+             # stop("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")     
+             # return (FALSE)
+           }      
+         }, error = function(e) {
+            print(e)
+            stop(call. = FALSE)
+            # stop("## The selected Internal Standard cannot find in the selected library. \n\t Please select a Biofluid type and an Internal Standard correctly.")
+         }
+       )
+   }
+  
    return (TRUE)   
 }
 

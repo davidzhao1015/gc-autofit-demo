@@ -45,9 +45,8 @@ getUniqueAlkanePeakList <- function(peak.list, offset.RT=50)
             cat("\n\n## NOTE: Alkane Standard has upto C20 only\n\n")
         }
     } else {
-        cat("\n## Error: cannot find the C20 as a standard in the alkane\n")
         cat("\t length(idx.c20):", length(idx.c20),"\n\n")
-        stop()
+        stop("\n## Cannot find the C20 as a standard in the alkane\n")
     }
     
     if (length(idx2remove) > 0) {          
