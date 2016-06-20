@@ -25,12 +25,12 @@ helpMessage <- function() {
         --infiledir='spectrum file directory' 
         --userlib='user_library_file.csv'       # only need if not use internal lib
         --usercal='user_calibration_file.csv'   # only need if not use internal lib
-        --internalstd='Compound Name' or 'NONE' # Internal Standard Compound Name in user library and calibration curve
+        --internalstd='Compound Name' or 'None' # Internal Standard Compound Name in user library and calibration curve
                                                 # e.g., Cholesterol or Succinate-D4
         --process='PREPROCESSING' or 'PROFILING'  # set a processing mode 
 
       Optional Arguments:
-        --lib.internal=NONE  # NONE, SERUM, URINE, SALIVA, ... default=NONE; 
+        --lib.internal=URINE  # SERUM, URINE, SALIVA, ... default=Urine; 
         --selectedCmpd=NULL # List of HMDB IDs (comma separated), default=NULL (which means ALL) 
                             # Selected HMDB IDs should be a subset of the selected internal library
         --useblank=TRUE   # boolean (TRUE/FALSE); toggle for using Blank Spectrum
@@ -69,7 +69,7 @@ parsingArgument <- function(args.in)
   argsDF <- as.data.frame(do.call("rbind", parseArgs(args.in)))
   argsL <- as.list(as.character(argsDF$V2))
   names(argsL) <- argsDF$V1
-  
+
   # cat("argsDF:\n"); print(argsDF);
   # cat("argsL:\n"); print(argsL);
   
@@ -80,7 +80,8 @@ parsingArgument <- function(args.in)
     sampleFileDir <<- normalizePath(argsL$infiledir) # should be absolute path
   }
   
-  if(is.null(argsL$lib.internal)) {
+  
+  if(is.null(argsL$lib.internal)) {  ## use user's own library
       USE_INTERNAL_LIBRARY <<- 'NONE' # argsL$lib.internal
       
       if(is.null(argsL$userlib)) {
@@ -97,8 +98,8 @@ parsingArgument <- function(args.in)
           userCalFile <<- argsL$usercal
       }
     
-  } else {
-      # NONE, SERUM, URINE, SILIVA, ... default = none
+  } else { ## use internal library
+      # SERUM, URINE, SILIVA, ... default = URINE
       if (argsL$lib.internal %in% c('SERUM', 'URINE', 'SALIVA', 'MILK')) {
           USE_INTERNAL_LIBRARY <<- argsL$lib.internal
       
@@ -119,11 +120,11 @@ parsingArgument <- function(args.in)
   
   # Internal Std in Library (HMDB ID or Compound Name; Final, Compound Name will be used for the analysis)
   if(is.null(argsL$internalstd)) {
-    showErrMessage("  Error in argument:\n\t There is no internal standard compound. 
-                   If you want profile only, then please set with 'NONE' ")
-    helpMessage()
+       showErrMessage("  Error in argument:\n\t There is no internal standard compound. 
+                   If you want profile only, then please set with 'None' ")
+       helpMessage()
   } else {
-    internalStd.in <<- argsL$internalstd
+       internalStd.in <<- argsL$internalstd
   }
   
   # use calibration curve of Cholesterol (OLD or NEW); Only for Urine/Organic acids
@@ -236,10 +237,11 @@ setSampleType <- function(internalLibType)
 ## assign calibration curve library
 setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
 {
-    # cat("internalLibType:", internalLibType, "\n")
-    # cat("strInternalStd:", strInternalStd, "\n")
-    # cat("is_new_calcurve:", is_new_calcurve, "\n")
-
+    if (strInternalStd == 'None') {
+        calCurveType <- 0
+        return (calCurveType)
+    }
+  
     if (internalLibType == 'SERUM') {
         calCurveType <- 1
     } else if (internalLibType == 'URINE') {
@@ -409,6 +411,9 @@ toIntMZ.sample <- function(mz)
     return (mz.int)
 }
 
-
-
+spentTime <- function(t.beg, ostr=NULL)
+{
+  td = as.numeric(Sys.time() - t.beg, "secs")
+  cat("## Spending Running Time :", td, "sec", ifelse(!is.null(ostr), paste(" at", ostr), ""), "\n")
+}
 

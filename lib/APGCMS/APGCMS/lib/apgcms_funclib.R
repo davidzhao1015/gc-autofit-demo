@@ -115,12 +115,12 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
       if( print.on ) { cat("\t >> Extracting Spectrum Information \n") }
       xset.asample <- extractSampleInfo2(f.sample)
       if(DEBUG) { cat("\n## xset.asample:\n"); print(xset.asample) }
-        
+
       ## peak picking for samples using TIC or EIC (peak's RT & Intensity)
       if( print.on & DEBUG ) {  cat("\t >> Extracting peak list \n")  }
       # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, RunPlotOnly)
       peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, plotFile=FALSE)
-      
+
       ## to check missing peak
       if (FALSE & DEBUG) {
           ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_extractedPeaks_temp.csv", sep='')
@@ -141,7 +141,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
       ##########################################################################    
      {
           if( FALSE & DEBUG ) {
-            ## for Zerihun to easy to find a peak
+            ## for using to easy to find a peak
             ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_selectedPeaks_RTRI.csv", sep='')
             write.csv(peak_samples_ri, file=ofilename, quote=FALSE)
           }
@@ -172,7 +172,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     ## Compound Identification using RI and Mass Spectrum 
     # profiled_peaks <- compoundIdentify3(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=PRINT_MZINT4DB)
     profiled_peaks <- compoundIdentify4(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=PRINT_MZINT4DB)
-    cat("\n\n## DONE compound Identify 4 for sample:", f.sample.basename,"\n\n")
+    if (DEBUG) cat("\n\n## DONE compound Identify 4 for sample:", f.sample.basename,"\n\n")
 
     if(nrow(profiled_peaks) == 0) {
           profiled_peaks <- "\n\n## Error: There is no matched peak with library\n Please check spectrum data file\n"
@@ -259,7 +259,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         
         if (print.on) { cat("\n\n###  Quantifying identified peaks\n\n") }
         quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType) 
-
+        
         if (print.on & DEBUG) {
           cat("\n\n## quantified Result:\n")
           print(quantifiedResult)
@@ -422,8 +422,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         write.table(finalReport.All[, -1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
         
         # making JSON file for Profiled Peak View
-        finalReport.json <- finalReport.json[which( (!is.na(finalReport.json$Concentration2)) ), 
-                                             c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity","MatchFactor",
+        finalReport.json <- finalReport.json[, c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity","MatchFactor",
                                                "TScore","RI.Similarity","Corr.Spearman","TargetIon","QIon",
                                                "Area.EICTarget","Area.EICQualification","AreaRatio","mz","mzInt","Concentration2")]
         cat("### finalReport.json: ###\n"); print(head(finalReport.json))
@@ -436,7 +435,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         # this is only for combined results
         ## concentration summary table
         tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
-        na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
+        # na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
         if(FALSE) {
             if ( na.length > 0 ) {
               # cat("length(NA):", na.length, "\n")
@@ -916,11 +915,11 @@ getPeakRange2 <- function(xset.one, nScanIndex, apex.idx)
           # 1) slope < threshold or 2) change the sigh of slope to positive/negative
           diff.intensity <- (xset.one@tic[idx] - xset.one@tic[idx+1])
           peak.rtmax <- xset.one@scantime[idx]
-          if(DEBUG2 & DEBUG) cat("## RT end:", peak.rtmax, " RT end (min):", peak.rtmax/60, " diff.intensity:", diff.intensity, "\n")
+          if(FALSE & DEBUG) cat("## RT end:", peak.rtmax, " RT end (min):", peak.rtmax/60, " diff.intensity:", diff.intensity, "\n")
           idx <- idx + 1
         }        
 
-        if (DEBUG2 & DEBUG) cat("## Peak RT Range (RT:", peak.rt/60,") :\n\t Step1 - RTmin:", peak.rtmin/60," RTmax:", peak.rtmax/60, "\n\n")
+        if (FALSE & DEBUG) cat("## Peak RT Range (RT:", peak.rt/60,") :\n\t Step1 - RTmin:", peak.rtmin/60," RTmax:", peak.rtmax/60, "\n\n")
     }
   
     # step 2    
@@ -965,7 +964,7 @@ getPeakRange2 <- function(xset.one, nScanIndex, apex.idx)
         if (!FLAG_HALF) peak.rtmax_half <- xset.one@scantime[idx]
         peak.rtmax_onethird <- xset.one@scantime[idx]        
         
-        if (DEBUG2 & DEBUG) { 
+        if (FALSE & DEBUG) { 
           cat("## Peak RT Range using half intensity:\n\t Step2 - RTmin:", peak.rtmin_half/60," RTmax:", peak.rtmax_half/60, "\n\n")
           cat("## onethird - RTmin:", peak.rtmin_onethird/60," RTmax:", peak.rtmax_onethird/60, "\n\n")
         }
@@ -1219,7 +1218,7 @@ getMZIntensityofEachPeak2 <- function(xset.one, peak_rt_vec) {
             if(FALSE & DEBUG) cat("i:", i, "peak.scanidx:", peak.scanidx, "\n")
             
             if ( length(peak.scanidx) == 0) {
-                  cat("There is no matched RT - rt:", peak_rt_vec[i], " --- skipped\n")
+                  if (DEBUG) { cat("There is no matched RT - rt:", peak_rt_vec[i], " --- skipped\n") }
                   # stop("There is no matched RT in xcmsRaw data") 
                   next
             }
@@ -1292,6 +1291,8 @@ screeningPeakinLib <- function(peakInfo, lib.peak, RI.Variation=0.03)
 # print_mzInt=FALSE; to make library update 
 compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, RI.Variation=0.03, isBLANK=FALSE, print_mzInt=FALSE)
 {
+      if (DEBUG.TIME) { t2.beg = Sys.time() }
+  
       if(isBLANK) {
           if(DEBUG) { cat("\n## Compound Identify: Blank Sample\n\n")}
           xset.one <- xset.one
@@ -1307,22 +1308,27 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## for RT, it should be used raw RT instead of corrected
       if (DEBUG)  { cat("asample.peakInfo:\n"); print(asample.peakInfo) }
   
-      nRI.before <- nrow(asample.peakInfo)
+      if (DEBUG) { nRI.before <- nrow(asample.peakInfo) }
       
       ## screening RT/RI with library before calculate mz/intensity/other measures
       # asample.peakInfo <- screeningPeakinLib(asample.peakInfo, lib.peak, RI.Offset=3)
       asample.peakInfo <- screeningPeakinLib(asample.peakInfo, lib.peak, RI.Variation = 0.02)
       
-      if (DEBUG) { cat("asample.peakInfo - screened:\n"); print(asample.peakInfo) }
-      nRI.after <- nrow(asample.peakInfo)
+      if (DEBUG) { 
+          cat("asample.peakInfo - screened:\n")
+          print(asample.peakInfo) 
+          nRI.after <- nrow(asample.peakInfo)
+          cat("\n\n## After screening RI with Library:", nRI.after,"/", nRI.before," was remained\n")
+      }
       
-      if (DEBUG) { cat("\n\n## After screening RI with Library:", nRI.after,"/", nRI.before," was remained\n");}
-      
-      peak_rt_vec <- asample.peakInfo[, "rt"] 
+      # peak_rt_vec <- asample.peakInfo[, "rt"] 
 
       ## get rt/mz/intensity/area/... for each peak
-      peak_mzInt_list <- getMZIntensityofEachPeak2(xset.one, peak_rt_vec)
+      # peak_mzInt_list <- getMZIntensityofEachPeak2(xset.one, peak_rt_vec)
+      peak_mzInt_list <- getMZIntensityofEachPeak2(xset.one, asample.peakInfo[, "rt"])
       if(FALSE & DEBUG) { cat("peak_mzInt_list\n"); print(head(peak_mzInt_list)) }
+      
+      if (DEBUG.TIME) { spentTime(t2.beg, "T2: after getMZIntensityofEachPeak2") }
 
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       ## used for mz/int DB update in Internal Library
@@ -1398,7 +1404,8 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       fname.identifeid.trace <- paste(sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE),"_identified.trace.tsv", sep='')  
       flag.firstItem <- TRUE
       
-      for (j in 1:length(peak_rt_vec)) {
+      # for (j in 1:length(peak_rt_vec)) {
+      for (j in 1:nrow(asample.peakInfo) ) {
           identified <- NULL
           
           # use peak location/index for no alkane covering
@@ -1439,7 +1446,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                   
                   # if the number of m/z of a sample peak < 10, then just skip this peak 
                   if (length(sample_mzs_vec) < 10) {
-                      if(!FALSE & DEBUG) { cat("### sample_mzs_vec < 10:\n"); print(sample_mzs_vec) }
+                      if(DEBUG) { cat("### sample_mzs_vec < 10:\n"); print(sample_mzs_vec) }
                       next
                   }
                   
@@ -1454,6 +1461,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                   RIScore <- 0;
 
                   identified.trace <- NULL; ## for trace
+                  if (DEBUG.TIME) { spentTime(t2.beg, "T2: before for loop to find a matched case in lib\n") } # 0.25 sec
                   for(k in 1:length(lib.matched$RI)) {  ## repeat for selected candidates of Library 
                       # k<-1
                       ## calculate scores (MF_Score, Prob, ...)      
@@ -1464,22 +1472,19 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       
                       ref_MZS_vec <- as.numeric(unlist(strsplit(as.character(alib.matched$MZ), split=" ")))
                       ref_INT_vec <- as.numeric(unlist(strsplit(as.character(alib.matched$Intensity), split=" ")))                
-                      
+
                       if( FALSE ) {
                           cat("\n## alib.matched:\n"); 
                           print(alib.matched[,c(1:9)]);
                           cat("\t alib.matched$TargetIon:",alib.matched$TargetIon,"\n\t QIon:", alib.matched$QIon, "\n\t IonArea(EIC) Ratio:",alib.matched$IonRatio,"\n")
                           print(c(alib.matched$TargetIon, alib.matched$QIon) %in% sample_mzs_vec)
                           print(length(which(c(alib.matched$TargetIon, alib.matched$QIon) %in% sample_mzs_vec)))
-                          # cat("ref_MZS_vec\n"); print(ref_MZS_vec)
-                          # cat("ref_INT_vec\n"); print(ref_INT_vec)
-                          #cat("sample_mzs_vec\n"); print(sample_mzs_vec)
-                          #cat("sample_mz_int_vec\n"); print(sample_mz_int_vec)
                           # stop()
                       }
-                      if(alib.matched$Compound == "Ribitol") {
-                        print(which(c(alib.matched$TargetIon, alib.matched$QIon) %in% sample_mzs_vec))
-                        # stop()
+                      
+                      if(DEBUG & (alib.matched$Compound == "Ribitol")) {
+                          print(which(c(alib.matched$TargetIon, alib.matched$QIon) %in% sample_mzs_vec))
+                          # stop()
                       }
                       
                       if(length(which(c(alib.matched$TargetIon, alib.matched$QIon) %in% sample_mzs_vec)) < 2) {
@@ -1519,20 +1524,13 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       if (DEBUG) cat("\n\n## EIC Areas of Target & Qualification Ions \n\n")
                       # objEIC.Target <- getEIC(xset.one, mzrange=matrix(c(alib.matched$TargetIon-1, alib.matched$TargetIon+1), ncol=2), rtrange=matrix(c(RT.sample-5, RT.sample+5), ncol=2), step=0.1)
                       # objEIC.Qualification <- getEIC(xset.one, mzrange=matrix(c(alib.matched$QIon-1, alib.matched$QIon+1), ncol=2), rtrange=matrix(c(RT.sample-5, RT.sample+5), ncol=2), step=0.1)
-
-                      rt.offset.EIC <- getEICPeakRTOffset(sample_mzs_vec, sample_mz_int_vec, alib.matched$TargetIon)
                       
+                      rt.offset.EIC <- getEICPeakRTOffset(sample_mzs_vec, sample_mz_int_vec, alib.matched$TargetIon)
+
+                      ## if (DEBUG.TIME) { spentTime(t2.beg, "T2: before") } ## 0.05 sec
                       objEIC.Target <- getEIC(xset.one, mzrange=matrix(c(alib.matched$TargetIon-0.3, alib.matched$TargetIon+0.7), ncol=2), rtrange=matrix(c(RT.sample-rt.offset.EIC, RT.sample+rt.offset.EIC), ncol=2), step=0.1)
                       objEIC.Qualification <- getEIC(xset.one, mzrange=matrix(c(alib.matched$QIon-0.3, alib.matched$QIon+0.7), ncol=2), rtrange=matrix(c(RT.sample-rt.offset.EIC, RT.sample+rt.offset.EIC), ncol=2), step=0.1)
-                      
-                      # cat("## getEIC Target & Qualification:\n")
-                      # print(objEIC.Target)
-                      # print(str(objEIC.Target))
-                      # print(objEIC.Target@eic[1][[1]][[1]])
-                      
-                      # print(objEIC.Target@eic[1][[1]][[1]])
-                      # print(objEIC.Qualification@eic[1][[1]][[1]])
-                      
+
                       df.EIC.Target <- as.data.frame(objEIC.Target@eic[1][[1]][[1]])
                       df.EIC.Qualification <- as.data.frame(objEIC.Qualification@eic[1][[1]][[1]])
                       
@@ -1540,20 +1538,21 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # find a range of a peak with 2nd derivation with interpolation
                       if(DEBUG) cat("# lib.matched[k,]$CompoundWithTMS:", as.character(lib.matched[k,]$CompoundWithTMS),"\n")
                       if( FALSE & (length(grep("ISTD", lib.matched[k,]$CompoundWithTMS)) > 0) ) {
-                          sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE)  
+                          sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE) 
                       } else {
                           sampleFile <- NULL
                       }
                       ## to check missing peak identification
-                      if (FALSE) {
-                      # if (as.character(lib.matched[k,]$CompoundWithTMS) == "Alanine" ) {
-                          sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE)  
-                      }
+                      # if (FALSE) {
+                      #     sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE)  
+                      #}
                       
+                      if (DEBUG.TIME) { spentTime(t2.beg, "T2: before - aPeakRange") }
                       aPeakRange.target <- getIonPeakRange(df.EIC.Target, in.RT=RT.sample, method.interpolation="linear", lag.2nd=2, fname=sampleFile, IonType = "Target", cmpdname=as.character(lib.matched[k,]$CompoundWithTMS))
                       aPeakRange.qualification <- getIonPeakRange(df.EIC.Qualification, in.RT=RT.sample, method.interpolation="linear", lag.2nd=2, fname=sampleFile, IonType = "Qualification",cmpdname=as.character(lib.matched[k,]$CompoundWithTMS))
+                      if (DEBUG.TIME) { spentTime(t2.beg, "T2: after - aPeakRange\n\n") }
+                      
                       # aPeakRange.qualification <- getIonPeakRange(df.EIC.Qualification, in.RT=RT.sample, method.interpolation="linear", lag.2nd=5, fname=sampleFile, IonType = "Qualification",cmpdname=as.character(lib.matched[k,]$CompoundWithTMS))
-
                       if ( is.null(aPeakRange.target$peakMatrix) | is.null(aPeakRange.qualification$peakMatrix)) {
                           if( DEBUG ) {
                               cat("## Skipped to matching compound (", as.character(lib.matched[k,]$CompoundWithTMS), ") due to no significant Ion Peak\n\n")
@@ -1563,9 +1562,11 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       
                       ## area calculation (Intensity, Range)    
                       # peakArea <- getPeakArea3(xset.one, xset.one@tic[peak.scanidx], peakRange) 
+                      if (DEBUG.TIME) { spentTime(t2.beg, "T2: before - aPeakArea") }
                       aPeakArea.target <- getIonPeakArea(peakMatrix=aPeakRange.target$peakMatrix, x.start=aPeakRange.target$start, x.end=aPeakRange.target$end)
                       aPeakArea.qualification <- getIonPeakArea(peakMatrix=aPeakRange.qualification$peakMatrix, x.start=aPeakRange.qualification$start, x.end=aPeakRange.qualification$end)
-
+                      if (DEBUG.TIME) { spentTime(t2.beg, "T2: before - aPeakArea\n\n") }
+                      
                       if (DEBUG) {
                           # cat("aPeakRange.Target:\n"); print(aPeakRange.Target)
                           # cat("aPeakRange.Qualification:\n"); print(aPeakRange.Qualification)
@@ -1577,8 +1578,9 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                           cat("# RT.sample:", RT.sample, "sec (min:", round(RT.sample/60, 2), ")\n")
                       }
                       
-                      # EIC peak plot
-                      if (!TRUE & DEBUG) {
+                      # EIC peak plot for developing 
+                      # check whether correctely select the range
+                      if (FALSE & DEBUG) {
                           sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE)  
                           png(filename = paste("Plot_EIC_", sampleFile,"_RT", round(RT.sample/60,2),"_", as.character(lib.matched[k,]$CompoundWithTMS),".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
                           par(mfrow=c(2,1))
@@ -1590,7 +1592,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                                main=paste("RT.sample:",round(RT.sample/60,2),"(",RT.sample,") Range:",aPeakRange.qualification$start,"~", aPeakRange.qualification$end, " Q Ion:", alib.matched$QIon, sep=""))
                           dev.off()
                       }
-                      
+
                       ## Match Factor (1000)
                       # MFscore <- get_mathc_factor(MZS_vec, INTS_vec, mzs_vec, mz_int_vec)
                       ## split the values of the mzs and intensities both library and sample                                    
@@ -1661,7 +1663,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                           # get mass spectrum data for plotting mass spectrum (JSON format)
                           # and three mzs with highest Intensity
                           aMzInt <- getMassSpec(sample_mzs_vec, sample_mz_int_vec, RT.sample) 
-  
+
                           identified <- c(
                               hmdbID=as.character(lib.matched[k,]$HMDB_ID),
                               CompoundWithTMS=as.character(lib.matched[k,]$CompoundWithTMS),
@@ -1697,6 +1699,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                           }
                       }
                   }
+                  if (DEBUG.TIME) { spentTime(t2.beg, "T2: end for loop to find a matched case in lib\n") }
                   
                   if(DEBUG & (length(identified.trace) > 0)) {
                     # cat("## tmp.identified:\n")
@@ -1709,10 +1712,6 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                         write.table(identified.trace, file=fname.identifeid.trace, quote=TRUE, col.names=FALSE, row.names=FALSE, sep="\t", append=TRUE)
                     }
                   }
-                  
-                  
-                  ## ??    
-                  # lst_tmp <- check_db_match_RI_get_compound(lib.peak, ri, sample_mzs, sample_mz_int)  
                   
                   ## just show the list of identified candidates
                   # rownames(identified.trace) <- c(1:nrow(identified.trace) )
@@ -1729,6 +1728,8 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
             
           }
           
+          if (DEBUG.TIME) { spentTime(t2.beg, "T2: end the inside of for loop - each peak\n\n") }
+          
           ## ========================================================
           ## if no matched RI from library because of no alkane    
           if ( FALSE & (RI.sample < 0) ) {   
@@ -1737,7 +1738,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
               cat("\n#\n#\n#################\n")
               
               if (FALSE & DEBUG) {
-                  cat("## peak", j ,"th RT:", peak_rt_vec[j],"\n")
+                  cat("## peak", j ,"th RT:", asample.peakInfo[j, "rt"],"\n")
                   cat("\n### NO RI was used because of no matched alkane\n\n")
               }
               # This part covers the peak which does not have alkane
@@ -1924,8 +1925,8 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
           ## ========================================================
           
       } # for each peak  
-      
-      
+      if (DEBUG.TIME) { spentTime(t2.beg, "T2: end the loop for nrow(asample.peakInfo)\n\n") }
+
       if (DEBUG)  { 
         cat("\n\n## After screening RI with Library:", nRI.after,"/", nRI.before," was remained\n");
         cat("identifiedList:\n"); print(identifiedList[,c(1:13)])
@@ -2006,7 +2007,7 @@ getPeakArea2 <- function(xr, peak.rt, peak.rtmin, peak.rtmax)  {
     # max(xr@tic[scantime.indices])
     
     if( length(scantime.indices) == 0)  {
-      cat("## No matced scan time in getPeakArea() - Peak's RT:", peak.rt, "(", peak.rt/60,")\n")
+      if(DEBUG) { cat("## No matced scan time in getPeakArea() - Peak's RT:", peak.rt, "(", peak.rt/60,")\n") }
       return ( list (area=NA, rt.start=NA, rt.end=NA))
       # stop("No matced scan time index in getPeakArea()")
     }
@@ -2347,6 +2348,9 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
 {
    # cat("profiledPeakSet:\n"); print(profiledPeakSet[,c(1:5)]);
    # cat("libDB:\n"); print(libDB[,c(1:5)]);
+   if ( internalStd == "NONE" ) {
+      return (FALSE)
+   }
   
    if( DEBUG ) {
       cat("#\n\nNOTE: If there is an error (argument is of length zero)\n")

@@ -13,7 +13,7 @@ $(window).load ->
         axis_y_show: true,
         axis_y_lock: 0.04,
         axis_x_reverse: false,
-        axis_x_title: 'Seconds',
+        axis_x_title: 'Minutes',
         axis_y_title: 'Intensity',
         axis_y_tick_format: '.1e',
         axis_y_gutter: 90,

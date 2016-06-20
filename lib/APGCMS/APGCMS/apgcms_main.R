@@ -64,26 +64,32 @@ setwd(dirProfileResult)  ## Set working directory
 if(ISDEBUG) { cat("## dirProfileResult:"); print(dirProfileResult) }
 
 # loading libraries
-# cat("## internalStd.in:", internalStd.in,"\n")
 
-if( toupper(internalStd.in) == 'NONE') {    
+
+if( USE_INTERNAL_LIBRARY == 'NONE') {  ## use user's own library  (need to be tested?????) 
     lib.peak <- getLibInfo(userLibFile)
-    lib.calicurv <- getLibInfo(userCalFile)
+    if( !is.null(userCalFile) ) {
+        lib.calicurv <- getLibInfo(userCalFile)
+    }
 } else{  
     SampleType <- setSampleType(USE_INTERNAL_LIBRARY)
     CalCurveType <- setCalCurveType(USE_INTERNAL_LIBRARY, internalStd.in, USE_NEW_CALCURVE)
-    # cat("internalStd.in:", internalStd.in, "\n")
-    # cat("USE_NEW_CALCURVE:", USE_NEW_CALCURVE,"\n")
-    # cat("CalCurveType:", CalCurveType,"\n")
+    cat("internalStd.in:", internalStd.in, "\n")
+    cat("SampleType:", SampleType,"\n")
+    cat("CalCurveType:", CalCurveType,"\n")
     
     ## load libraries (profiling/identification)
     fname.lib.peak <- file.path(file.path(lib_dir, LibFile[SampleType]))
+    cat("fname.lib.peak:", fname.lib.peak, "\n")
     lib.peak <- getLibInfo(fname.lib.peak)
     
     ## load calibration curve library
-    fname.lib.calicurve <- file.path(file.path(lib_dir, LibCaliCurveFile[CalCurveType]))
-    lib.calicurv <- getLibInfo(fname.lib.calicurve)
-    # cat(fname.lib.calicurve)
+    if(internalStd.in == 'None' | CalCurveType == 0) {
+        lib.calicurv <- NULL
+    } else {
+        fname.lib.calicurve <- file.path(file.path(lib_dir, LibCaliCurveFile[CalCurveType]))
+        lib.calicurv <- getLibInfo(fname.lib.calicurve)
+    }
     
     ## making Subset of Internal Library 
     ## if USER_SELECTED_CMPDS is not NULL (user selected some compounds of internal library)
@@ -92,7 +98,11 @@ if( toupper(internalStd.in) == 'NONE') {
         # cat("\n\n# lib.peak:\n"); print(as.character(lib.peak$HMDB_ID)) 
         # cat("\n\n# lib.calicurv:\n"); print(as.character(lib.calicurv$HMDB_ID))
         lib.peak <- lib.peak[which(as.character(lib.peak$HMDB_ID) %in% userSelectedCmpdList), ]
-        lib.calicurv <- lib.calicurv[which(as.character(lib.calicurv$HMDB_ID) %in% userSelectedCmpdList), ]
+        if(internalStd.in == 'None' | CalCurveType == 0) {
+            lib.calicurv <- NULL
+        } else {
+            lib.calicurv <- lib.calicurv[which(as.character(lib.calicurv$HMDB_ID) %in% userSelectedCmpdList), ]
+        }
     }
 }  
 
@@ -105,14 +115,12 @@ source( file.path(lib_dir, libfunc.JSON.file) )  ## loading packages, libraries,
 setDebugMode(ISDEBUG);  
 
 # get Internal Standard Compound Name using input internal Std (compound name or HMDB ID)
-if (internalStd.in == "NONE")  {
+if (toupper(internalStd.in) == "NONE")  {
     cat("\n\n## Internal Standard was not assigned. Proceed to profilie the compound only! \n")
     internalStd <- "NONE"
 } else {  
-    # if(DEBUG) { cat("\n\n## internalStd.in (in main 107):", internalStd.in,"\n\t Sample/Biofluid Type:", USE_INTERNAL_LIBRARY,"\n") }
     internalStd <- getInternalStdCmpdName(lib.peak, internalStd.in)
-    # if(DEBUG) { cat("\n\n## internalStd.matched (in main 109):", internalStd,"\n\t Sample/Biofluid Type:", USE_INTERNAL_LIBRARY,"\n") }
-    
+
     if ( is.null(internalStd) ) {
       stop(paste("\n\t Cannot find the selected Internal Standard [", internalStd.in,"]",
                   "\n\t in the library [ Biofluid type:",USE_INTERNAL_LIBRARY,"].",
@@ -136,6 +144,8 @@ cat("\n## [", processOption, "] Extracting Raw data ...\n")
 # in Preprocessing
 # Alkane Std, Blank, and Spectrum plot of Samples
 ####################################################################################
+if (DEBUG.TIME) { t.beg = Sys.time() }
+
 
 if (processOption == 'PREPROCESSING') {
   
@@ -202,7 +212,7 @@ if (processOption == 'PREPROCESSING') {
                                               "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
                                               "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration") 
         write.table(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
-
+        
         if (CREATE_JSON_FILE) {
             ofilename <- paste(specFilename.blank,"_spectrum.json", sep='')
             create_json_file(ofilename, round(xset.blank@scantime/60,3), xset.blank@tic, final_PeakProfile_blank.json)
@@ -230,7 +240,7 @@ if (processOption == 'PREPROCESSING') {
                   USE_BLANK_SPECTRUM <- FALSE
               }
         }
-
+        
     } else {
         cat("\n## Blank Sample is not found/used\n")
         xset.blank <- NULL
@@ -241,20 +251,20 @@ if (processOption == 'PREPROCESSING') {
     save(alkaneInfo, file="alkaneInfo.Rdata")
     save(peak_alkane_std, file="alkanePeakInfo.Rdata")
     save(final_PeakProfile_blank, file="blankInfo.Rdata")
-        
+    
 } else {
     ## for Quantification Process, loading preprocessed information from saved files
     cat("\n##### Loading Preprocessed Information Files \n")
     infoFileDir.alkane <- paste(infoFileDir, "/alkaneInfo.Rdata", sep='')
-    cat(infoFileDir.alkane,"\n")
+    if(DEBUG) cat(infoFileDir.alkane,"\n")
     file.exists(infoFileDir.alkane)
     
     infoFileDir.alkanePeak <- paste(infoFileDir, "/alkanePeakInfo.Rdata", sep='')
-    cat(infoFileDir.alkanePeak,"\n")
+    if(DEBUG) cat(infoFileDir.alkanePeak,"\n")
     file.exists(infoFileDir.alkanePeak)
     
     infoFileDir.blank <- paste(infoFileDir, "/blankInfo.Rdata", sep='')
-    cat(infoFileDir.blank,"\n")
+    if(DEBUG) cat(infoFileDir.blank,"\n")
     file.exists(infoFileDir.blank)
     
     load(infoFileDir.alkane)
@@ -311,7 +321,6 @@ if ( processOption == "PREPROCESSING" ) {
             # cat("\n\n## Time - Single Core:", td,"\n")
         }
     }
-
 } else {
     ## PROFILING & Quantification as optional
   
@@ -320,7 +329,6 @@ if ( processOption == "PREPROCESSING" ) {
     cat("## Profiling and quantifying for each sample ...\n\n")
 
     checkInternalStd <- FALSE    
-    if (DEBUG) { beg = Sys.time() }
    
     # For supporting multiple cores. However, it was changed because process as queue structure
     if ( FALSE ) {
@@ -338,14 +346,6 @@ if ( processOption == "PREPROCESSING" ) {
                             final_PeakProfile_blank=final_PeakProfile_blank, PRINT_MZINT4DB=TRUE)        
     }
    
-    if (DEBUG) { 
-        cat("\n\n# [Profiling] Each concentration table:\n"); print(conc.each) 
-        td = as.numeric(Sys.time() - beg, "secs")
-        if (DEBUG && nCores > 1) {
-            cat("## Running Time with multiple Cores (", nCores,") :", td,"\n")
-        }
-    }
-    
     ## merge concentration for all samples
     # conc.each <- conc.each[-which(is.null(conc.each))]
     if (length(conc.each) >= 2) {
@@ -354,57 +354,62 @@ if ( processOption == "PREPROCESSING" ) {
         # final.Concentration <- conc.each;
         final.Concentration <- as.data.frame(conc.each);
     }
-    
     # cat("final.Concentration:\n"); print(final.Concentration)
 
     ## Collect concentrations only and combine all samples
     ## ==================================================================================================
-    if (TRUE) {        
-        ## Combining  all concentration and Generate Files for Concentration Table with Sample ID
-        ## use the "final.Concentration" data frame
-        if ( (internalStd != 'NONE') && !is.null(internalStd) ) {
-            # ofile.merged <- paste(basename(sampleFileDir),"_profiledAll.csv", sep='')
-            ofile.merged <- "profiled_All.csv"
-            cat("\n## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
-            ## order by RI as in library; merge compound name with RI and sort by RI
+    ## Combining  all concentration and Generate Files for Concentration Table with Sample ID
+    ## use the "final.Concentration" data frame
+    if ( (internalStd != 'NONE') && !is.null(internalStd) ) {
+        # ofile.merged <- paste(basename(sampleFileDir),"_profiledAll.csv", sep='')
+        ofile.merged <- "profiled_All.csv"
+        cat("\n## Generate Files for Concentration Table of All Samples:", ofile.merged, "\n")
+        ## order by RI as in library; merge compound name with RI and sort by RI
 
-            if(nrow(final.Concentration) == 0) {
-                if (DEBUG) {
-                    cat("\n\n## final.Concentration\n"); print(final.Concentration)
-                    cat("nrow:", nrow(final.Concentration), "\n")
-                }
-                stop("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n", call. = FALSE)
+        if(nrow(final.Concentration) == 0) {
+            if (DEBUG) {
+                cat("\n\n## final.Concentration\n"); print(final.Concentration)
+                cat("nrow:", nrow(final.Concentration), "\n")
             }
-            
-            if(DEBUG) cat("\n\n## merging Concentration\n");
-            final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
-            if(DEBUG) { cat("\n ### final.Concentration:\n"); print(final.Concentration) }
-            final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
-            if(DEBUG) { cat("\n ### final.Concentration (sort):\n"); print(final.Concentration) }
-                    
-            rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
-            final.Concentration <- final.Concentration[ , - rm.SeqIndex]
-            rownames(final.Concentration) <- c(1:nrow(final.Concentration))
-            
-            if( DEBUG ) { cat("final.concentration:\n"); print(final.Concentration)  }
-            
-            write.table( t(final.Concentration), file=ofile.merged, sep=",", col.names=FALSE, quote=TRUE)
-            cat("\n==============================================================\n")
-            cat("## Done:", length(fileList$sampleFiles), "spectrum files\n")
-            cat("==============================================================\n\n")
-            
+            stop("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n", call. = FALSE)
+        }
+        
+        if(DEBUG) cat("\n\n## merging Concentration\n");
+        final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
+        if(DEBUG) { cat("\n ### final.Concentration:\n"); print(final.Concentration) }
+        final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
+        if(DEBUG) { cat("\n ### final.Concentration (sort):\n"); print(final.Concentration) }
+                
+        rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
+        final.Concentration <- final.Concentration[ , - rm.SeqIndex]
+        rownames(final.Concentration) <- c(1:nrow(final.Concentration))
+        
+        if( DEBUG ) { cat("final.concentration:\n"); print(final.Concentration)  }
+        
+        write.table( t(final.Concentration), file=ofile.merged, sep=",", col.names=FALSE, quote=TRUE)
+        cat("\n==============================================================\n")
+        cat("## Done:", length(fileList$sampleFiles), "spectrum files\n")
+        cat("==============================================================\n\n")
+        
+    } else {
+        ## OPTION or if no internal std, then just report without quantification 
+        if (internalStd == 'NONE') {
+            ostr <- paste("\n\n################################################################################\n",
+                          "## NOTE: The profiled_ALL file was not generated due to NO internal Standard\n", 
+                          "################################################################################\n", sep='')
         } else {
-            ## OPTION or if no internal std, then just report without quantification 
             ostr <- paste("\n\n################################################################################\n",
                           "## NOTE: The profiled_ALL file was not generated due to missing internal Standard\n", 
                           "\t internalStd:", internalStd.in,"\n",
                           "################################################################################\n", sep='')
-            ofile.merged <- "profiled_All.csv"
-            cat(ostr, file=ofile.merged)            
-            cat(ostr)
         }
+        ofile.merged <- "profiled_All.csv"
+        cat(ostr, file=ofile.merged)            
+        cat(ostr)
     }
-    
+
     ofile.note <- paste(basename(sampleFileDir),"_note.txt", sep='')
     saveProfilingInfo(ofile.note, Version, MF_THRESHOLD)   
+    
+    if (DEBUG.TIME) { spentTime(t.beg, "very end") }
 }
