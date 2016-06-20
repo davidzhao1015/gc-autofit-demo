@@ -190,7 +190,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         write.csv(profiled_peaks, file=ofilename, quote=TRUE)
     }
     
-    ## -- select only the highest score peaks
+    ## -- select only the highest (T)score peaks
     if (print.on & DEBUG) { cat("## arranging profiled peaks \n")  }
     # final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks, SampleType)
     final_PeakProfile <- arrangeProfiledPeaks2(profiled_peaks)
@@ -261,15 +261,22 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType) 
         
         if (print.on & DEBUG) {
-          cat("\n\n## quantified Result:\n")
-          print(quantifiedResult)
-          # hmdbID, Area, Concentration 
+            cat("\n\n## quantified Result:\n")
+            print(quantifiedResult)
+            # hmdbID, Area, Concentration 
         }
-
+        
         # if (print.on) { cat("\t >> Generating FinalReport for", basename(f.sample), "\n") }
         if (print.on) { cat("\n\n## Generating FinalReport (with concentration)\n\n") }
         finalReport <- genFinalReport(final_PeakProfile.screened, quantifiedResult) 
         colnames(finalReport)[1] <- "HMDB_ID"
+        
+        # (matchMZrate > 60.0)
+        if(DEBUG) { ## save quantified results
+            ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_quantifiedResult.csv", sep='')
+            write.table(finalReport, file=ofilename, quote=TRUE, row.names=FALSE, sep=",")
+        }
+        
         
         Concentration2 <- check.Concentration(finalReport$Concentration) 
         finalReport <- cbind(finalReport, Concentration2) 
@@ -282,7 +289,6 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         finalReport.json <- finalReport.All # for the JSON file generation
 
         ## saving final profile/quantification data into a file
-        ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
         finalReport.All <- finalReport.All[,c("SeqIndex","HMDB_ID","Compound","CompoundWithTMS","RT_min","RT","RI","Intensity",
                                               "TargetIon","QIon","MatchFactor","RI.Similarity","Corr.Spearman","matchMZrate",
                                               "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration2")]
@@ -293,10 +299,11 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
                          "TargetIon","QIon","MatchFactor","RI.Similarity","Corr.Spearman","matchMZrate",
                          "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration")
+        ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
         write.table(finalReport.All[,-1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
         
         # check blank substraction
-        if(TRUE) {
+        if(FALSE & DEBUG) {
             ofname.tmp <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled_allFields.csv", sep='')
             write.table(finalReport.All[,-1], file=ofname.tmp, quote=TRUE, row.names=FALSE, sep=",")
         }
@@ -1655,7 +1662,9 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
 
                       # if ( nearRelPeakRTscore < nearRelPeakRTscore.tmp 
                       # RI.similarity: 70 --> 90 (Dec 16, 2014)
-                      if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) & (matchMZrate > 60.0) 
+                      # & (matchMZrate > 60.0) ## excluded Jun 20, 2016
+                      # if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) & (matchMZrate > 60.0)
+                      if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) 
                               & (hmdbID == "HMDB_ISTD1" | cor.spearman > 0.65) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                           TScore <- tmp.TScore
                           RIScore <- RI.similarity
@@ -2249,11 +2258,10 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     if(DEBUG) { cat("\n\n## combine areas for the same compound (hmdbIDwithArea):\n"); print(hmdbIDwithArea); }
     
     internalStd.hmdbID <- as.character(lib[which(lib$Compound == internalStdCmpd), 'HMDB_ID'])
-    if( DEBUG) cat("\t# selected internal standard compound:", internalStdCmpd, "(", internalStd.hmdbID,")\n\n")
     area.internalStd <- as.double(as.character(hmdbIDwithArea[which(hmdbIDwithArea$hmdbID == internalStd.hmdbID), "Area"]))
-    if( DEBUG) cat("\t# area.internalStd:", area.internalStd,"\n")
-    
-    if (DEBUG) { 
+    if(DEBUG) {
+        cat("\t# selected internal standard compound:", internalStdCmpd, "(", internalStd.hmdbID,")\n\n")
+        cat("\t# area.internalStd:", area.internalStd,"\n")
         cat("## internalStdCmpd:\n"); 
         print(profiled.result[which(as.character(profiled.result$Compound) == internalStdCmpd), c(1:24)])
     }
@@ -2266,13 +2274,18 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     
     # hmdbIDwithArea: hmdbID, +Compound, +Concentration, Area,  NPeaks
     if(DEBUG) { cat("\n\n## calculating concentration with ratio (Target Ion's EIC area/ ISTD's)\n") }
+    
     quantifiedList <- NULL
     for ( hmdbID in hmdbIDwithArea$hmdbID ) {
         aCmpd <- hmdbIDwithArea[which(hmdbIDwithArea$hmdbID == hmdbID), ]
         area_ratio <- as.double(as.character(aCmpd$Area)) / area.internalStd
-                
+        
+        if (DEBUG) {
+          cat("\n\n####################\n")
+          cat("\n## hmdbID:", hmdbID, "\t area_ratio:", area_ratio,"\n")
+        }
+        
         if ( (hmdbID != internalStd.hmdbID) ) {  
-            if( DEBUG ) { cat("## hmdbID:", hmdbID, " area_ratio:", area_ratio,"\n") }
             if(area_ratio > 0) {
                 calc <- calibration(lib.curve, hmdbID, area_ratio) # unit uM
                 calc <- ifelse(calc < 0, 0, calc)  
@@ -2282,14 +2295,18 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
         } else {
             calc <- 'ISTD' # internal standard
         }
+        tmp.concTable <- data.frame(hmdbID=aCmpd$hmdbID, Area=aCmpd$Area, Concentration=calc, row.names=NULL, stringsAsFactors=FALSE)
+        quantifiedList <- rbind(quantifiedList, tmp.concTable) 
+        # quantifiedList <- rbind(quantifiedList, cbind(aCmpd[,c(1,2)], Concentration=calc) )
        
-        if (DEBUG) { 
-          cat("\t==>  ", hmdbID, "\t area:", as.double(as.character(aCmpd$Area)), "\t conc:", calc,"\n")
+        if (DEBUG) {
+          cat("  ==> area:", as.double(as.character(aCmpd$Area)), "\t conc:", calc,"\n")
+          cat("\n cbind(aCmpd[,c(1,2)], Concentration=calc):\n"); print(cbind(aCmpd[,c(1,2)], Concentration=calc))
+          cat("\n\nquantifiedList:\n"); print(quantifiedList)
         }
         
-        quantifiedList <- rbind(quantifiedList, cbind(aCmpd[,c(1,2)], Concentration=calc) ) 
     }
-
+    
     return (quantifiedList)
 }
 
