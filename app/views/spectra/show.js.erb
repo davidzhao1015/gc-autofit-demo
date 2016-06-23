@@ -9,6 +9,7 @@ if ('<%= @spectrum.has_message? %>' == 'true') {
 $("#spectrum-prev").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum.prev)) %>");
 $("#spectrum-next").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum.next)) %>");
 $("#spectrum-csv").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum, 'csv')) %>");
+$("#spectrum-log").attr('href',"<%= escape_javascript(submission_spectrum_path(@submission, @spectrum, 'log')) %>");
 $('#spectra-container').data('spectrum-id', '<%= @spectrum.id %>');
 $('#batch-select').val(<%= @spectrum.id %>);
 window.history.pushState('', '', '<%= escape_javascript(submission_spectrum_path(@submission, @spectrum)) %>');

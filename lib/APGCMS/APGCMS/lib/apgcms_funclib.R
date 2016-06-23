@@ -163,9 +163,11 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     if ( length(unique(xset.asample$xraw@scanindex)) < length(xset.asample$xraw@scanindex) * 0.9  ) { 
         # cat("length(xset.alkane@scanindex):\n"); print(length(xset.asample$xraw@scanindex));
         # cat("length(unique(xset.alkane@scanindex)):\n"); print(length(unique(xset.asample$xraw@scanindex)));
-        
-        showErrMessage(paste("WARNING: Unable to detect peaks in the spectrum.\n\t Please verify the Spectrum of", 
-                             f.sample.basename))
+        amsg <- paste("WARNING: Unable to detect peaks in the spectrum.\n\t Please verify the Spectrum of", 
+                      f.sample.basename)
+        showErrMessage(amsg)
+        cat(file=File.ErrorLog, amsg, append=TRUE)
+      
         return (NULL)
     }
     
@@ -176,7 +178,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
 
     if(nrow(profiled_peaks) == 0) {
           profiled_peaks <- "\n\n## Error: There is no matched peak with library\n Please check spectrum data file\n"
-          cat(profiled_peaks)
+          cat(file=File.ErrorLog, profiled_peaks, append=TRUE)
           ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_profiledPeaksTMP.csv", sep='')
           write.csv(profiled_peaks, file=ofilename, quote=TRUE)
           
@@ -329,15 +331,18 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
                 areaSuccinicD4 <- dt4calibcurve[which(dt4calibcurve$HMDB_ID == "HMDB_ISTD1"), "Area.EICTarget"]
                 ratioWithCholesterol <- dt4calibcurve$Area.EICTarget / areaCholesterol
                 ratioWithSuccinicD4 <- dt4calibcurve$Area.EICTarget / areaSuccinicD4
-  
-                cat("# sampleID\n"); print(sampleID)
-                cat("# dt4calibcurve\n"); print(dt4calibcurve[,c(1:2)])
-                cat("# ratioWithCholesterol\n"); print(ratioWithCholesterol)
-                cat("# ratioWithSuccinicD4\n"); print(ratioWithSuccinicD4)
                 
                 dt4calibcurve <- cbind(sampleID, dt4calibcurve, ratioWithCholesterol, ratioWithSuccinicD4)
-                cat("## sample:", f.sample.basename, "\n")
-                cat("\n\n## areaCholesterol:", areaCholesterol, "\t areaSuccinicD4:", areaSuccinicD4, "\n")
+                
+                if(DEBUG) {  
+                    cat("# sampleID\n"); print(sampleID)
+                    cat("# dt4calibcurve\n"); print(dt4calibcurve[,c(1:2)])
+                    cat("# ratioWithCholesterol\n"); print(ratioWithCholesterol)
+                    cat("# ratioWithSuccinicD4\n"); print(ratioWithSuccinicD4)
+                    
+                    cat("## sample:", f.sample.basename, "\n")
+                    cat("\n\n## areaCholesterol:", areaCholesterol, "\t areaSuccinicD4:", areaSuccinicD4, "\n")
+                }
             } else {
                 # one ISTD - Succinic Acid -D4
                 if (DEBUG) { 
@@ -352,8 +357,10 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
                     ratioWithSuccinicD4 <- dt4calibcurve$Area.EICTarget / areaSuccinicD4
                     
                     dt4calibcurve <- cbind(sampleID, dt4calibcurve, ratioWithCholesterol, ratioWithSuccinicD4)
-                    cat("## sample:", f.sample.basename, "\n")
-                    cat("\n\n## areaCholesterol:", areaCholesterol, "\t areaSuccinicD4:", areaSuccinicD4, "\n")
+                    if(DEBUG) {
+                        cat("## sample:", f.sample.basename, "\n")
+                        cat("\n\n## areaCholesterol:", areaCholesterol, "\t areaSuccinicD4:", areaSuccinicD4, "\n")
+                    }
                 }
               
                 if(TRUE)  {
@@ -363,8 +370,10 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
                   ratioWithISTD <- dt4calibcurve$Area.EICTarget / areaISTDCompound
                   
                   dt4calibcurve <- cbind(sampleID, dt4calibcurve, ratioWithISTD)
-                  cat("## sample:", f.sample.basename, "\n")
-                  cat("\n\n## areaISTD:", areaISTDCompound, "\n")
+                  if(DEBUG) {
+                      cat("## sample:", f.sample.basename, "\n")
+                      cat("\n\n## areaISTD:", areaISTDCompound, "\n")
+                  }
                 }
             }                
             write.table(dt4calibcurve, file=ofilename, quote=TRUE, row.names=FALSE, sep=",", append=TRUE)
@@ -472,7 +481,9 @@ mergeConcTable <- function( conc.list )
   
       # column names: HMDB_ID, Compound, sample_ID
       if( is.null(conc.list[[1]])) {
-          showErrMessage("WARNING: No identification and quantification because of problem in the spectrum.\n\t Please verify the Spectrum !!!")
+          amsg <- "WARNING: No identification and quantification because of problem in the spectrum.\n\t Please verify the Spectrum !!!"
+          showErrMessage(amsg)
+          cat(file=File.ErrorLog, amsg, append=TRUE)
       } 
       conc.all <- conc.list[[1]]
         
@@ -482,7 +493,9 @@ mergeConcTable <- function( conc.list )
           } else if ( is.null(conc.all) & !is.null(conc.list[[i]]) ) {
               conc.all <- conc.list[[i]]
           } else {
-              showErrMessage("WARNING: No identification and quantification because of problem in the spectrum.\n\t Please verify the Spectrum !!!")
+              amsg <- "WARNING: No identification and quantification because of problem in the spectrum.\n\t Please verify the Spectrum !!!"
+              showErrMessage(amsg)
+              cat(file=File.ErrorLog, amsg, append=TRUE)              
           }
       }
       return (conc.all)
@@ -527,13 +540,13 @@ extract_RT_forEachPeak <- function(rt_int_matrix, offset=7, ctype="TIC", xset=NU
 
       if( ctype == "TIC") {
           if(is.null(xset)) {
-              stop("TIC type analysis is required raw dataset (xset)")
+              stopMessage("TIC type analysis is required raw dataset (xset)")
           }
           # rtint.o <- rt_int_matrix
           rt_int_matrix <- data.frame(rt=xset@scantime, intensity=xset@tic)
           # cat("## rt_int_matrix:\n"); print(head(rt_int_matrix))
       } else {
-          stop("## ctype is EIC - process will stop (417)\n"); 
+          stopMessage("## ctype is EIC - process will stop\n"); 
       }
 
       ## new algorithm to find significant peak's RT & Intensity (Jan 21, 2016)
@@ -1515,12 +1528,14 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec)
                       if (length(lst$MZS_vec_tmp)==0) { 
                           if(DEBUG) {
-                              cat("## Warning: No matched mass (m/z) - compound:", as.character(alib.matched$CompoundWithTMS),"\n");
+                              amsg <- paste("## Warning: No matched mass (m/z) - compound:", as.character(alib.matched$CompoundWithTMS),"\n",sep="")
+                              cat(amsg);
+                              cat(file=File.ErrorLog, amsg, append=TRUE)
                           }
                           # stop("No m/z matched")
                           next # skip following because no matched mass (m/z)
                       } else {
-                          if (FALSE & DEBUG) {         
+                          if (FALSE & DEBUG) {
                               cat("## Match Factor) # of m/z matched:", length(lst$MZS_vec_tmp), " ref m/z:", length(ref_MZS_vec)
                                   , " sample m/z:", length(sample_mzs_vec), "\n")
                               cat("# RT:", round(peakRT/60,2),"\n")
@@ -1544,10 +1559,11 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # peakRange <- getPeakRange2(xset.one, nScanIndex, peak.scanidx)
                       # find a range of a peak with 2nd derivation with interpolation
                       if(DEBUG) cat("# lib.matched[k,]$CompoundWithTMS:", as.character(lib.matched[k,]$CompoundWithTMS),"\n")
-                      if( FALSE & (length(grep("ISTD", lib.matched[k,]$CompoundWithTMS)) > 0) ) {
+                      if(FALSE & (length(grep("ISTD", lib.matched[k,]$CompoundWithTMS)) > 0) ) {
                           sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE) 
                       } else {
                           sampleFile <- NULL
+                          # sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE)
                       }
                       ## to check missing peak identification
                       # if (FALSE) {
@@ -1758,9 +1774,17 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
               } else if ( RT.sample > alkaneInfo$RTmax ) {
                   lib.matched <- lib.peak[which(lib.peak$RI > alkaneInfo$RImax), ]
               } else {
-                  cat("!!! Found another case RT:", RT.sample, "\n")
-                  cat("alkane detail:\n"); print(alkaneInfo)
-                  stop("Error in compound profiling")
+                  amsg <- paste("!!! Found unexpected RT case:", RT.sample, "\n")
+                  cat(amsg)
+                  cat(file=File.ErrorLog, amsg, append=TRUE)
+                  
+                  amsg <- "alkane detail:\n"
+                  cat(amsg); print(alkaneInfo)
+                  cat(file=File.ErrorLog, amsg, append=TRUE)
+                  write.table(alkaneInfo, file=File.ErrorLog, append=TRUE)
+                  
+                  stopMessage("Error in compound profiling: Found unexpected RT case")
+                  
               } 
               
               # cat("# N matched with lib compounds:", nrow(lib.matched), " a peak's RT:", asample.peakInfo[j,"rt"]/60, "\t j:", j, "\n");
@@ -1810,8 +1834,11 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                   # round.digit <- 0 # 0 or 2; not 1
                   lst <- find_similar_peaks(ref_MZS_vec, ref_INT_vec, sample_mzs_vec, sample_mz_int_vec)
                   if (length(lst$MZS_vec_tmp)==0) { 
-                    cat("# ERROR - compound:", alib.matched$CompoundWithTMS, "\n");
-                    stop("No m/z matched")
+                    amsg <- paste("# ERROR - compound:", alib.matched$CompoundWithTMS, "\n")
+                    cat(amsg)
+                    cat(file=File.ErrorLog, amsg, append=TRUE)
+                    
+                    stopMessage("No m/z matched")
                   } else {
                     if (DEBUG & FALSE) {         
                       cat("## Match Factor) # of m/z matched:", length(lst$MZS_vec_tmp), " ref m/z:", length(ref_MZS_vec)
@@ -2184,10 +2211,16 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
         conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept) 
     } else {
         if(nrow(libVec) > 1) {
-            cat("\n\n## Error to find a record in library (more than 2):", hmdbID,"\n\n");
+            amsg <- paste("\n\n## Error to find a record in library (more than 2):", hmdbID,"\n\n")
+            cat(amsg);
+            cat(file=File.ErrorLog, amsg, append=TRUE)
             print(dbLib[which(as.character(dbLib$HMDB_ID) == hmdbID), ]);
         }
-        if(DEBUG) cat("\n\n## Error: Cannot find a record in library:", hmdbID,"\n\n");
+        if(DEBUG) {
+          amsg <- paste("\n\n## Error: Cannot find a record in library:", hmdbID,"\n\n")
+          cat(amsg)
+          cat(file=File.ErrorLog, amsg, append=TRUE)
+        }
         conc <- "NA" # no calibration
     }
     return(conc)
@@ -2267,9 +2300,8 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     }
 
     if (length(area.internalStd) == 0 ) {
-      stop(paste("## Error: Cannot find internal standard compound '", internalStdCmpd, "' in the library.
-           Please check the internal standard compound name both sample peak and library ")
-           , call. = FALSE)
+        stopMessage(paste("## Error: Cannot find internal standard compound '", internalStdCmpd, "' in the library.
+           Please check the internal standard compound name both sample peak and library ") )
     }
     
     # hmdbIDwithArea: hmdbID, +Compound, +Concentration, Area,  NPeaks
@@ -2379,8 +2411,8 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
   
    if( ! (internalStd %in% profiledPeakSet$CompoundWithTMS) ) {
       # showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n")
-      stop(paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
-           , call. = FALSE )
+      amsg <- paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
+      stopMessage(amsg)
    }
   
    if (FALSE)  {
@@ -2388,21 +2420,23 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
            if( ! (internalStd %in% profiledPeakSet$CompoundWithTMS) ) {
              #showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
              # showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n")
-             stop(paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
-                        , call. = FALSE )
+             amsg <- paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
+             stopMessage(amsg)
              # stop("\n\n## Warning: Can not find the internal standard (",internalStd,") in Sample Spectrum.\n\t Program will report without quantification.\n\n")
              # return (FALSE)
            }
            if( ! (internalStd %in% as.character(libDB$CompoundWithTMS)) ) {
              # showErrMessage("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")
              # showErrMessage("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n")
-             cat("\n\n## Warning:\n\t Cannot find the selected internal standard (",internalStd,") in the library database.\n")
+             amsg <-paste("\n\n## Warning:\n\t Cannot find the selected internal standard (",internalStd,") in the library database.\n")
+             cat(amsg)
+             cat(file=File.ErrorLog, amsg, append=TRUE)
              # stop("\n\n## Warning: Can not find the internal standard (",internalStd,") in the library database.\n\t Program will report without quantification.\n\n")     
              # return (FALSE)
            }      
          }, error = function(e) {
             print(e)
-            stop(call. = FALSE)
+            stopMessage(e)
             # stop("## The selected Internal Standard cannot find in the selected library. \n\t Please select a Biofluid type and an Internal Standard correctly.")
          }
        )

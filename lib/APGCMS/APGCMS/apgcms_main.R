@@ -61,6 +61,9 @@ dir.create(user.outdir, showWarnings=FALSE, recursive=TRUE) # expected full path
 dirProfileResult <- normalizePath(user.outdir)
 setwd(dirProfileResult)  ## Set working directory    
 
+## collect error log details
+cat(file=File.ErrorLog, "## Error Log Details ##\n\n")
+
 if(ISDEBUG) { cat("## dirProfileResult:"); print(dirProfileResult) }
 
 # loading libraries
@@ -122,10 +125,9 @@ if (toupper(internalStd.in) == "NONE")  {
     internalStd <- getInternalStdCmpdName(lib.peak, internalStd.in)
 
     if ( is.null(internalStd) ) {
-      stop(paste("\n\t Cannot find the selected Internal Standard [", internalStd.in,"]",
+        stopMessage(paste("\n\t Cannot find the selected Internal Standard [", internalStd.in,"]",
                   "\n\t in the library [ Biofluid type:",USE_INTERNAL_LIBRARY,"].",
-                  "\n\n\t Please use the correct Internal Standard with Biofluid type.")
-           , call. = FALSE)
+                  "\n\n\t Please use the correct Internal Standard with Biofluid type.") )
     } else {
         cat("\n\n## Internal Standard [", internalStd,"] is in the library\n")
     }
@@ -371,7 +373,7 @@ if ( processOption == "PREPROCESSING" ) {
                 cat("\n\n## final.Concentration\n"); print(final.Concentration)
                 cat("nrow:", nrow(final.Concentration), "\n")
             }
-            stop("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n", call. = FALSE)
+            stopMessage("\n\n## Error: there is no final concentration data (empty or not identified at all)\n\n")
         }
         
         if(DEBUG) cat("\n\n## merging Concentration\n");

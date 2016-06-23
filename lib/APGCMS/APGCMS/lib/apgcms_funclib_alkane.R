@@ -45,8 +45,8 @@ getUniqueAlkanePeakList <- function(peak.list, offset.RT=50)
             cat("\n\n## NOTE: Alkane Standard has upto C20 only\n\n")
         }
     } else {
-        cat("\t length(idx.c20):", length(idx.c20),"\n\n")
-        stop("\n## Cannot find the C20 as a standard in the alkane\n")
+        if(DEBUG) cat("\t length(idx.c20):", length(idx.c20),"\n\n")
+        stopMessage("\n## Cannot find the C20 as a standard in the alkane\n")
     }
     
     if (length(idx2remove) > 0) {          
@@ -178,9 +178,8 @@ userAssignedAlkanePeakCn <- function(peak.list, user.AlkaneRT)
     }
     
     if( length(which(table(peak.list.assigned$Cn) > 1)) > 0 ) {
-        showErrMessage(" Error in user defined alkane:\n\t there are same carbon numbers. It should be unique values")
         if (DEBUG) { cat(" >> Cn:",peak.list.assigned$Cn,"\n\n\n") }
-        stop()
+        stopMessage(" Error in user defined alkane:\n\t there are same carbon numbers. It should be unique values")
     }
     
     return(peak.list.assigned)
@@ -379,8 +378,7 @@ peakIdentify.alkane <- function(alkane.peakInfo, xset.one, lib.peak.alkane)
       lst <- find_similar_peaks(aMZIntLib$MZvec, aMZIntLib$INTvec, sample_mzs_vec, sample_mz_int_vec, round.digit)
       lst20 <- find_similar_peaks(aMZIntLib$MZ20vec, aMZIntLib$INT20vec, sample_mzs_vec, sample_mz_int_vec, round.digit)
       if (length(lst$MZS_vec_tmp)==0) { 
-        cat("# ERROR - compound:", alib.matched$Compound, "\n");
-        stop("No m/z matched")
+          stopMessage(paste("# ERROR: No m/z matched - compound:", alib.matched$Compound, "\n"))
       } else {
         if (DEBUG & FALSE) {         
           cat("## Match Factor) # of m/z matched:", length(lst$MZS_vec_tmp), " ref m/z:", length(ref_MZS_vec)
@@ -652,8 +650,7 @@ peakIdentify.alkane2 <- function(alkane.peakInfo, xset.one, lib.peak.alkane, pri
         round.digit <- 0 # 0 or 2; not 1
         lst <- find_similar_peaks(aMZIntLib$MZvec, aMZIntLib$INTvec, sample_mzs_vec, sample_mz_int_vec, round.digit)
         if (length(lst$MZS_vec_tmp)==0) { 
-          cat("# ERROR - compound:", aMZIntLib$Compound, "\n");
-          stop("No m/z matched")
+          stopMessage(paste("# ERROR: No m/z matched - compound:", alib.matched$Compound, "\n"))
         } else {
           if (FALSE & DEBUG) {
             cat("## Match Factor) # of m/z matched:", length(lst$MZS_vec_tmp), " ref m/z:", length(ref_MZS_vec)

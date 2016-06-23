@@ -203,6 +203,17 @@ showErrMessage <- function(s) {
   cat("\n################################################################################\n")  
   cat(s)
   cat("\n################################################################################\n") 
+  
+  amsg <- "\n################################################################################\n"
+  cat(file=File.ErrorLog, amsg, append=TRUE)
+  cat(file=File.ErrorLog, paste(s), append=TRUE)
+  cat(file=File.ErrorLog, amsg, append=TRUE)
+}
+
+stopMessage <- function(s) {
+  amsg <- "\n\n## STOP due to the following reason ##\n"
+  cat(file=File.ErrorLog, paste(amsg, s), append=TRUE)
+  stop(s, call. = FALSE )
 }
 
 ## set running model to check each procedure
@@ -254,10 +265,11 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
         } else if (length(grep('Succinate-D4', strInternalStd)) > 0) {
             calCurveType <- 4
         } else {
-            stop(paste("  Error in argument:\n",
+            stopMessage(paste("  Error in argument:\n",
                                  "\t Please check the internal standard [",strInternalStd,"]",
                                  "\n\t that should be exist in the selected biofluid library [",internalLibType,"]."
-                                 , sep=''), call. = FALSE )
+                                 , sep=''))
+            
             # helpMessage()
         }
     } else if (internalLibType == 'SALIVA') {
@@ -265,8 +277,7 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
     } else if (internalLibType == 'MILK') {
         calCurveType <- 6
     } else {
-      stop("  Error in argument:\n\t see the help to correctly use the internal Calibration Curve option (lib.internal)"
-           , call. = FALSE)
+        stopMessage("  Error in argument:\n\t see the help to correctly use the internal Calibration Curve option (lib.internal)")
     }
 
     return (calCurveType)
@@ -276,7 +287,9 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
 getLibInfo <- function(fname.lib)
 {    
     lib.table <- read.csv(file=fname.lib, head=TRUE, sep=",", quote = "\"");
-    if(nrow(lib.table) == 0) stop( paste("Cannot load the library",basename(fname.lib)) , call. = FALSE )
+    if(nrow(lib.table) == 0) {
+      stopMessage( paste("Cannot load the library",basename(fname.lib)))
+    }
     
     return(lib.table)  
 }
@@ -298,7 +311,7 @@ get_file_list <- function(infileDir, procStatus) {
     if (length(alk_file_index) == 0) {
       alk_file_index <- grep("ALK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);
       if (procStatus == "PREPROCESSING" & length(alk_file_index) == 0) {
-          stop("Could not find any Alkane Standard file (filename: ALK* or ALKSTD*)", call. = FALSE )
+          stopMessage("Could not find any Alkane Standard file (filename: ALK* or ALKSTD*)")
       }    
     }
     blank_file_index <- grep("BLANK", basename(file_list_tmp), ignore.case=TRUE, perl=TRUE, value=FALSE);  
@@ -309,7 +322,7 @@ get_file_list <- function(infileDir, procStatus) {
       }    
     }
   } else {
-      stop("There is no CDF/mzXML files", call. = FALSE )
+      stopMessage("There is no CDF/mzXML files")
   }
   
   ## BHAN: if more than two alkane files, then just use first one and exclude others.give message note

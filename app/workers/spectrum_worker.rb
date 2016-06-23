@@ -1,5 +1,6 @@
 class SpectrumWorker
   include Sidekiq::Worker
+  include Rails.application.routes.url_helpers
   sidekiq_options :retry => false
 
   def perform(spectrum_id)
@@ -32,12 +33,12 @@ class SpectrumWorker
       spectrum.save!
     else
       spectrum.status = 'failed'
-      spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
+      spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors} -- <a href=#{submission_spectrum_path(submission, spectrum, 'log')} target=_new>details</a>"
     end
 
   rescue StandardError => e
     spectrum.status = "failed"
-    spectrum.error =  "There was a problem running GC-AutoFit."
+    spectrum.error =  "[Rescue] There was a problem running GC-AutoFit."
     spectrum.logger(e.message)
     spectrum.logger(e.backtrace.join("\n"))
   ensure
