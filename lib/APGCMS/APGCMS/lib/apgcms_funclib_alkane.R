@@ -858,7 +858,10 @@ estimateMissingAlkaneRT <- function(peak.list)
         zeroIntensity <- rep(0, length(Cn.newlist))      
         return(as.data.frame(cbind(ALKRT=predALK, ALKRTmin=round(predALK/60,3), Cn=Cn.newlist, Intensity=zeroIntensity)) )
     }
-  
+     
+     
+    cat("peak.list:\n"); print(peak.list)
+     
     if(max(peak.list[,'Cn']) < 36) {
         if(DEBUG) {cat("## Estimated Higher Alkane Cn's RT (>= 36) \n")}
         alkane.ext <- predAlkaneRT(as.data.frame(peak.list), max(peak.list[,"Cn"]), 36)
@@ -920,12 +923,22 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
       alkane.peaks.profiled <- peakIdentify.alkane2(peaks.alkane, xset.alkane, lib.peak.alkane, print_mzInt=FALSE)
       if (DEBUG) { cat("## alkane.peaks.profiled:\n"); print(alkane.peaks.profiled) }
       
+      ## Alkane spectrum may have error
+      alkrt.stderr <- sd(alkane.peaks.profiled$ALKRT)/mean(alkane.peaks.profiled$ALKRT)
+      if(alkrt.stderr < 0.3) {
+          amsg <- "## There may be a problem in Alkane Standard Spectrum. \nPlease check the spectrum.\n\n"
+          amsg <- paste(amsg, "## profiled alkane peaks (RT) - before adjusted:\n Range of RT:", 
+                        paste(range(alkane.peaks.profiled$ALKRT), collapse= " ~ "))
+          stopMessage(amsg)
+      }
+
       if (setAdjustAlkanePeakCn) {
         alkane.peaks.profiled <- adjustAlkanePeakCn(alkane.peaks.profiled, Cn.topIntensity=20)
       }
-      if (DEBUG) { cat("## alkane.peaks.profiled:\n"); print(alkane.peaks.profiled) }
-      alkaneInfo <- check_alkane_std(alkane.peaks.profiled)
       
+      if (DEBUG) { cat("## alkane.peaks.profiled:\n"); print(alkane.peaks.profiled) }
+      ## alkaneInfo <- check_alkane_std(alkane.peaks.profiled)
+
       if( ! is.null(userDefined.Cn) ) {
           final_PeakProfile_alkane <- userAssignedAlkanePeakCn(final_PeakProfile_alkane, userDefined.Cn)
           if (DEBUG) { cat("## user defined alkane peaks:\n"); print(final_PeakProfile_alkane) }
@@ -950,7 +963,16 @@ do_AlkanePeakProfile <- function(lib.fname.alkane, sample.fname.alkane, setAdjus
       ## Estimated missing alkane
       if( userEstAlkaneRT == TRUE ) {
           if(DEBUG) {cat("\n## Estimating missing Alkanes\n") }
-          alkane.peaks.profiled <- estimateMissingAlkaneRT(alkane.peaks.profiled)
+          tryCatch({
+                    alkane.peaks.profiled <- estimateMissingAlkaneRT(alkane.peaks.profiled)
+              }, error = function(e) {
+                  print(e)
+                  amsg <- "## There is a problem in Alkane Standard Spectrum. Please check the spectrum.\n\n"
+                  amsg <- paste(amsg, "## profiled alkane peaks (RT):\n", paste(alkane.peaks.profiled$ALKRT, collapse= " "))
+                  
+                  stopMessage(amsg)
+              }
+          )
       }
       
       if (DEBUG) { 

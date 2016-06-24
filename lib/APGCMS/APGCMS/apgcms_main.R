@@ -351,7 +351,9 @@ if ( processOption == "PREPROCESSING" ) {
     ## merge concentration for all samples
     # conc.each <- conc.each[-which(is.null(conc.each))]
     if (length(conc.each) >= 2) {
+        cat("\n\n## conc.each:\n"); print(conc.each)
         final.Concentration <- mergeConcTable( conc.each )
+        cat("\n\n## 356 - final.Concentration:\n"); print(final.Concentration)
     } else {
         # final.Concentration <- conc.each;
         final.Concentration <- as.data.frame(conc.each);
@@ -378,15 +380,15 @@ if ( processOption == "PREPROCESSING" ) {
         
         if(DEBUG) cat("\n\n## merging Concentration\n");
         final.Concentration <- merge(lib.calicurv[,c('HMDB_ID','Compound','SeqIndex')], final.Concentration, by=c('HMDB_ID', 'Compound'), sort=FALSE, all=TRUE)   
-        if(DEBUG) { cat("\n ### final.Concentration:\n"); print(final.Concentration) }
+        cat("## final.Concentration after merged with lib:\n"); print(final.Concentration)
+        
         final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
-        if(DEBUG) { cat("\n ### final.Concentration (sort):\n"); print(final.Concentration) }
-                
+
         rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
         final.Concentration <- final.Concentration[ , - rm.SeqIndex]
         rownames(final.Concentration) <- c(1:nrow(final.Concentration))
         
-        if( DEBUG ) { cat("final.concentration:\n"); print(final.Concentration)  }
+        if( DEBUG ) { cat("\n\n## final.concentration:\n"); print(final.Concentration)  }
         
         write.table( t(final.Concentration), file=ofile.merged, sep=",", col.names=FALSE, quote=TRUE)
         cat("\n==============================================================\n")
