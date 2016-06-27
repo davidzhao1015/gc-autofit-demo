@@ -75,13 +75,17 @@ generateSpectrumPlot.multicore <- function(nCluster, fnames) {
 }
 
 # to give more kind/understandable string in concentration
-replaceShort2LongString <- function(tbl)
+replaceShort2LongString <- function(tbl, isJson=FALSE)
 {
   
     tbl$Concentration2 <- as.character(unlist(tbl$Concentration2)) 
   
     if (nrow(tbl[which(tbl$Concentration2 == "<LOD"),]) > 0) {
-        tbl[which(tbl$Concentration2 == "<LOD"), "Concentration2"] <- "<LOD (Limit Of Detection)"
+        if(isJson==TRUE) {
+            tbl[which(tbl$Concentration2 == "<LOD"), "Concentration2"] <- "&ltLOD (Limit Of Detection)"
+        } else {
+            tbl[which(tbl$Concentration2 == "<LOD"), "Concentration2"] <- "<LOD (Limit Of Detection)"
+        }
     }
     if (nrow(tbl[which(tbl$Concentration2 == "MP"),]) > 0) {
         tbl[which(tbl$Concentration2 == "MP"), "Concentration2"] <- "Multiple peaks (combined with the biggest one)"
@@ -386,7 +390,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
         
         ## making JSON file for Profiled Peak View
-        finalReport.json <- replaceShort2LongString(finalReport.json) 
+        finalReport.json <- replaceShort2LongString(finalReport.json, isJson=TRUE) 
         if (DEBUG) { 
             cat("## finalReport.json 2\n"); print(names(finalReport.json));
         }
