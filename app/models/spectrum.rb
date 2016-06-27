@@ -24,6 +24,10 @@ class Spectrum < ActiveRecord::Base
     self.submission.input_dir
   end
 
+  def profile_results_path
+    File.join(sample_dir, 'profiled_All.csv')
+  end
+
   def log_file
     File.join(sample_dir, 'log.txt')
   end
