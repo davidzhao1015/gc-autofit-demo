@@ -236,7 +236,7 @@ class Submission < ActiveRecord::Base
       names = hmdb_ids.map { |id| first_sample_data[id][:name] }
       CSV.generate do |output|
         # self.settings.each { |s| output << s }
-        output << ['# Concentration Units: µM']
+        output << ['# Concentration Units: mM']
         output << ["# Job ID: #{self.to_param}"]
         output << ['HMDB_ID'] + hmdb_ids
         output << ['Compound'] + names
