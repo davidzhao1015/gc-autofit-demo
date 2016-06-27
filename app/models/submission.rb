@@ -16,7 +16,8 @@ class Submission < ActiveRecord::Base
     'upload' => 'Upload Your Library'
 
   }
-  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 None Other ]
+  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Other ]
+  # INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Other ]
 
   has_many :spectra, dependent: :destroy
   has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
@@ -181,7 +182,7 @@ class Submission < ActiveRecord::Base
   end
 
   # Join CSV reports from all spectra into single CSV
-  def csv_report
+  def csv_report_OLD_WAY
     all_concs = []
     hmdbids = {}
     self.samples.each do |spectrum|
@@ -205,6 +206,47 @@ class Submission < ActiveRecord::Base
       output << ['HMDB ID', 'Compound Name'] + self.samples.map(&:name)
       hmdbids.each do |hmdbid, name|
         output << [hmdbid, name] + all_concs.map { |d| "#{d[hmdbid]}" }
+      end
+    end
+  end
+
+  # Join CSV reports from all spectra into single CSV
+  def csv_report
+    samples_data = {}
+    self.samples.each do |spectrum|
+      concentrations = {}
+      if File.exist?(spectrum.profile_results_path)
+        results = File.readlines(spectrum.profile_results_path)
+        ids = results[0].split('","').map { |i| i.gsub('"', '') }
+        names = results[1].split('","').map { |i| i.gsub('"', '') }
+        concs = results[2].split(',').map { |i| i.gsub('"', '') }
+        ids.shift
+        names.shift
+        concs.shift
+        ids.each_with_index do |id, i|
+          concentrations[id] = { name: names[i], conc: concs[i] }
+        end
+      end
+      samples_data[spectrum.name] = concentrations
+    end
+
+    if self.samples.count > 0
+      first_sample_data = samples_data[self.samples.first.name]
+      hmdb_ids = first_sample_data.keys
+      names = hmdb_ids.map { |id| first_sample_data[id][:name] }
+      CSV.generate do |output|
+        # self.settings.each { |s| output << s }
+        output << ['# Concentration Units: µM']
+        output << ["# Job ID: #{self.to_param}"]
+        output << ['HMDB_ID'] + hmdb_ids
+        output << ['Compound'] + names
+        self.samples.each do |sample|
+          row = [sample.name]
+          hmdb_ids.each do |id|
+            row << samples_data[sample.name][id][:conc]
+          end
+          output << row
+        end
       end
     end
   end
@@ -274,11 +316,8 @@ class Submission < ActiveRecord::Base
       ids = metabolites.keys.map { |i| i.downcase }
       names = metabolites.values.map { |n| n.downcase }
       valid_standard = (standard =~ /^hmdb/) ? ids.include?(standard) : names.include?(standard)
-      # add istd=NONE case
-      if standard != 'none'
-         unless valid_standard
-            errors[:base] << "Internal standard must be present in the selected library"
-         end
+      unless valid_standard
+        errors[:base] << "Internal standard must be present in the selected library"
       end
     end
   end
