@@ -241,6 +241,7 @@ class Submission < ActiveRecord::Base
         output << ['HMDB_ID'] + hmdb_ids
         output << ['Compound'] + names
         self.samples.each do |sample|
+          next if sample.failed?
           row = [sample.name]
           hmdb_ids.each do |id|
             row << samples_data[sample.name][id][:conc]
