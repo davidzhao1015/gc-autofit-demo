@@ -246,7 +246,7 @@ setSampleType <- function(internalLibType)
 }
 
 ## assign calibration curve library
-setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
+setCalCurveType <- function(internalLibType, strInternalStd)
 {
     if (strInternalStd == 'None') {
         calCurveType <- 0
@@ -254,28 +254,21 @@ setCalCurveType <- function(internalLibType, strInternalStd, is_new_calcurve)
     }
   
     if (internalLibType == 'SERUM') {
-        calCurveType <- 1
+        calCurveType <- CALICURVE_IDX_SERUM
     } else if (internalLibType == 'URINE') {
         if(length(grep('Cholesterol',strInternalStd)) > 0) {
-            if (is_new_calcurve == TRUE) {
-                calCurveType <- 2 # new calibration
-            } else {
-                calCurveType <- 3 # old calibration
-            }
+            calCurveType <- CALICURVE_IDX_URINE_CHOLESTEROL
         } else if (length(grep('Succinate-D4', strInternalStd)) > 0) {
-            calCurveType <- 4
+            calCurveType <- CALICURVE_IDX_URINE_SUCCINICACIDD4
         } else {
             stopMessage(paste("  Error in argument:\n",
                                  "\t Please check the internal standard [",strInternalStd,"]",
                                  "\n\t that should be exist in the selected biofluid library [",internalLibType,"]."
                                  , sep=''))
-            
             # helpMessage()
         }
     } else if (internalLibType == 'SALIVA') {
-        calCurveType <- 5
-    } else if (internalLibType == 'MILK') {
-        calCurveType <- 6
+        calCurveType <- CALICURVE_IDX_SALIVA
     } else {
         stopMessage("  Error in argument:\n\t see the help to correctly use the internal Calibration Curve option (lib.internal)")
     }

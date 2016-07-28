@@ -89,7 +89,7 @@ spectrumToJSON.profile <- function(data.in)
             '\t\t\t\t\t "Q.Ion": "', x[11], '",\n', 
             '\t\t\t\t\t "MatchFactor": "', x[6], '",\n', 
             '\t\t\t\t\t "AreaRatio": "', x[14], '",\n', 
-            '\t\t\t\t\t "Concentration (mM)": "', x[17], '"\n',
+            '\t\t\t\t\t "Concentration (uM)": "', x[17], '"\n',
             '\t\t\t\t},\n',
             '\t\t\t\t"ms_data" : {\n',
             '\t\t\t\t\t "m/z": [', x[15], '],\n', 

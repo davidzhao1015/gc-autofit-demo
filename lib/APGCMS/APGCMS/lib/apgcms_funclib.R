@@ -79,7 +79,7 @@ replaceShort2LongString <- function(tbl, isJson=FALSE)
 {
   
     tbl$Concentration2 <- as.character(unlist(tbl$Concentration2)) 
-  
+    
     if (nrow(tbl[which(tbl$Concentration2 == "<LOD"),]) > 0) {
         if(isJson==TRUE) {
             tbl[which(tbl$Concentration2 == "<LOD"), "Concentration2"] <- "&ltLOD (Limit Of Detection)"
@@ -87,16 +87,14 @@ replaceShort2LongString <- function(tbl, isJson=FALSE)
             tbl[which(tbl$Concentration2 == "<LOD"), "Concentration2"] <- "<LOD (Limit Of Detection)"
         }
     }
+    
     if (nrow(tbl[which(tbl$Concentration2 == "MP"),]) > 0) {
         tbl[which(tbl$Concentration2 == "MP"), "Concentration2"] <- "Multiple peaks (combined with the biggest one)"
     }
     if (nrow(tbl[which(tbl$Concentration2 == "ISTD"),]) > 0) {
         tbl[which(tbl$Concentration2 == "ISTD"), "Concentration2"] <- "Internal Standard"
     }
-    if (nrow(tbl[which(tbl$Concentration2 == "NA"),]) > 0) {
-      tbl[which(tbl$Concentration2 == "NA"), "Concentration2"] <- "NA (No Calibration Curve)"
-    }
-    
+
     return (tbl)
 }
 
@@ -272,7 +270,6 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
             # hmdbID, Area, Concentration 
         }
         
-        # if (print.on) { cat("\t >> Generating FinalReport for", basename(f.sample), "\n") }
         if (print.on) { cat("\n\n## Generating FinalReport (with concentration)\n\n") }
         finalReport <- genFinalReport(final_PeakProfile.screened, quantifiedResult) 
         colnames(finalReport)[1] <- "HMDB_ID"
@@ -283,15 +280,18 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
             write.table(finalReport, file=ofilename, quote=TRUE, row.names=FALSE, sep=",")
         }
         
-        
-        Concentration2 <- check.Concentration(finalReport$Concentration) 
+        # Concentration2 <- check.Concentration(finalReport$Concentration)  ## changed July2516
+        Concentration2 <- finalReport$Concentration ## temporary
         finalReport <- cbind(finalReport, Concentration2) 
         if (print.on & DEBUG) { cat("# finalReport:\n"); print(finalReport); }
-
+        
         finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
         finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
         rownames(finalReport.All) <- c(1:nrow(finalReport.All))
-
+        
+        finalReport.All$Concentration2 <- as.character(finalReport.All$Concentration2)
+        finalReport.All$Concentration2[is.na(finalReport.All$Concentration2)] <- "<LOD" # not detected
+        
         finalReport.json <- finalReport.All # for the JSON file generation
 
         ## saving final profile/quantification data into a file
@@ -301,12 +301,13 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
 
         # change short string to long string: eg. <LOD -> <LOD (Limit Of Detection)
         finalReport.All <- replaceShort2LongString(finalReport.All) 
-
+        
         outColnames <- c("HMDB_ID", "Compound", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
                          "TargetIon","QIon","MatchFactor","RI.Similarity","Corr.Spearman","matchMZrate",
                          "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration")
         ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_profiled.csv", sep='')
-        write.table(finalReport.All[,-1], file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
+        write.table(finalReport.All[which(substr(finalReport.All$Concentration,1,4) !="<LOD"),-1], file=ofilename, 
+                    quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
         
         # check blank substraction
         if(FALSE & DEBUG) {
@@ -390,6 +391,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
         
         ## making JSON file for Profiled Peak View
+        finalReport.json <- finalReport.json[-which(is.na(finalReport.json$Concentration)), ]  ## excluding all NA (<LOD); non detected records
         finalReport.json <- replaceShort2LongString(finalReport.json, isJson=TRUE) 
         if (DEBUG) { 
             cat("## finalReport.json 2\n"); print(names(finalReport.json));
@@ -400,9 +402,10 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
                                                "TScore","RI.Similarity","Corr.Spearman","TargetIon","QIon",
                                                "Area.EICTarget","Area.EICQualification","AreaRatio","mz","mzInt","Concentration2")]
         
+        
         ofilename <- paste(sub(".mzXML|.CDF","", basename(f.sample), ignore.case = TRUE),"_spectrum.json", sep='')
         create_json_file(ofilename, round(xset.asample$xraw@scantime/60, 3), xset.asample$xraw@tic, finalReport.json)
-
+        
         ## concentration summary table
         tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
         na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
@@ -2207,32 +2210,38 @@ arrangeProfiledPeaks2 <- function(profiled_peaks)
 
 # find matching library & call calc concentration ftn
 calibration <- function(dbLib, hmdbID, relative_area_comp) {
-    # cat("## compound:", compound, "\t area_ratio:", relative_area_comp,"\n")  
+    if(DEBUG) {
+        cat("\n\n## calibration() # hmdbid:", hmdbID, "\t area_ratio:", relative_area_comp,"\n")  
+    }
+  
     libVec <- dbLib[which(as.character(dbLib$HMDB_ID) == hmdbID), ];
     if(DEBUG) { cat("### libVec:\n"); print(libVec); }
     
+    
     if(nrow(libVec) == 1) {
-        conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept) 
+        conc <- calcConcentration(relative_area_comp, slope=libVec$Slope, intercept=libVec$Intercept, loq.value=libVec$LOQ) # loq.value: uM
     } else {
         if(nrow(libVec) > 1) {
-            amsg <- paste("\n\n## Error to find a record in library (more than 2):", hmdbID,"\n\n")
+            amsg <- paste("\n\n## Error: more than two calibration curves were found:", hmdbID,"\n\n")
             cat(amsg);
             cat(file=File.ErrorLog, amsg, append=TRUE)
             print(dbLib[which(as.character(dbLib$HMDB_ID) == hmdbID), ]);
+            conc <- "Error: More than two calibration curves"
+        } else {
+            conc <- "NA (No 'Matched' Calibration Curve)" # no calibration
         }
         if(DEBUG) {
           amsg <- paste("\n\n## Error: Cannot find a record in library:", hmdbID,"\n\n")
           cat(amsg)
           cat(file=File.ErrorLog, amsg, append=TRUE)
         }
-        conc <- "NA" # no calibration
     }
     return(conc)
 }
 
 # area: after divided by internal standard area
 # return: uM conc
-calcConcentration <- function(area, slope, intercept)
+calcConcentration <- function(area, slope, intercept, loq.value=NULL)
 {  
   
   if( is.na(slope) | is.na(intercept) ) {
@@ -2240,21 +2249,42 @@ calcConcentration <- function(area, slope, intercept)
           cat("# [calcConcentration] area:", area,"\t slope:", slope, "\t intercept:", intercept,"\n")
           cat("\t Slope & Intercept are NA\n")
       }
-      return ("No Calibration Curve");
-  }
-
-  if(DEBUG) {
-      cat("area:", is.numeric(area),"\n")
-      cat("intercept:", is.numeric(intercept),"\n")
-      cat("(area - intercept):", (area - intercept),"\n")
+      return ("NA (No Calibration Curve)");
+  } 
+  
+  loq.calc <- NULL
+  if ( area > 0 & area > intercept ) {
+      conc <- round( (area - intercept) * 1000 / slope , 2); # unit: uM
+  } else {
+      # LOQ due to negative concentration
+      # round( 0.0001 / slope , 2); # < LOD generation
+      if(is.na(loq.value)) {
+          conc <- "NO LOQ value"
+      } else {
+          if (area == 0 & intercept >= 0) {
+            conc <- paste("< ", loq.value, sep='') # uM - use a calculated LOQ instead of minimum concentration in mixture             
+          } else if (area == 0 & intercept < 0) {
+            # calculated LOQ with area_ratio=0
+            loq.calc <- (area -intercept)/slope * 1000 # unit: uM
+            conc <- paste("< ", round(loq.calc, 1), sep='') # uM - use a calculated LOQ instead of minimum concentration in mixture 
+          } else if ( area > 0 & area < intercept ) {
+            conc <- paste("< ", loq.value, sep='') # uM - use a calculated LOQ instead of minimum concentration in mixture             
+          } else {
+            conc <- "NO case"
+          }
+      }
   }
   
-  if ( (area - intercept) > 0 ) {
-      # round( (area - intercept) * 1000 / slope , 2);
-      round( (area - intercept) / slope , 2);
-  } else {
-      round( 0.0001 / slope , 2); # < LOD generation
+  if(DEBUG) {
+    cat("area ratio:", area, "\n")
+    cat("intercept:", intercept,"\n")
+    cat("slope:", slope,"\n")
+    cat("LOQ:", loq.value,"\n")
+    cat("Calc LOQ:", loq.calc,"\n")
+    cat("conc:", conc,"\n\n")
   }
+  
+  return (conc)
 }
 
 # profiled_peaks <- profiled.result  
@@ -2309,38 +2339,33 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
     }
     
     # hmdbIDwithArea: hmdbID, +Compound, +Concentration, Area,  NPeaks
-    if(DEBUG) { cat("\n\n## calculating concentration with ratio (Target Ion's EIC area/ ISTD's)\n") }
-    
+    if (DEBUG) {
+        cat("\n\n########################################################################\n")
+        cat("## Quantification for each Compound \n")
+        cat("## Calculating concentration with ratio (Target Ion's EIC area/ ISTD's)\n") 
+        cat("########################################################################\n")
+    }
     quantifiedList <- NULL
     for ( hmdbID in hmdbIDwithArea$hmdbID ) {
         aCmpd <- hmdbIDwithArea[which(hmdbIDwithArea$hmdbID == hmdbID), ]
         area_ratio <- as.double(as.character(aCmpd$Area)) / area.internalStd
         
         if (DEBUG) {
-          cat("\n\n####################\n")
           cat("\n## hmdbID:", hmdbID, "\t area_ratio:", area_ratio,"\n")
+          cat("=================================================================\n")
         }
         
         if ( (hmdbID != internalStd.hmdbID) ) {  
-            if(area_ratio > 0) {
-                calc <- calibration(lib.curve, hmdbID, area_ratio) # unit uM
-                calc <- ifelse(calc < 0, 0, calc)  
-            } else {
-                calc <- 0
-            }
+            calc <- calibration(lib.curve, hmdbID, area_ratio) # unit uM
         } else {
             calc <- 'ISTD' # internal standard
         }
         tmp.concTable <- data.frame(hmdbID=aCmpd$hmdbID, Area=aCmpd$Area, Concentration=calc, row.names=NULL, stringsAsFactors=FALSE)
         quantifiedList <- rbind(quantifiedList, tmp.concTable) 
         # quantifiedList <- rbind(quantifiedList, cbind(aCmpd[,c(1,2)], Concentration=calc) )
-       
-        if (DEBUG) {
-          cat("  ==> area:", as.double(as.character(aCmpd$Area)), "\t conc:", calc,"\n")
-          cat("\n cbind(aCmpd[,c(1,2)], Concentration=calc):\n"); print(cbind(aCmpd[,c(1,2)], Concentration=calc))
-          cat("\n\nquantifiedList:\n"); print(quantifiedList)
-        }
-        
+    }
+    if (DEBUG) {
+      cat("\n\n## quantifiedList:\n"); print(quantifiedList)
     }
     
     return (quantifiedList)
@@ -2376,8 +2401,8 @@ genFinalReport <- function(profiled.result, quantified.result) {
             final.comp[1,"Concentration"] <- NA
         } else if (conc == "ISTD") {
             final.comp[1,"Concentration"] <- conc
-        } else if (conc == "NA") {
-            final.comp[1,"Concentration"] <- conc
+        } else if (is.character(conc)) {
+            final.comp[1,"Concentration"] <- conc # "< LOQ value"
         } else {
             final.comp[1,"Concentration"] <- as.double(conc)
         }  
@@ -2452,17 +2477,13 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
 check.Concentration<-function(conc) 
 {
     for (i in 1:length(conc)) {
-        # cat("conc[i]"); print(conc[i])
+        cat(i, "conc[i]:", conc[i], "\n") 
         if(!is.na(conc[i]) & conc[i] != "ISTD" & conc[i] != "NA" & conc[i] == 0) {
             # cat(i, "conc[i]:", conc[i], "--> <LOD\n") 
-            conc[i] <- '<LOD' 
+            conc[i] <- '< LOD' 
         } 
-        #else if (conc[i] > 0.90) {
-        #    # cat(i, "conc[i]:", conc[i], "--> NA\n")   
-        #    conc[i] <- 'NA'
-        #}
     }
-    
+
     return (conc)
 }
 

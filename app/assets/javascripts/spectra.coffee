@@ -145,7 +145,7 @@ $(window).load ->
       return false
 
     # standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'Ions', 'MatchFactor', 'Concentration (uM)']
-    standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'TargetIon','Q.Ion', 'MatchFactor', 'AreaRatio', 'Concentration (mM)']
+    standard_columns = ['HMDB ID', 'Name', 'RT(min)', 'RI', 'Intensity', 'TargetIon','Q.Ion', 'MatchFactor', 'AreaRatio', 'Concentration (uM)']
 
     load_results_table = () ->
       table = $('.results-table').DataTable()

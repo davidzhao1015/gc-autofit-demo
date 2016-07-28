@@ -76,7 +76,7 @@ if( USE_INTERNAL_LIBRARY == 'NONE') {  ## use user's own library  (need to be te
     }
 } else{  
     SampleType <- setSampleType(USE_INTERNAL_LIBRARY)
-    CalCurveType <- setCalCurveType(USE_INTERNAL_LIBRARY, internalStd.in, USE_NEW_CALCURVE)
+    CalCurveType <- setCalCurveType(USE_INTERNAL_LIBRARY, internalStd.in)
     cat("internalStd.in:", internalStd.in, "\n")
     cat("SampleType:", SampleType,"\n")
     cat("CalCurveType:", CalCurveType,"\n")
@@ -198,49 +198,58 @@ if (processOption == 'PREPROCESSING') {
 
         final_PeakProfile_blank <- final_PeakProfile_blank[which(final_PeakProfile_blank$MatchFactor > MF_THRESHOLD), ]
         
-        final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[, c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity",
-                                              "MatchFactor","TScore","RI.Similarity","Corr.Spearman","TargetIon","QIon",
-                                              "Area.EICTarget","Area.EICQualification","AreaRatio","mz","mzInt")], 
-                                              Concentration2="NA") # keep mass Spectrum Info (m/z, Intensity)
+        if(nrow(final_PeakProfile_blank) == 0) {
+            cat("\n## No significant compound was identified in Blank Sample (will be used as no blank)\n")
+            xset.blank <- NULL
+            USE_BLANK_SPECTRUM <- FALSE
+            final_PeakProfile_blank <- NULL
+        } else {
         
-        
-        final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                                              "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
-                                              "Area.EICTarget","Area.EICQualification","AreaRatio")], 
-                                              Concentration="NA")
-
-        ofilename <- paste(specFilename.blank,"_profiled.csv", sep='')
-        outColnames <- c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
-                                              "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
-                                              "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration") 
-        write.table(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
-        
-        if (CREATE_JSON_FILE) {
-            ofilename <- paste(specFilename.blank,"_spectrum.json", sep='')
-            create_json_file(ofilename, round(xset.blank@scantime/60,3), xset.blank@tic, final_PeakProfile_blank.json)
-        }
-                
-        # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
-        if( (internalStd != "NONE") && !is.null(internalStd) ) {
-              rmCompoundStr <- internalStd
-              # check whether or not exist the Internal Standard
-              if (nrow(final_PeakProfile_blank[which(final_PeakProfile_blank$Compound == rmCompoundStr), ]) == 0) {
-                  if(DEBUG) {
-                    cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
+            final_PeakProfile_blank.json <- cbind(final_PeakProfile_blank[, c("HMDB_ID","CompoundWithTMS","RT_min","RI","Intensity",
+                                                                              "MatchFactor","TScore","RI.Similarity","Corr.Spearman","TargetIon","QIon",
+                                                                              "Area.EICTarget","Area.EICQualification","AreaRatio","mz","mzInt")], 
+                                                  Concentration2="NA") # keep mass Spectrum Info (m/z, Intensity)
+            
+            
+            final_PeakProfile_blank <- cbind(final_PeakProfile_blank[,c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                                                                        "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
+                                                                        "Area.EICTarget","Area.EICQualification","AreaRatio")], 
+                                             Concentration="NA")
+            
+            
+            ofilename <- paste(specFilename.blank,"_profiled.csv", sep='')
+            outColnames <- c("HMDB_ID", "CompoundWithTMS", "RT_min","RT","RI","Intensity",
+                                                  "MatchFactor","RI.Similarity","TScore","matchMZrate","TargetIon","TargetIon.intensity","QIon",
+                                                  "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration") 
+            write.table(final_PeakProfile_blank, file=ofilename, quote=TRUE, row.names=FALSE, col.names=outColnames, sep=",")
+            
+            if (CREATE_JSON_FILE) {
+                ofilename <- paste(specFilename.blank,"_spectrum.json", sep='')
+                create_json_file(ofilename, round(xset.blank@scantime/60,3), xset.blank@tic, final_PeakProfile_blank.json)
+            }
+                    
+            # rmCompoundStr <- ifelse(SampleType %in% c(SERUM,SALIVA), 'Ribitol', 'Cholesterol')     
+            if( (internalStd != "NONE") && !is.null(internalStd) ) {
+                  rmCompoundStr <- internalStd
+                  # check whether or not exist the Internal Standard
+                  if (nrow(final_PeakProfile_blank[which(final_PeakProfile_blank$Compound == rmCompoundStr), ]) == 0) {
+                      if(DEBUG) {
+                        cat("## Warning: There is no Internal Standard in Blank.\n## >> Running without Blank ! \n")
+                      }
+                      xset.blank <- NULL
+                      USE_BLANK_SPECTRUM <- FALSE
                   }
-                  xset.blank <- NULL
-                  USE_BLANK_SPECTRUM <- FALSE
-              }
-              
-              final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
-              
-              if( nrow(final_PeakProfile_blank) == 0  ) {
-                  if(DEBUG) {
-                    cat("## Warning: There is no coumpounds in Blank.\n## >> Running without Blank ! \n")
+                  
+                  final_PeakProfile_blank <- final_PeakProfile_blank[- which(final_PeakProfile_blank$Compound == rmCompoundStr), ]
+                  
+                  if( nrow(final_PeakProfile_blank) == 0  ) {
+                      if(DEBUG) {
+                        cat("## Warning: There is no coumpounds in Blank.\n## >> Running without Blank ! \n")
+                      }
+                      xset.blank <- NULL
+                      USE_BLANK_SPECTRUM <- FALSE
                   }
-                  xset.blank <- NULL
-                  USE_BLANK_SPECTRUM <- FALSE
-              }
+            }
         }
         
     } else {

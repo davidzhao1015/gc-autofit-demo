@@ -28,7 +28,6 @@ h1 GC-AutoFit Analysis
         provide information on the biofluid being analyzed and the spectral files in
         <em>.CDF</em> or <em>.mzXML</em> format. Upto 30 spectra are recommended to analyze in one submission.
 
-    /p.clear Or submit your own mixture:
     p.clear  Submit your own mixture:
 
     = render_form_errors(@submission)
@@ -139,13 +138,15 @@ h1 GC-AutoFit Analysis
 
     .button-clear
 
-/    .example-section[data-no-turbolink]
-      .float-text <br><br>OR, run one of our examples:
+    .example-section[data-no-turbolink]
+      p.clear <br><br>OR, run one of our examples:
     
       .example-button
         = link_to 'Serum', example_submissions_path(example_num: 1), class: 'btn btn-info btn-spaced'
-      .example-button
-        = link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
+      //.example-button
+      //  = link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
+      // .example-button
+      //  = link_to 'Saliva', example_submissions_path(example_num: 3), class: 'btn btn-info btn-spaced'
 
   - Submission::DATABASES.each do |key, name|
     - next if key == 'upload'

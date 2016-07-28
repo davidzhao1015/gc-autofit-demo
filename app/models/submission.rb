@@ -17,7 +17,6 @@ class Submission < ActiveRecord::Base
 
   }
   INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Other ]
-  # INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Other ]
 
   has_many :spectra, dependent: :destroy
   has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
@@ -193,7 +192,7 @@ class Submission < ActiveRecord::Base
           data = label['meta']['table_data']
           hmdbids[ data['HMDB ID'] ] = data['Name'] unless hmdbids[ data['id'] ].present?
 
-          concentrations[ data['HMDB ID'] ] = data['Concentration (mM)']
+          concentrations[ data['HMDB ID'] ] = data['Concentration (uM)']
         end
       end
       all_concs << concentrations
@@ -201,7 +200,7 @@ class Submission < ActiveRecord::Base
 
     CSV.generate do |output|
       # self.settings.each { |s| output << s }
-      output << ['# Concentration Units: mM']
+      output << ['# Concentration Units: uM']
       output << ["# Job ID: #{self.to_param}"]
       output << ['HMDB ID', 'Compound Name'] + self.samples.map(&:name)
       hmdbids.each do |hmdbid, name|
@@ -236,7 +235,7 @@ class Submission < ActiveRecord::Base
       names = hmdb_ids.map { |id| first_sample_data[id][:name] }
       CSV.generate do |output|
         # self.settings.each { |s| output << s }
-        output << ['# Concentration Units: mM']
+        output << ['# Concentration Units: uM']
         output << ["# Job ID: #{self.to_param}"]
         output << ['HMDB_ID'] + hmdb_ids
         output << ['Compound'] + names

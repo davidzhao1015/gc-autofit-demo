@@ -30,9 +30,7 @@ class SubmissionsController < ApplicationController
   # GET /submissions/new
   def new
     @submission = Submission.new
-    # @submission.database = 'serum'
     @submission.database = 'urine'
-    # @submission.internal_standard = 'Ribitol'
     @submission.internal_standard = 'Cholesterol'
     @submission.mf_score_threshold = 400
     @upload_spectra_format = 'separate'  # OR 'zip'
@@ -137,21 +135,19 @@ class SubmissionsController < ApplicationController
                                spectrum_data: File.new(File.join(example_dir, 'GSS-1R.CDF')))
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'GSS-2R.CDF')))
-    end
-    if example_num == '2'
+    elsif example_num == '2'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'urine')
       submission.database = 'urine'
       submission.internal_standard = 'Cholesterol'
       submission.spectra.build(category: 'standards',
-                               spectrum_data: File.new(File.join(example_dir, 'Alkstd.mzXML')))
+                              spectrum_data: File.new(File.join(example_dir, 'Alkstd.mzXML')))
       submission.spectra.build(category: 'blank',
-                               spectrum_data: File.new(File.join(example_dir, 'Blank.mzXML')))
+                              spectrum_data: File.new(File.join(example_dir, 'Blank.mzXML')))
       submission.spectra.build(category: 'sample',
-                               spectrum_data: File.new(File.join(example_dir, 'C001.mzXML')))
+                              spectrum_data: File.new(File.join(example_dir, 'C001.mzXML')))
       submission.spectra.build(category: 'sample',
-                               spectrum_data: File.new(File.join(example_dir, 'C002.mzXML')))
-    end
-    if example_num == '3'
+                              spectrum_data: File.new(File.join(example_dir, 'C002.mzXML')))
+    elsif example_num == '3'
       example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'saliva')
       submission.database = 'saliva'
       submission.spectra.build(category: 'standards',
