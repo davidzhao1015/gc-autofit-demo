@@ -30,7 +30,7 @@ Getting Started
 ---------------
 ### Development on Local PC
 
-'''bash
+```bash
 ## mysql setting
 
 ## running mysql daemon
@@ -60,13 +60,13 @@ rake db:migrate
  
 ## Run Local Rails Daemon
 localhost:3010
-'''
+```
 
 ### deploy command
 
 update server after modification on local rails project directory
 
-'''bash
+```bash
 update git 
 git update
 git push
@@ -74,7 +74,7 @@ bundle exec cap production deploy
 
 bundle exec cap production sidekiq:start
 bundle exec cap production deploy:start # if no puma on the processes, then running (web 504 error?)
-'''
+```
 
 Documentation and Support
 -------------------------
