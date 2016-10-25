@@ -125,18 +125,3 @@ Documentation and Support
 ```
 GA.tracker = "UA-59743942-6"
 ```
-
-Issues
--------------
-
-Similar Projects
-----------------
-
-Contributing
-------------
-
-Credits
--------
-
-License
--------
