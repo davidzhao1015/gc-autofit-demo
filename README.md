@@ -6,6 +6,7 @@ provided by the [RailsApps Project](http://railsapps.github.io/).
 
 Rails Composer is open source and supported by subscribers. Please join RailsApps to support development of Rails Composer.
 
+
 Problems? Issues?
 -----------
 
@@ -78,6 +79,10 @@ bundle exec cap production deploy:start # if no puma on the processes, then runn
 
 Documentation and Support
 -------------------------
+### Google analytics code:
+```
+GA.tracker = "UA-59743942-6"
+```
 
 Issues
 -------------
