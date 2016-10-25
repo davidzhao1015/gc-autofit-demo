@@ -125,3 +125,34 @@ Documentation and Support
 ```
 GA.tracker = "UA-59743942-6"
 ```
+
+## Workflow
+
+```bash
+Phase I) Preprocessing
+1. Upload spectra files (CDF or mzXML)
+    1. Alkane Standard, Blank (only one), Samples (multiple) 
+    2. Individual file or zip of them
+2. Parsing/Checking Alkane Standard
+    1. peak picking —> collect RT (Retention times of Alkane Peaks)
+3. Generating the Spectrum Plots for each spectrum
+4. save all information tables as .RData
+
+
+Phase II) Profiling
+1. Upload spectra files (CDF or mzXML)
+    1. Alkane Standard, Blank (only one), Samples (multiple) 
+    2. Individual file or zip of them
+2. Parsing each spectrum file
+    1. Generate Peak Tables with using threshold
+3. Calculate RI (Retention Index)
+4. Identification with using library
+    1. calculate scores including Match Factor, M/Z correlations, and etc
+    2. matching and screening with scores
+    3. Generate final tables for identified compounds
+5. Quantification with using calibration curves
+    1. using ratio of EIC areas (target Ion’s)
+    2. calculate concentration values
+6. Generate Report (JSON file)
+    1. JSON will be used for spectrum viewer and tables
+```
