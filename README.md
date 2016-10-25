@@ -7,6 +7,48 @@ provided by the [RailsApps Project](http://railsapps.github.io/).
 Rails Composer is open source and supported by subscribers. Please join RailsApps to support development of Rails Composer.
 
 
+Server
+-----------
+```bash
+
+Hosting: Google Computing Engine
+
+# Server Access
+ssh gcms@gc-autofit.wishartlab.com
+
+# as root
+ssh root@gc-autofit.wishartlab.com
+
+# TOP command
+# check & manage process (login as gems)
+top -> ‘u’ -> ‘gcms’ -> ‘c’ for list -> ‘k’ for kill process
+
+note)	 puma and sidekiq should be only one. If these are more than two, then kill all and restart it.
+
+# reboot server
+* login as root
+* use ‘reboot’ command
+
+# restart process [gcms userid] from the "local" [anything with CAP]
+* goto /gc-autofit directory
+* bundle exec cap production sidekiq:start
+* bundle exec cap production deploy:start # if no puma, then running (web 504 error?)
+
+## change file upload size limitation
+* /etc/nginx/conf.d/gcms.conf
+    * change file size limit : right now 1200mb
+* service nginx restart # restart for updated configuration
+
+## log files
+* general log: /var/log/nginx
+* gc-autofit’s log: /apps/gcms/project/shared/log
+
+## to set to increase session timeout
+add a bunch of settings to the /etc/nginx/conf.d/gcms.conf file
+```
+
+
+
 Problems? Issues?
 -----------
 
