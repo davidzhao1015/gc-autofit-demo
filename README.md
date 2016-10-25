@@ -28,9 +28,9 @@ Learn more about [Installing Rails](http://railsapps.github.io/installing-rails.
 
 Getting Started
 ---------------
-Development on Local PC
+### Development on Local PC
 
-'''
+'''bash
 ## mysql setting
 
 ## running mysql daemon
@@ -62,11 +62,11 @@ rake db:migrate
 localhost:3010
 '''
 
-deploy command
-update server after modification
-on local rails project directory
+### deploy command
 
-'''
+update server after modification on local rails project directory
+
+'''bash
 update git 
 git update
 git push
