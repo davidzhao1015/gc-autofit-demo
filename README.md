@@ -74,35 +74,72 @@ Getting Started
 ### Development on Local PC
 
 ```bash
-## mysql setting
+## install R if it is not installed already
 
-## running mysql daemon
-> mysqld_safe &
+## install R packages
+R
+> install.packages('gdata')
+> source("http://bioconductor.org/biocLite.R")
+> biocLite("xcms")
 
-## in Sequel Pro
-> mysql root without password 
+## install rbenv if it is not already installed.
+## Using Homebrew on MacOS:
+brew install rbenv ruby-build
 
-## shutdown
-$ mysqladmin -u root -p shutdown 
+## clone the repository, e.g.
+git clone git@bitbucket.org:wishartlab/gc-autofit.git
 
-> mysqld_safe &
+## change into project directory and check ruby version
+cd gc-autofit
+cat .ruby-version
 
-## inside of project folder
-cd [project]/config
-check database.yml
+## check versions of Ruby installed by rbenv to see if
+## that Ruby version is installed
+rbenv versions
 
-# check database.ml file
-# copy database.ml.sample —> database.yml
-application\config\database.yml
+## install missing Ruby version if needed, e.g.
+rbenv install 2.2.2
+rbenv rehash
 
-rake db:create # database/mysql 
-rake db:migrate
+## Install bundler if it is not already installed
+gem install bundler
 
-## running daemon
-> bundle exec guard # monitoring 
- 
-## Run Local Rails Daemon
-localhost:3010
+## Install all gems for the project
+bundle install
+
+## Set up YML files. In the config directory of the project,
+## copy all files that have a .sample suffix to create
+## versions without the suffix, e.g.:
+cp config/database.yml.sample database.yml
+
+## Install MySQL and start MySQL server. One way to start it:
+mysqld_safe &
+
+## Create database
+bundle exec rake db:create
+
+## Load database schema
+bundle exec rake db:schema:load
+
+## Install redis if it is not already installed.
+## With Homebrew on MacOS:
+brew install redis
+
+## Start guard daemon
+bundle exec guard
+
+## Start redis server
+redis-server
+
+## Visit site in web browser. Use the port on which guard is running, e.g.
+http://localhost:3010
+
+
+## Update codebase and database schema later on
+
+git pull
+bundle install
+bundle exec rake db:migrate
 ```
 
 ### deploy command
