@@ -1362,17 +1362,18 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       ## @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       if(Flag.mzInt4DB) {
             ofile <- paste(basename(xset.one@filepath[1]),"-mzint4DB.csv", sep='')
-            cat("PeakNO,rt,rt_min,RI,mz,intensity\n", file=ofile, append=FALSE)
+            cat("PeakNO,rt,rt_min,RI,peakIntensity,mz,intensity\n", file=ofile, append=FALSE)
             for (i in 1:length(peak_mzInt_list))  {
                   peakrt <- as.character(peak_mzInt_list[[i]]$rt)
                   peakri <- as.character(asample.peakInfo[i,"RI"])
+                  peakIntensity <- as.character(peak_mzInt_list[[i]]$peakIntensity)
                   # asample.peakInfo[65,]
                   # peak_mzInt_list[[65]]$mzInt[,"mz"]
                   
                   peakmz <- paste(noquote(round(peak_mzInt_list[[i]]$mzInt[,"mz"],2)), collapse=" ")
                   peakmzint <- paste(peak_mzInt_list[[i]]$mzInt[,"intensity"], collapse=" ")
                   
-                  oinfo <- paste(c(i, peakrt, round(as.numeric(peakrt)/60,2), peakri, peakmz, peakmzint), collapse=",")
+                  oinfo <- paste(c(i, peakrt, round(as.numeric(peakrt)/60,2), peakri, peakIntensity, peakmz, peakmzint), collapse=",")
                   cat(oinfo, "\n", file=ofile, append=TRUE)
             }    
       }

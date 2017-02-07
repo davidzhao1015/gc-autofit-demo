@@ -210,10 +210,17 @@ showErrMessage <- function(s) {
   cat(file=File.ErrorLog, amsg, append=TRUE)
 }
 
-stopMessage <- function(s) {
-  amsg <- "\n\n## STOP due to the following reason ##\n"
-  cat(file=File.ErrorLog, paste(amsg, s), append=TRUE)
-  stop(s, call. = FALSE )
+stopMessage <- function(s, stopflag=TRUE) {
+  if (stopflag == TRUE) {
+      amsg <- "\n\n## STOP due to the following reason ##\n"
+      cat(file=File.ErrorLog, paste(amsg, s), append=TRUE)
+      
+      stop(s, call. = FALSE )
+  } else {
+      amsg <- "\n\n## Warning - see the following reason ##\n"
+      cat(file=File.ErrorLog, paste(amsg, s), append=TRUE)
+  }
+  
 }
 
 ## set running model to check each procedure

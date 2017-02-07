@@ -123,6 +123,24 @@ adjustAlkanePeakCn <- function(peak.list, Cn.topIntensity=20)
     
     idx.c20 <- which((peak.list.adjusted[,"Cn"] == Cn.topIntensity) & (max(peak.list.adjusted$Intensity) == peak.list.adjusted$Intensity) )
     if (DEBUG) cat("idx.c20:", idx.c20,"\n")
+    
+    if(peak.list.adjusted[idx.c20, "ALKRT"] > 1700 & peak.list.adjusted[idx.c20, "ALKRT"] < 1800) {
+      if (DEBUG) { 
+        cat ("\n## Check Alkane Index C20 idx.c20:", idx.c20,"\n")
+        cat("peak.list.adjusted[idx.c20, 'ALKRT'] :", peak.list.adjusted[idx.c20, "ALKRT"], "\n")
+      }  
+    } else {
+      if (DEBUG) { 
+          cat ("\n## Check Alkane Index C20 idx.c20:", idx.c20,"\n")
+          cat("# peak.list.adjusted[idx.c20, 'ALKRT'] :", peak.list.adjusted[idx.c20, "ALKRT"], "\n")
+          cat("# BEFORE idx.c20:", idx.c20,"\n")
+          idx.c20 <- which(peak.list.adjusted[, "ALKRT"] > 1700 & peak.list.adjusted[, "ALKRT"] < 1800)
+          cat("# AFTER idx.c20:", idx.c20,"\n")
+          cat("# peak.list.adjusted[idx.c20, ]:\n");
+          print(peak.list.adjusted[idx.c20, ]);
+      }
+      stopMessage("## Alkane Highest peak is not C20 --> Adjusted with RT Range\n\n", stopflag=FALSE);
+    }
 
     k <- 1
     for(i in (idx.c20-1):1) {
