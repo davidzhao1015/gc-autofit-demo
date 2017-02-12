@@ -122,7 +122,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
       if( print.on & DEBUG ) {  cat("\t >> Extracting peak list \n")  }
       # peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, RunPlotOnly)
       peaks.sample <- extract_peak_list_samples2(xset.asample, ctype="TIC", offset=1.5, plotFile=FALSE)
-
+      
       ## to check missing peak
       if (FALSE & DEBUG) {
           ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_extractedPeaks_temp.csv", sep='')
@@ -132,10 +132,12 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
       ## RI calculation using Alkane Std
       if ( print.on ) { cat("\t >> Get RI for each peak \n") }
       peak_samples_ri <- get_RI_for_samples2(peaks.sample, peak_alkane_std)
+    
       if (FALSE & DEBUG) {
           ofilename <- paste(sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE),"_peak_sample_RI.csv", sep='')
           write.csv(peak_samples_ri, file=ofilename, quote=FALSE)
       }
+      
       
       ##########################################################################    
       ## NOT USED for ACTUAL PROCESS
@@ -177,7 +179,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     # profiled_peaks <- compoundIdentify3(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=PRINT_MZINT4DB)
     profiled_peaks <- compoundIdentify4(peak_samples_ri, xset.asample, lib.peak, alkaneInfo, RI.Variation, isBLANK=FALSE, print_mzInt=PRINT_MZINT4DB)
     if (DEBUG) cat("\n\n## DONE compound Identify 4 for sample:", f.sample.basename,"\n\n")
-
+   
     if(nrow(profiled_peaks) == 0) {
           profiled_peaks <- "\n\n## Error: There is no matched peak with library\n Please check spectrum data file\n"
           cat(file=File.ErrorLog, profiled_peaks, append=TRUE)
@@ -206,7 +208,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
       if( print.on & DEBUG) {  cat("\n\n## subtract blank peaks' area \n") }
       # final_PeakProfile <- cbind(final_PeakProfile, Area.Blank=0)
       # exclude Standard Peak
-
+      
       final_PeakProfile <- as.data.frame(final_PeakProfile)
       final_PeakProfile_blank <- as.data.frame(final_PeakProfile_blank)
       final_PeakProfile$Area.EICTarget <- as.double(as.character(final_PeakProfile$Area.EICTarget))
@@ -243,7 +245,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         } 
       }
     }
-    
+
     if (print.on & DEBUG) { 
       cat("\n\n## final_peakProfile after blank subtraction:\n"); 
       print(final_PeakProfile)
@@ -252,6 +254,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     
     if (DEBUG) { cat("\n\n## screeningWithMatchFactor with Match Factor Threshold (", threshold.matchFactor, ")\n") }
     final_PeakProfile.screened <- screeningWithMatchFactor(final_PeakProfile, threshold.matchFactor)
+    
     if (DEBUG) {
         cat("# final_PeakProfile.screened\n"); print(final_PeakProfile.screened)
     } 
@@ -875,6 +878,9 @@ get_RI_for_samples2 <- function(peak_list_sample, alkane_std) {
   ## calculate RI of alkane standard and all the samples.
   ## augs: object matrix of rts and peaks: peak_list_samples
   ## return : object matrix  peak_list_samples with RI column
+
+  ## cat("peak_list_sample:\n"); print(peak_list_sample)
+  ## cat("alkane_std:\n");  print(alkane_std)
   
   #  for(i in 1:length(peak_list_sample)) {
   sample_rt_vec <- as.numeric(peak_list_sample[,"rt"])
@@ -889,11 +895,15 @@ get_RI_for_samples2 <- function(peak_list_sample, alkane_std) {
   ri_vec[which(ri_vec=="NA")] <- "-1"
   ri_vec <- as.numeric(ri_vec)
   # print(ri_vec)
-  
+
   # peak_list_samples[[i]] <- cbind(peak_list_samples[[i]], RI=round(as.numeric(ri_vec),3) )    
   peak_list_sample <- cbind(peak_list_sample, rt_min=round(sample_rt_vec/60, 3), RI=round(as.numeric(ri_vec),3) )
+  # cat(">>> [peak_list_sample]:", nrow(peak_list_sample), "\n")
+  
   peak_list_sample <- peak_list_sample[which(peak_list_sample$RI > 0), ]
   #  }
+  # cat(">>> [peak_list_sample 2]:", nrow(peak_list_sample), "\n")
+  # print(peak_list_sample$RI)
   
   return(peak_list_sample)
 }
@@ -2244,7 +2254,6 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
 # return: uM conc
 calcConcentration <- function(area, slope, intercept, loq.value=NULL)
 {  
-  
   if( is.na(slope) | is.na(intercept) ) {
       if(DEBUG) {
           cat("# [calcConcentration] area:", area,"\t slope:", slope, "\t intercept:", intercept,"\n")
@@ -2259,9 +2268,8 @@ calcConcentration <- function(area, slope, intercept, loq.value=NULL)
   } else {
       # LOQ due to negative concentration
       # round( 0.0001 / slope , 2); # < LOD generation
-      if(is.na(loq.value)) {
-          conc <- "NO LOQ value"
-      } else {
+      
+      if (!is.null(loq.value) & is.numeric(loq.value)) {
           if (area == 0 & intercept >= 0) {
             conc <- paste("< ", loq.value, sep='') # uM - use a calculated LOQ instead of minimum concentration in mixture             
           } else if (area == 0 & intercept < 0) {
@@ -2271,8 +2279,10 @@ calcConcentration <- function(area, slope, intercept, loq.value=NULL)
           } else if ( area > 0 & area < intercept ) {
             conc <- paste("< ", loq.value, sep='') # uM - use a calculated LOQ instead of minimum concentration in mixture             
           } else {
-            conc <- "NO case"
+            conc <- "No LOQ case (with LOQ number)"
           }
+      } else {
+          conc <- "NA (No LOQ value)"
       }
   }
   
@@ -2374,7 +2384,13 @@ quantification <- function(profiled.result, lib, lib.curve, internalStdCmpd, sam
 
 screeningWithMatchFactor <- function(profiled.result, MFthreshold) {
     profiled.result.screened <- profiled.result[which(as.numeric(as.character(profiled.result$MatchFactor)) > MFthreshold), ]  
-    rownames(profiled.result.screened) <- c(1:nrow(profiled.result.screened))
+
+    if (nrow( profiled.result.screened) > 0) {
+        rownames(profiled.result.screened) <- c(1:nrow(profiled.result.screened))
+        
+    } else {
+      stopMessage(paste("## Error: No profiled results after screening with MFscore threshold [> ", MFthreshold,"]") )
+    } 
     
     return(profiled.result.screened)
 }

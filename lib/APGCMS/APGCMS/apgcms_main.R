@@ -163,6 +163,7 @@ if (processOption == 'PREPROCESSING') {
     peak_alkane_std <- do_AlkanePeakProfile(fname.lib.alkane, fileList$alkaneFile, setAdjustAlkanePeakCn=IS_AlkanePeakCnAdjust, userDefined.Cn=user.AlkaneRT, userEstAlkaneRT=TRUE) 
 
     if(DEBUG) { cat("final alkane profiled:\n"); print(peak_alkane_std) }
+
     alkaneInfo <- check_alkane_std(peak_alkane_std)
 
     ## =======================================================================================
