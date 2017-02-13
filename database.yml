@@ -2,7 +2,7 @@ development:
   adapter: mysql2
   encoding: utf8
   reconnect: false
-  database: gc-autofit_development
+  database: gcms
   username: root
   password: 
   socket: /tmp/mysql.sock
@@ -13,7 +13,7 @@ development:
 test:
   adapter: mysql2
   encoding: utf8
-  database: gc-autofit_test
+  database: gcms
   username: root
   password: 
   socket: /tmp/mysql.sock
@@ -22,7 +22,7 @@ production:
   adapter: mysql2
   encoding: utf8
   reconnect: false
-  database: gc-autofit_production
+  database: gcms
   username: root
   password: 
   socket: /tmp/mysql.sock
