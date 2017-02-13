@@ -5,7 +5,7 @@ development:
   database: gc-autofit_development
   pool: 5
   username: gc-autofit
-  password:
+  password: 
   host: localhost
 
 test:
