@@ -24,5 +24,6 @@ production:
   reconnect: false
   database: gcms
   pool: 5
-  username: gc-autofit
+  username: root
   password:
+  host: localhost
