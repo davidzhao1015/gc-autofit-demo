@@ -4,7 +4,7 @@ development:
   reconnect: false
   database: gc-autofit_development
   pool: 5
-  username: gc-autofit
+  username: root
   password:
   host: localhost
 
@@ -14,7 +14,7 @@ test:
   reconnect: false
   database: gc-autofit_test
   pool: 5
-  username: gc-autofit
+  username: root
   password:
   host: localhost
 
@@ -22,8 +22,8 @@ production:
   adapter: mysql2
   encoding: utf8
   reconnect: false
-  database: gc-autofit_production
+  database: gcms
   pool: 5
-  username: gc-autofit
+  username: root
   password:
   host: localhost
