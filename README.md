@@ -107,13 +107,16 @@ gem install bundler
 ## Install all gems for the project
 bundle install
 
+## note: if you get a puma error:
+# gem install puma -- --with-cppflags=-I/usr/local/opt/openssl/include
+
 ## Set up YML files. In the config directory of the project,
 ## copy all files that have a .sample suffix to create
 ## versions without the suffix, e.g.:
 cp config/database.yml.sample database.yml
 
-## Install MySQL and start MySQL server. One way to start it:
-mysqld_safe &
+## Install MySQL and start MySQL server. One way to start it: (may be optional if you already have MySQL runing)
+#mysqld_safe &
 
 ## Create database
 bundle exec rake db:create
@@ -125,11 +128,14 @@ bundle exec rake db:schema:load
 ## With Homebrew on MacOS:
 brew install redis
 
-## Start guard daemon
-bundle exec guard
+
+### To run the app
 
 ## Start redis server
 redis-server
+
+## Start guard daemon
+bundle exec guard
 
 ## Visit site in web browser. Use the port on which guard is running, e.g.
 http://localhost:3010
@@ -147,7 +153,7 @@ bundle exec rake db:migrate
 update server after modification on local rails project directory
 
 ```bash
-update git 
+update git
 git update
 git push
 bundle exec cap production deploy
@@ -168,7 +174,7 @@ GA.tracker = "UA-59743942-6"
 ```bash
 Phase I) Preprocessing
 1. Upload spectra files (CDF or mzXML)
-    1. Alkane Standard, Blank (only one), Samples (multiple) 
+    1. Alkane Standard, Blank (only one), Samples (multiple)
     2. Individual file or zip of them
 2. Parsing/Checking Alkane Standard
     1. peak picking —> collect RT (Retention times of Alkane Peaks)
@@ -178,7 +184,7 @@ Phase I) Preprocessing
 
 Phase II) Profiling
 1. Upload spectra files (CDF or mzXML)
-    1. Alkane Standard, Blank (only one), Samples (multiple) 
+    1. Alkane Standard, Blank (only one), Samples (multiple)
     2. Individual file or zip of them
 2. Parsing each spectrum file
     1. Generate Peak Tables with using threshold
