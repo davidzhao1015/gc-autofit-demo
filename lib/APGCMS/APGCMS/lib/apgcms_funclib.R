@@ -1528,7 +1528,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       if(length(which(c(alib.matched$TargetIon, alib.matched$QIon) %in% sample_mzs_vec)) < 2) {
                           if(DEBUG) { 
                               cat("\n## SKIP following procedure [Compound Identification]: No matched Target & Qualification Ions\n");
-                              cat("## Sample's RI:",RI.sample, "RT:", round(RT.sample/60,2), "\n"); 
+                              cat("## infile:", basename(xset.one@filepath[1]), "\n## Sample's RI:",RI.sample, "RT:", round(RT.sample/60,2), "\n"); 
                               print(alib.matched[,c(1:9)]);
                               cat("\t alib.matched$TargetIon:",alib.matched$TargetIon,"\n\t QIon:", alib.matched$QIon, "\n\t IonArea(EIC) Ratio:",alib.matched$IonRatio,"\n")
                           }
@@ -1536,7 +1536,9 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                         
                       } else {
                           if(DEBUG) { 
-                            cat("\n## alib.matched:\n"); 
+                            cat("\n## alib.matched: matched Target & Qualification Ions\n"); 
+                            cat("## infile:", basename(xset.one@filepath[1]), "\n## Sample's RI:",RI.sample, "RT:", round(RT.sample/60,2), "\n"); 
+                            print(alib.matched[,c(1:9)]);
                             cat("\t alib.matched$TargetIon:",alib.matched$TargetIon,"\n\t QIon:", alib.matched$QIon, "\n\t IonArea(EIC) Ratio:",alib.matched$IonRatio,"\n")
                           }
                       }
@@ -1577,7 +1579,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # peakRange <- getPeakRange2(xset.one, nScanIndex, peak.scanidx)
                       # find a range of a peak with 2nd derivation with interpolation
                       if(DEBUG) cat("# lib.matched[k,]$CompoundWithTMS:", as.character(lib.matched[k,]$CompoundWithTMS),"\n")
-                      if(FALSE & (length(grep("ISTD", lib.matched[k,]$CompoundWithTMS)) > 0) ) {
+                      if( DEBUG & (length(grep("ISTD", lib.matched[k,]$CompoundWithTMS)) > 0) ) {
                           sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE) 
                       } else {
                           sampleFile <- NULL
@@ -1597,6 +1599,9 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       if ( is.null(aPeakRange.target$peakMatrix) | is.null(aPeakRange.qualification$peakMatrix)) {
                           if( DEBUG ) {
                               cat("## Skipped to matching compound (", as.character(lib.matched[k,]$CompoundWithTMS), ") due to no significant Ion Peak\n\n")
+                              cat("## infile:", basename(xset.one@filepath[1]), "\n## Sample's RI:",RI.sample, "RT:", round(RT.sample/60,2), "\n"); 
+                              print(alib.matched[,c(1:9)]);
+                              cat("\t alib.matched$TargetIon:",alib.matched$TargetIon,"\n\t QIon:", alib.matched$QIon, "\n\t IonArea(EIC) Ratio:",alib.matched$IonRatio,"\n")
                           }
                           next
                       }

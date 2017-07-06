@@ -96,3 +96,4 @@ SeqIndex,HMDB_ID,Compound,Intercept,Slope,rsq,adjrsq,Src,RT,RI
 95,HMDB13678,4-hydroxyhippuric acid,-1.05853,28.18974,0.985,0.984,May1816,33.05,2241.05
 96,HMDB_ISTD1,Succinate-D4,NA,NA,NA,NA,ISTD,,
 97,HMDB00067,Cholesterol,NA,NA,NA,NA,ISTD,,
+98,HMDB_ISTD2,Tropic acid,NA,NA,NA,NA,ISTD,,

@@ -26,7 +26,7 @@ helpMessage <- function() {
         --userlib='user_library_file.csv'       # only need if not use internal lib
         --usercal='user_calibration_file.csv'   # only need if not use internal lib
         --internalstd='Compound Name' or 'None' # Internal Standard Compound Name in user library and calibration curve
-                                                # e.g., Cholesterol or Succinate-D4
+                                                # e.g., Cholesterol, Succinate-D4, or Tropic acid
         --process='PREPROCESSING' or 'PROFILING'  # set a processing mode 
 
       Optional Arguments:
@@ -267,6 +267,8 @@ setCalCurveType <- function(internalLibType, strInternalStd)
             calCurveType <- CALICURVE_IDX_URINE_CHOLESTEROL
         } else if (length(grep('Succinate-D4', strInternalStd)) > 0) {
             calCurveType <- CALICURVE_IDX_URINE_SUCCINICACIDD4
+        } else if (length(grep('Tropic acid', strInternalStd)) > 0) {
+            calCurveType <- CALICURVE_IDX_URINE_TROPICACID
         } else {
             stopMessage(paste("  Error in argument:\n",
                                  "\t Please check the internal standard [",strInternalStd,"]",

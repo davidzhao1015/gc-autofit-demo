@@ -16,7 +16,7 @@ class Submission < ActiveRecord::Base
     'upload' => 'Upload Your Library'
 
   }
-  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Other ]
+  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Tropic\ acid Other ]
 
   has_many :spectra, dependent: :destroy
   has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
