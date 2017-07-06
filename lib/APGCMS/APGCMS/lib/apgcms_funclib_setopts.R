@@ -1,7 +1,7 @@
 ###########################################################################################
 ## Functions for the Option and Global Environment
 ## Author: Beomsoo Han
-## Latest Update: 20150325
+## Latest Update: July 6, 2017
 ############################################################################################
 
 showProgramInfo <- function(VersionStr)
