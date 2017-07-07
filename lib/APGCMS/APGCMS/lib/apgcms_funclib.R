@@ -1,4 +1,4 @@
-##########################################################################################
+#########################################################################################
 ## Library for automatic GC-MS profiling
 ## update: July 6, 2017
 ############################################################################################
@@ -14,6 +14,11 @@
 ## library(xcms)
 # suppressMessages(require(xcms));
 # options(warn=-1)
+
+# option to generate area plot files
+# DEBUG.AREAPLOT <- TRUE;
+DEBUG.AREAPLOT <- FALSE;
+
 
 # Generate Spectrum Plots
 # fname.list <- fileList$sampleFiles
@@ -265,6 +270,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
     if ( internalStd != 'NONE' & checkInternalStd == TRUE ) {
         
         if (print.on) { cat("\n\n###  Quantifying identified peaks\n\n") }
+        
         quantifiedResult <- quantification(final_PeakProfile.screened, lib.peak, lib.calicurv, internalStd, f.sample, stype=SampleType) 
         
         if (print.on & DEBUG) {
@@ -577,7 +583,7 @@ extract_RT_forEachPeak <- function(rt_int_matrix, offset=7, ctype="TIC", xset=NU
           
           # xrange <- c(1950:2100)
           # xrange <- c(0:4000)
-          if (FALSE & DEBUG) {
+          if (DEBUG & DEBUG.AREAPLOT) {
               sampleFile <- sub(".mzXML|.CDF", "", basename(xset@filepath), ignore.case=TRUE)  
               png(filename = paste("Plot_ScanTimeIntensity_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
                   par(mfrow=c(2,1))
@@ -639,7 +645,7 @@ extract_RT_forEachPeak <- function(rt_int_matrix, offset=7, ctype="TIC", xset=NU
       # ofilename <- paste("/Users/beomsoo/gcmsProfiling/gc-autofit/lib/APGCMS/test/peak_matrix.csv", sep='')
       # write.csv(peak_matrix, file=ofilename, quote=FALSE)
       
-      if (FALSE & DEBUG) {
+      if (DEBUG & DEBUG.AREAPLOT) {
           png(filename = paste("Plot_Selected_gd5_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
           plot(peak_matrix[,c(1,2)], type="h") # rt with intensity.gd5
           dev.off()
@@ -656,7 +662,7 @@ extract_RT_forEachPeak <- function(rt_int_matrix, offset=7, ctype="TIC", xset=NU
         cat("## rt.len:", rt.len, "--> cutoff:", length(idx), "--> apex of peak:", nrow(peak_matrix),"\n");
       }
 
-      if (FALSE & DEBUG) {
+      if (DEBUG & DEBUG.AREAPLOT) {
           png(filename = paste("Plot_RTofeachPeak_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
           plot(peak_matrix[,c("rt","intensity")], type="h")
           dev.off()
@@ -836,7 +842,8 @@ extract_peak_list_samples2 <- function(xset, ctype="TIC", offset=1.5, plotFile=T
       # eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange, sampleidx=i, rt="corrected")
 
       # TIC plot generation  
-      if (plotFile) {
+      # if (plotFile) {
+      if(DEBUG & DEBUG.AREAPLOT) {
             sampleFile <- sub(".mzXML|.CDF", "", basename(xset$xraw@filepath[1]), ignore.case=TRUE)
             ## plot TIC instead of EIC (Jan 19, 2016) 
             # png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 10)
@@ -1078,7 +1085,7 @@ getIonPeakRange <- function(df.EIC, in.RT=NULL, method.interpolation="linear", l
       # peakheight.threshold <- bp$stat[3] + 2*(bp$stat[4]-bp$stat[2])
       peakheight.threshold <- bp$stat[4]
       if ( rt.eic.intensity < peakheight.threshold) {
-            if(DEBUG & !is.null (fname)) {
+            if(DEBUG & DEBUG.AREAPLOT & !is.null (fname)) {
               cat("## [getIonPeakRange] Skip peak - because of lower peak intensity than threshold:\n")
               cat("\t rt.eic.intensity:", rt.eic.intensity, " peakheight.threshold:", peakheight.threshold,"\n")
         
@@ -1113,7 +1120,7 @@ getIonPeakRange <- function(df.EIC, in.RT=NULL, method.interpolation="linear", l
       rt.inflection.right <- round(df.derivative.right$rt[i], 3)
       
       # check for inflection points 
-      if( !is.null (fname) ) {
+      if( DEBUG.AREAPLOT & !is.null (fname) ) {
         png(filename = paste("Plot_TEST_Inflection_", fname,"_RT", round(in.RT/60,2),"_",cmpdname,"_",IonType,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
         par(mfrow=c(2,1))
         plot(sm, type="b", main=paste("Inflection EIC - RT:", in.RT), xlim=range(rt.vec), ylim=c(0,max(df.EIC.sp$intensity)) )
@@ -1216,8 +1223,8 @@ getIonPeakRange <- function(df.EIC, in.RT=NULL, method.interpolation="linear", l
       }    
       
       # peak is OK then next
-      if( DEBUG & !is.null (fname) ) {
-          png(filename = paste("Plot_EIC_", fname,"_RT", round(in.RT/60,2),"_",cmpdname,"_",IonType,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
+      if( DEBUG & DEBUG.AREAPLOT & !is.null (fname) ) {
+          png(filename = paste("Plot_ION_", fname,"_RT", round(in.RT/60,2),"_",cmpdname,"_",IonType,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
           par(mfrow=c(2,1))
           plot(df.EIC.sp, type="l", main=paste("Interpolated EIC - RT:",in.RT," slope.L:", slope.avg.left," slope.R:", slope.avg.right)
                                   , xlim=range(rt.vec), ylim=c(0,max(df.EIC.sp$intensity)))
@@ -1626,7 +1633,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       
                       # EIC peak plot for developing 
                       # check whether correctely select the range
-                      if (FALSE & DEBUG) {
+                      if (DEBUG & DEBUG.AREAPLOT) {
                           sampleFile <- sub(".mzXML|.CDF", "", basename(xset.one@filepath), ignore.case=TRUE)  
                           png(filename = paste("Plot_EIC_", sampleFile,"_RT", round(RT.sample/60,2),"_", as.character(lib.matched[k,]$CompoundWithTMS),".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT*2, units = "px", pointsize = 10)
                           par(mfrow=c(2,1))
@@ -1704,7 +1711,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # & (matchMZrate > 60.0) ## excluded Jun 20, 2016
                       # if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) & (matchMZrate > 60.0)
                       if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) 
-                              & (hmdbID == "HMDB_ISTD1" | cor.spearman > 0.65) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
+                              & (hmdbID == "HMDB_ISTD1" | hmdbID == "HMDB_ISTD2" | cor.spearman > 0.65) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                           TScore <- tmp.TScore
                           RIScore <- RI.similarity
   
