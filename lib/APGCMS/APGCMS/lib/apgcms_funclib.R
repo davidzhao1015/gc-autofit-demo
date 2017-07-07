@@ -16,8 +16,8 @@
 # options(warn=-1)
 
 # option to generate area plot files
-# DEBUG.AREAPLOT <- TRUE;
-DEBUG.AREAPLOT <- FALSE;
+DEBUG.AREAPLOT <- TRUE;
+# DEBUG.AREAPLOT <- FALSE;
 
 
 # Generate Spectrum Plots
@@ -842,8 +842,8 @@ extract_peak_list_samples2 <- function(xset, ctype="TIC", offset=1.5, plotFile=T
       # eic_obj <- getEIC(xset, mzrange=mzrange, rtrange=rtrange, sampleidx=i, rt="corrected")
 
       # TIC plot generation  
-      # if (plotFile) {
-      if(DEBUG & DEBUG.AREAPLOT) {
+      if (plotFile) {
+      # if(DEBUG & DEBUG.AREAPLOT) {
             sampleFile <- sub(".mzXML|.CDF", "", basename(xset$xraw@filepath[1]), ignore.case=TRUE)
             ## plot TIC instead of EIC (Jan 19, 2016) 
             # png(filename = paste("Plot_EIC_", sampleFile,".png", sep=''), width = PNG_WIDTH, height = PNG_HEIGHT, units = "px", pointsize = 10)
