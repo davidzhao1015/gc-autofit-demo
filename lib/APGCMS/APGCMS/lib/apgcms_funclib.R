@@ -289,6 +289,17 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
             write.table(finalReport, file=ofilename, quote=TRUE, row.names=FALSE, sep=",")
         }
         
+        ## AreaRatio: updated with divided by Internal Std (Target Ion's)
+        ## July 22, 2017
+        istd.hmdbid <- as.character(finalReport[which(finalReport$Concentration == "ISTD"), "HMDB_ID"])
+        AreaRatio.ISTD <- finalReport[which(finalReport$HMDB_ID == istd.hmdbid), "Area.EICTarget"]
+        # cat("\n\n### istd.hmdbid:",istd.hmdbid,"\n", file="area.test.log.txt", append=FALSE)
+        # cat("\n\n### AreaRatio.ISTD:",AreaRatio.ISTD,"\n", file="area.test.log.txt", append=TRUE)
+        # cat("\n\n### round(finalReport.All$Area.EICTarget[1] / AreaRatio.ISTD, 4):", 
+        #     round(finalReport$Area.EICTarget[1] / AreaRatio.ISTD, 4),"\n", file="area.test.log.txt", append=TRUE)
+        # 
+        finalReport$AreaRatio <- round(finalReport$Area.EICTarget / AreaRatio.ISTD, 4) 
+        
         # Concentration2 <- check.Concentration(finalReport$Concentration)  ## changed July2516
         Concentration2 <- finalReport$Concentration ## temporary
         finalReport <- cbind(finalReport, Concentration2) 
@@ -302,12 +313,14 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         finalReport.All$Concentration2[is.na(finalReport.All$Concentration2)] <- "<LOD" # not detected
         
         finalReport.json <- finalReport.All # for the JSON file generation
+        
+        
 
         ## saving final profile/quantification data into a file
         finalReport.All <- finalReport.All[,c("SeqIndex","HMDB_ID","Compound","CompoundWithTMS","RT_min","RT","RI","Intensity",
                                               "TargetIon","QIon","MatchFactor","RI.Similarity","Corr.Spearman","matchMZrate",
                                               "Area.EICTarget","Area.EICQualification","AreaRatio", "Concentration2")]
-
+        
         # change short string to long string: eg. <LOD -> <LOD (Limit Of Detection)
         finalReport.All <- replaceShort2LongString(finalReport.All) 
         

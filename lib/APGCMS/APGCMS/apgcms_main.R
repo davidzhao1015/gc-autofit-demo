@@ -69,7 +69,7 @@ if(ISDEBUG) { cat("## dirProfileResult:"); print(dirProfileResult) }
 # loading libraries
 
 
-if( USE_INTERNAL_LIBRARY == 'NONE') {  ## use user's own library  (need to be tested?????) 
+if( USE_INTERNAL_LIBRARY == 'NONE') {  ## use user's own library  (need to be tested) 
     lib.peak <- getLibInfo(userLibFile)
     if( !is.null(userCalFile) ) {
         lib.calicurv <- getLibInfo(userCalFile)
@@ -395,10 +395,11 @@ if ( processOption == "PREPROCESSING" ) {
         
         final.Concentration <- final.Concentration[order(as.integer(as.character(final.Concentration$SeqIndex)), decreasing=FALSE), ]
         # cat("## final.Concentration after order:\n"); print(final.Concentration)
-
+  
         rm.SeqIndex <- which(names(final.Concentration) == "SeqIndex")
         final.Concentration <- final.Concentration[ , - rm.SeqIndex]
         rownames(final.Concentration) <- c(1:nrow(final.Concentration))
+        # write.table(final.Concentration, file="final.Concentration.405.csv", sep=",", col.names=TRUE, quote=TRUE)
         
         if( DEBUG ) { cat("\n\n## final.concentration:\n"); print(final.Concentration)  }
         
