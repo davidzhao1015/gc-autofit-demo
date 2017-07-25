@@ -340,7 +340,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         ###################################################################
         ## for making calibration curve, generting temporary summary files
         ###################################################################
-        if (DEBUG) {
+        if (FALSE & DEBUG) {
             sampleID <- sub(".mzXML|.CDF","", f.sample.basename, ignore.case = TRUE)
             # ofilename <- paste("profileddata_for_calibration_", substr(sampleID,1,4),".csv", sep='')
             ofilename <- "profileddata_for_calibration.csv"
