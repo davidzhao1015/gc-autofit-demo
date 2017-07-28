@@ -113,7 +113,7 @@ bundle install
 ## Set up YML files. In the config directory of the project,
 ## copy all files that have a .sample suffix to create
 ## versions without the suffix, e.g.:
-cp config/database.yml.sample database.yml
+cp config/database.yml.sample config/database.yml
 
 ## Install MySQL and start MySQL server. One way to start it: (may be optional if you already have MySQL runing)
 #mysqld_safe &
