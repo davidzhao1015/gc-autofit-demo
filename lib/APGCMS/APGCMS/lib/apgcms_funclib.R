@@ -16,8 +16,7 @@
 # options(warn=-1)
 
 # option to generate area plot files
-DEBUG.AREAPLOT <- TRUE;
-# DEBUG.AREAPLOT <- FALSE;
+DEBUG.AREAPLOT <- FALSE;
 
 
 # Generate Spectrum Plots
@@ -31,7 +30,11 @@ generateSpectrumPlot <- function(fname.list) {
     # i<-1
     f.sample <- fname.list[i]
     f.sample.basename <- basename(f.sample)
-    cat(paste("\n", i, ") Profiling Processing file :", sep=''), f.sample.basename, "\n")
+    # cat(paste("\n", i, ") Profiling Processing file :", sep=''), f.sample.basename, "\n")
+    
+    amsg <- paste("\n\n##########################################\n## Profiling Processing file :", f.sample.basename, "\n", sep='')
+    cat(amsg)
+    cat(file=File.ErrorLog, amsg, append=TRUE)
     
     if(DEBUG) cat("## Extracting Spectrum Information \n")
     xset.asample <- extractSampleInfo2(f.sample)
@@ -117,6 +120,10 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
           # cat(paste("\n", i, ") Compound Profiling and Quantifying:", sep=''), f.sample.basename, "\n")
           cat("\n Compound Profiling and Quantifying:", f.sample.basename, "\n")
       }
+      
+      amsg <- paste("\n\n##########################################\n## Profiling Processing file :", f.sample.basename, "\n", sep='')
+      cat(amsg)
+      cat(file=File.ErrorLog, amsg, append=TRUE)
       
       ## should be updated (remove peakFind function; data structure because it doesnot use anymore)  
       if( print.on ) { cat("\t >> Extracting Spectrum Information \n") }
@@ -308,14 +315,15 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
         finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
         rownames(finalReport.All) <- c(1:nrow(finalReport.All))
+        if (print.on & DEBUG) { cat("# finalReport.All 318:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB00354"), ]); }
         
         finalReport.All$Concentration2 <- as.character(finalReport.All$Concentration2)
         finalReport.All$Concentration2[is.na(finalReport.All$Concentration2)] <- "<LOD" # not detected
         
         finalReport.json <- finalReport.All # for the JSON file generation
+        if (print.on & DEBUG) { cat("# finalReport.All 324:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB00354"), ]); }
         
         
-
         ## saving final profile/quantification data into a file
         finalReport.All <- finalReport.All[,c("SeqIndex","HMDB_ID","Compound","CompoundWithTMS","RT_min","RT","RI","Intensity",
                                               "TargetIon","QIon","MatchFactor","RI.Similarity","Corr.Spearman","matchMZrate",
@@ -409,13 +417,10 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         ## End: for making calibration curve, generting temporary summary files
         ###########################################################################
         
-        
-        if (print.on & DEBUG) { cat("# finalReport All:\n"); print(finalReport.All); }
-        
         ## making JSON file for Profiled Peak View
         finalReport.json <- finalReport.json[-which(is.na(finalReport.json$Concentration)), ]  ## excluding all NA (<LOD); non detected records
         finalReport.json <- replaceShort2LongString(finalReport.json, isJson=TRUE) 
-        if (DEBUG) { 
+        if (FALSE & DEBUG) { 
             cat("## finalReport.json 2\n"); print(names(finalReport.json));
         }
 
@@ -430,12 +435,23 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         
         ## concentration summary table
         tmp.Concentration <- finalReport.All[, c("HMDB_ID","Compound","Concentration2")]
-        na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
+        # if (print.on & DEBUG) { cat("# finalReport.All 442:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB00354"), ]); }
+        
+        # replaced to check "<LOD" instead of na
+        na.length <- length(which(substr(tmp.Concentration$Concentration2,1,4) =="<LOD"))
         if( na.length > 0 ) {
-            tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
+            tmp.Concentration <- tmp.Concentration[- which(substr(tmp.Concentration$Concentration2,1,4) =="<LOD"), ]
+            # if (print.on & DEBUG) { cat("# tmp.Concentration 446:\n"); print(tmp.Concentration); }
         }
+        # na.length <- length(which(is.na(tmp.Concentration$Concentration2)))
+        # if( na.length > 0 ) {
+        #     tmp.Concentration <- tmp.Concentration[- which(is.na(tmp.Concentration$Concentration2)), ]
+        #     cat("# tmp.Concentration 446:\n"); print(tmp.Concentration);
+        # }
+        
         if( length(which(tmp.Concentration$Concentration2 == "Multiple peaks (merged with the first peak)")) > 0 ) {
             tmp.Concentration <- tmp.Concentration[- which(tmp.Concentration$Concentration2 == "Multiple peaks (merged with the first peak)"), ]
+            # if (print.on & DEBUG) { cat("# tmp.Concentration 450:\n"); print(tmp.Concentration);  }           
         }
         
         colnames(tmp.Concentration) <- c('HMDB_ID', 'Compound', basename(sub(".mzXML|.CDF", "", f.sample, ignore.case = TRUE)) )
@@ -1683,7 +1699,8 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       
                       ## tmp.TScore =  0.7 * RI.similarity + 0.3 * MFscore/10 
                       # tmp.TScore =  0.3 * MFscore/10 + 0.2 * RI.similarity + 0.5*matchMZrate  ## ~ Apr 27, 2016
-                      tmp.TScore =  0.4 * MFscore/10 + 0.6 * RI.similarity + 0.3*cor.spearman + 0.1*matchMZrate
+                      #  tmp.TScore =  0.4 * MFscore/10 + 0.6 * RI.similarity + 0.3*cor.spearman + 0.1*matchMZrate
+                      tmp.TScore =  0.4 * MFscore/10 + 0.6 * RI.similarity + 0.3*cor.spearman
                       
                       hmdbID <- as.character(lib.matched[k,]$HMDB_ID)
                       
@@ -1723,7 +1740,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # RI.similarity: 70 --> 90 (Dec 16, 2014)
                       # & (matchMZrate > 60.0) ## excluded Jun 20, 2016
                       # if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) & (matchMZrate > 60.0)
-                      if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) 
+                      if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore <= RI.similarity) & (matchMZnum > 10) 
                               & (hmdbID == "HMDB_ISTD1" | hmdbID == "HMDB_ISTD2" | cor.spearman > 0.65) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                           TScore <- tmp.TScore
                           RIScore <- RI.similarity
@@ -1792,7 +1809,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                   }
               }
             
-              identifiedList <- rbind(identifiedList, identified)        
+              identifiedList <- rbind(identifiedList, identified)
             
           }
           
@@ -2265,11 +2282,10 @@ calibration <- function(dbLib, hmdbID, relative_area_comp) {
             conc <- "Error: More than two calibration curves"
         } else {
             conc <- "NA (No 'Matched' Calibration Curve)" # no calibration
-        }
-        if(DEBUG) {
-          amsg <- paste("\n\n## Error: Cannot find a record in library:", hmdbID,"\n\n")
-          cat(amsg)
-          cat(file=File.ErrorLog, amsg, append=TRUE)
+         
+            amsg <- paste("\n\n## Warning/Note: No 'Matched' Calibration Curve:", hmdbID,"\n\n")
+            cat(amsg)
+            cat(file=File.ErrorLog, amsg, append=TRUE)
         }
     }
     return(conc)
