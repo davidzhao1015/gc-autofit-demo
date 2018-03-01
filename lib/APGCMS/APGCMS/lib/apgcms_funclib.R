@@ -15,9 +15,6 @@
 # suppressMessages(require(xcms));
 # options(warn=-1)
 
-# option to generate area plot files
-DEBUG.AREAPLOT <- FALSE;
-
 
 # Generate Spectrum Plots
 # fname.list <- fileList$sampleFiles
@@ -315,13 +312,13 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
         finalReport.All <- merge(cmpdlist, finalReport, by=c('HMDB_ID','CompoundWithTMS'), all.x=TRUE)
         finalReport.All <- finalReport.All[order(finalReport.All$SeqIndex), ]
         rownames(finalReport.All) <- c(1:nrow(finalReport.All))
-        if (print.on & DEBUG) { cat("# finalReport.All 318:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB00354"), ]); }
+        if (print.on & DEBUG) { cat("# finalReport.All 318:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB0000354"), ]); }
         
         finalReport.All$Concentration2 <- as.character(finalReport.All$Concentration2)
         finalReport.All$Concentration2[is.na(finalReport.All$Concentration2)] <- "<LOD" # not detected
         
         finalReport.json <- finalReport.All # for the JSON file generation
-        if (print.on & DEBUG) { cat("# finalReport.All 324:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB00354"), ]); }
+        if (print.on & DEBUG) { cat("# finalReport.All 324:\n"); print(finalReport.All[which(finalReport.All$HMDB_ID=="HMDB0000354"), ]); }
         
         
         ## saving final profile/quantification data into a file
@@ -362,7 +359,7 @@ quantificationFunc <- function(f.sample, print.on=FALSE, use.blank, threshold.ma
             
             if(length(istd.cmpds) == 2) {
                 if (DEBUG) cat("\n## Two Internal Standards were found\n")
-                areaCholesterol <- dt4calibcurve[which(dt4calibcurve$HMDB_ID == "HMDB00067"), "Area.EICTarget"]
+                areaCholesterol <- dt4calibcurve[which(dt4calibcurve$HMDB_ID == "HMDB0000067"), "Area.EICTarget"]
                 areaSuccinicD4 <- dt4calibcurve[which(dt4calibcurve$HMDB_ID == "HMDB_ISTD1"), "Area.EICTarget"]
                 ratioWithCholesterol <- dt4calibcurve$Area.EICTarget / areaCholesterol
                 ratioWithSuccinicD4 <- dt4calibcurve$Area.EICTarget / areaSuccinicD4
@@ -1741,7 +1738,7 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
                       # & (matchMZrate > 60.0) ## excluded Jun 20, 2016
                       # if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore < RI.similarity) & (matchMZnum > 10) & (matchMZrate > 60.0)
                       if ( (RI.similarity > RI_SIMILARITY_THRESHOLD) & (RIScore <= RI.similarity) & (matchMZnum > 10) 
-                              & (hmdbID == "HMDB_ISTD1" | hmdbID == "HMDB_ISTD2" | cor.spearman > 0.65) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
+                              & (hmdbID == "HMDB_ISTD1" | hmdbID == "HMDB_ISTD2" | cor.spearman > SPEARMAN_CORR_THRESHOLD) & (!is.na(tmp.TScore) & (tmp.TScore > TScore)) ) {
                           TScore <- tmp.TScore
                           RIScore <- RI.similarity
   
