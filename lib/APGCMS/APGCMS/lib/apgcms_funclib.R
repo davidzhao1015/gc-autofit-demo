@@ -2496,6 +2496,8 @@ existInternalStd <- function(internalStd, profiledPeakSet, libDB)
    if( ! (internalStd %in% profiledPeakSet$CompoundWithTMS) ) {
       # showErrMessage("## Warning:\n\t Can not find the internal standard (",internalStd,") in Sample Spectrum.\n")
       amsg <- paste("## Error:\n\t Cannot find the selected internal standard (",internalStd,") in the Sample Spectrum.\n")
+      cat("\n# profiledPeakSet$CompoundWithTMS:\n");
+      print(profiledPeakSet$CompoundWithTMS);
       stopMessage(amsg)
    }
   
