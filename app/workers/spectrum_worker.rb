@@ -1,7 +1,7 @@
 class SpectrumWorker
   include Sidekiq::Worker
   include Rails.application.routes.url_helpers
-  sidekiq_options :retry => false
+  sidekiq_options :retry => true
 
   def perform(spectrum_id)
     start_time = Time.now
@@ -10,7 +10,15 @@ class SpectrumWorker
     spectrum.update!(status: 'profiling')
 
     FileUtils.mkdir_p(spectrum.sample_dir)
-    FileUtils.symlink(spectrum.spectrum_data.path, File.join(spectrum.sample_dir, 'sample.mzXML'))
+    if spectrum.spectrum_data.path =~/CDF$/i 
+      suffix =  '.CDF'
+    elsif spectrum.spectrum_data.path =~/mzXML$/i
+      suffix = '.mzXML'
+    else
+      suffix = ''
+      raise StandardError.new("Error: unknown format of sample file #{spectrum.spectrum_data.path}")
+    end
+    FileUtils.symlink(spectrum.spectrum_data.path, File.join(spectrum.sample_dir, "sample#{suffix}"))
     # FileUtils.symlink(submission.standards.spectrum_data.path, File.join(spectrum.sample_dir, 'Alkstd.mzXML'))
     # FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
 
@@ -38,7 +46,7 @@ class SpectrumWorker
 
   rescue StandardError => e
     spectrum.status = "failed"
-    spectrum.error =  "[Rescue] There was a problem running GC-AutoFit."
+    spectrum.error =  "[Rescue] There was a problem running GC-AutoFit. #{e.message}"
     spectrum.logger(e.message)
     spectrum.logger(e.backtrace.join("\n"))
   ensure

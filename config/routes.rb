@@ -2,6 +2,7 @@ require 'sidekiq/web'
 
 Rails.application.routes.draw do
 
+
   resources :submissions do
     get 'example', on: :collection
     get 'profile', on: :member
@@ -16,7 +17,18 @@ Rails.application.routes.draw do
   get "home/download_pdf_sopSerum"
 
   root :to => "submissions#new"
+  
+  namespace :admin do
+    namespace :db do
+      resources :salivas, :urines, :serums, :alkanes
+    end
 
+    namespace :calibration do
+      resources :salivas, :serums, :urinecholesterols, :urinesuccinicacidd4s, :urinetropicacids
+    end
+    
+    get '',  to: 'admin#index'
+  end
 
   mount Wishart::Engine => "/w" , as: 'wishart'
 

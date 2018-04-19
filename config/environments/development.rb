@@ -35,8 +35,39 @@ Rails.application.configure do
   # Checks for improperly declared sprockets dependencies.
   # Raises helpful error messages.
   config.assets.raise_runtime_errors = true
-
+  
+  #config.assets.precompile  += %w( print.css )
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
+
+  #admin domain username and password
+  config.admin_username = 'admin'
+  config.admin_password = '1d989cc0ce4221aaa7081a43a2877294'
+
+  # Root of APGCMS
+  config.APGCMS_root = "/home/centos/APGCMS"
+  # csv lib files for maintenance in admin domain.
+  # mz_intensity DBs
+  config.APGCMS_mz_intensity_dir = "#{config.APGCMS_root}/DB/mz_intensity"
+  config.alkane_lib_file = "#{config.APGCMS_mz_intensity_dir}/lib_alkane.csv"
+  config.saliva_lib_file =  "#{config.APGCMS_mz_intensity_dir}/lib_saliva.csv"
+  config.serum_lib_file = "#{config.APGCMS_mz_intensity_dir}/lib_serum.csv"
+  config.urine_lib_file = "#{config.APGCMS_mz_intensity_dir}/lib_urine.csv"
+  # calibations DBs
+  config.APGCMS_calibration_dir = "#{config.APGCMS_root}/DB/calibrations"
+  config.saliva_calibration_lib_file = "#{config.APGCMS_calibration_dir}/lib_saliva_CalibrationCurve.csv"
+  config.serum_calibration_lib_file = "#{config.APGCMS_calibration_dir}/lib_serum_CalibrationCurve.csv"
+  config.urinecholesterol_lib_file = "#{config.APGCMS_calibration_dir}/lib_urine_CalibrationCurve_Cholesterol.csv"
+  config.urinesuccinicacidd4_lib_file =  "#{config.APGCMS_calibration_dir}/lib_urine_CalibrationCurve_SuccinicAcidD4.csv"
+  config.urinetropicacid_lib_file =  "#{config.APGCMS_calibration_dir}/lib_urine_CalibrationCurve_TropicAcid.csv"
+
+  # METABOLITES_DIR
+  config.APGCMS_METABOLITES_DIR = "#{config.APGCMS_root}/DB/metabolites"
+
+  # user cases working dir 
+  config.APGCMS_job_dir = "#{config.APGCMS_root}/JOBS"
+
+  # APGCMSs' example dir
+  config.APGCMS_example_dir = "#{config.APGCMS_root}/example"
 
 end

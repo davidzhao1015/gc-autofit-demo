@@ -1,5 +1,5 @@
 class APGCMS
-  @@apgcms_path = Rails.root.join('lib', 'APGCMS', 'APGCMS', 'apgcms_main.R')
+  @@apgcms_path = "#{Rails.application.config.APGCMS_root}/scripts/apgcms_main.R"
 
   # The command that was run
   attr_reader :command
@@ -20,29 +20,30 @@ class APGCMS
     options.each do |key, value|
       @command += "--#{key}='#{value}' "
     end
-
+    
     # @command = "Rscript #{@@apgcms_path} --infiledir=#{options[:infiledir]} --lib.internal='SERUM' "
     # @command += "--internalstd='Ribitol' --plotonly=TRUE"
     puts @command if @@debug
-    begin
-      @status, @stdout, stderr = systemu(@command)
-      @errors += stderr.strip.split(/\n/)
-    rescue SystemCallError => error
-      app_failed("There was a system call error (Is R and APGCMS installed?): #{error.to_s}")
-    rescue Exception => error
-      app_failed("There was an exception: #{error.to_s}")
-    ensure
-      if options[:log]
-        File.open(options[:log], 'a') do |f|
-          f.write("#{'-'*80}\nCOMMAND\n#{'-'*80}\n")
-          f.write(@command)
-          f.write("\n\n\n#{'-'*80}\nSTDOUT\n#{'-'*80}\n")
-          f.write(@stdout)
-          f.write("\n\n\n#{'-'*80}\nSTDERR\n#{'-'*80}\n")
-          f.write(@stderr)
-        end
+    
+    
+    @status, @stdout, @stderr = systemu(@command)
+    # has to filter some info out from errors since xcms package 
+    # has some info put into stderr but actually not errors. Those lines
+    # are like this:
+    # Create profile matrix with method 'bin' and step 1 ... OK
+    @errors += @stderr.strip.split(/\n/).select { |e| e !~ /Create profile matrix with method.*?OK/ }
+
+    if options[:log]
+      File.open(options[:log], 'a') do |f|
+        f.write("#{'-'*80}\nCOMMAND\n#{'-'*80}\n")
+        f.write(@command)
+        f.write("\n\n\n#{'-'*80}\nSTDOUT\n#{'-'*80}\n")
+        f.write(@stdout)
+        f.write("\n\n\n#{'-'*80}\nSTDERR\n#{'-'*80}\n")
+        f.write(@errors)
       end
     end
+   
   end
 
 
@@ -52,10 +53,11 @@ class APGCMS
 
   private
 
-  def app_failed(msg)
-    @errors << msg
-    Rails.logger.error(msg) if Rails.logger && @@debug
-  end
+    def app_failed(msg)
+      @errors << msg
+      Rails.logger.error(msg) if Rails.logger && @@debug
+    end
+
 
 end
 

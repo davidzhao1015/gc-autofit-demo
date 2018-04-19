@@ -33,7 +33,7 @@ class Spectrum < ActiveRecord::Base
   end
 
   def logger(text)
-    File.open(self.log_path, 'a+') { |f| f.puts(text) }
+    File.open(self.log_file, 'a+') { |f| f.puts(text) }
   end
 
   def csv_file

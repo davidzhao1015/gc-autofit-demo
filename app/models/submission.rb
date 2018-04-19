@@ -1,10 +1,13 @@
+require 'fileutils'
+
 class Submission < ActiveRecord::Base
   # STATES = %w[ validating queued processing processed profiling complete failed ]
   STATES = %w[ validating queued processing complete failed ]
   # PROCESSED = %w[ processed profiling complete ]
   FINALIZED_STATES = %w[ complete failed ]
 
-  WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.root.join('APGCMS_working')
+  WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.application.config.APGCMS_job_dir
+                                    
   DAYS_TO_KEEP_SUBMISSIONS = 7
   SECRET_ID_LENGTH = 20
 
@@ -116,7 +119,7 @@ class Submission < ActiveRecord::Base
   # end
 
   def working_dir
-    File.join(WORKING_DIR, 'Results', self.secret_id)
+    File.join(WORKING_DIR, self.secret_id)
   end
 
   def input_dir
@@ -124,7 +127,11 @@ class Submission < ActiveRecord::Base
   end
 
   def preprocessing_dir
-    File.join(self.working_dir, 'preprocessing')
+    dir = File.join(self.working_dir, 'preprocessing')
+    if not Dir.exist?(dir)
+      Dir.mkdir(dir)
+    end
+    dir
   end
 
   def log_file
@@ -133,6 +140,7 @@ class Submission < ActiveRecord::Base
 
   def logger(text)
     File.open(self.log_path, 'a+') { |f| f.puts(text) }
+    File.open(self.log_file, 'a+') { |f| f.puts(text) }
   end
 
   def profiling_dir

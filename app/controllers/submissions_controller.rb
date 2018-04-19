@@ -12,12 +12,16 @@ class SubmissionsController < ApplicationController
   # GET /submissions/1
   # GET /submissions/1.json
   def show
+    if ! @submission
+      return "This case is deleted!"
+    end
     if params[:spectrum]
       @spectrum = @submission.spectra.where(id: params[:spectrum]).first
     else
       # TODO: set to first working finalized spectrum
       @spectrum = @submission.spectra.first
     end
+    
     respond_to do |format|
       format.csv do
         send_data(@submission.csv_report, type: 'text/csv', disposition: 'attachment', filename: @submission.csv_filename)
@@ -124,7 +128,7 @@ class SubmissionsController < ApplicationController
     submission.status = 'validating'
     submission.mf_score_threshold = 400
     if example_num == '1'
-      example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'serum')
+      example_dir = File.join(Rails.application.config.APGCMS_example_dir, "serum")
       submission.database = 'serum'
       submission.internal_standard = 'Ribitol'
       submission.spectra.build(category: 'standards',
@@ -136,7 +140,7 @@ class SubmissionsController < ApplicationController
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'GSS-2R.CDF')))
     elsif example_num == '2'
-      example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'urine')
+      example_dir = File.join(Rails.application.config.APGCMS_example_dir, 'urine')
       submission.database = 'urine'
       submission.internal_standard = 'Cholesterol'
       submission.spectra.build(category: 'standards',
@@ -148,7 +152,7 @@ class SubmissionsController < ApplicationController
       submission.spectra.build(category: 'sample',
                               spectrum_data: File.new(File.join(example_dir, 'C002.mzXML')))
     elsif example_num == '3'
-      example_dir = Rails.root.join('lib', 'APGCMS', 'example', 'saliva')
+      example_dir = File.join(Rails.application.config.APGCMS_example_dir, 'saliva')
       submission.database = 'saliva'
       submission.spectra.build(category: 'standards',
                                spectrum_data: File.new(File.join(example_dir, 'ALKS.CDF')))

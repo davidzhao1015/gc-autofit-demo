@@ -8,7 +8,7 @@ set :scm, :git
 set :deploy_to, '/apps/gcms/project'
 set :use_sudo, false
 set :linked_files, %w{config/database.yml}
-set :linked_dirs, %w{public/system log APGCMS_working}
+set :linked_dirs, %w{public/system log}
 
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
 set :keep_releases, 5

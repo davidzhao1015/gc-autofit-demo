@@ -1,24 +1,29 @@
-- if @submission.profile
+- if ! @submission
+    p
+      | This case is deleted!
+- else
 
-  #samples-status[data-secret-id="#{@submission.secret_id}" data-finalized="#{@submission.samples_all_finalized?}"]
+  - if @submission.profile
 
-  h2 
-    | Samples 
-    span.batch-download-results[class='#{"hidden" unless @submission.samples_all_finalized?}']
-      | (#{link_to 'Download Results', submission_path(@submission, 'csv')})
+    #samples-status[data-secret-id="#{@submission.secret_id}" data-finalized="#{@submission.samples_all_finalized?}"]
 
-  table.table.table-condensed#spectra-list
-    thead
-      tr
-        th Name
-        th Run Time
-        th Status
-    tbody
-      - @submission.samples.each do |sample|
-        tr[id='spectrum_id_#{sample.id}'
-           data-spectrum-link='#{submission_spectrum_path(@submission, sample)}'
-           class='#{"spectrum-active" if sample.finalized?}']
-          td = sample.name
-          td.runtime = sample.display_runtime
-          td.status-text = display_status(sample)
+    h2 
+      | Samples 
+      span.batch-download-results[class='#{"hidden" unless @submission.samples_all_finalized?}']
+        | (#{link_to 'Download Results', submission_path(@submission, 'csv')})
+
+    table.table.table-condensed#spectra-list
+      thead
+        tr
+          th Name
+          th Run Time
+          th Status
+      tbody
+        - @submission.samples.each do |sample|
+          tr[id='spectrum_id_#{sample.id}'
+             data-spectrum-link='#{submission_spectrum_path(@submission, sample)}'
+             class='#{"spectrum-active" if sample.finalized?}']
+            td = sample.name
+            td.runtime = sample.display_runtime
+            td.status-text = display_status(sample)
 

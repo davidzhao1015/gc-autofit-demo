@@ -1,6 +1,6 @@
 class SubmissionWorker
   include Sidekiq::Worker
-  sidekiq_options :retry => false
+  sidekiq_options :retry => true
 
   def perform(submission_id)
     start_time = Time.now
@@ -42,7 +42,7 @@ class SubmissionWorker
 
   rescue StandardError => e
     submission.status = "failed"
-    submission.error =  "There was a problem running GC-AutoFit."
+    submission.error =  "There was a problem running GC-AutoFit. #{e.message}"
     submission.logger(e.message)
     submission.logger(e.backtrace.join("\n"))
   ensure

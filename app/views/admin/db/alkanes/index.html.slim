@@ -1,0 +1,10 @@
+= render(:partial => 'index', 
+         :locals => {csv_files: @csv_files,
+                   base_file: @base_file,
+                   file: @file,  
+                   header: @header, 
+                   csv_rows: @csv_rows,
+                   index_path: 'admin_db_alkanes_path', 
+                   new_path: 'new_admin_db_alkane_path', 
+                   edit_path: 'edit_admin_db_alkane_path', 
+                   delete_path: 'admin_db_alkane_path'} )

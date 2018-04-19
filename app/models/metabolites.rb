@@ -5,7 +5,7 @@ class Metabolites
   #   - There should be a header
 
   # Directory where all metabolite related files are located
-  METABOLITES_DIR = Rails.root.join('lib', 'APGCMS', 'DB')
+  METABOLITES_DIR = Rails.application.config.APGCMS_METABOLITES_DIR
 
   CSV_OPTIONS = {skip_lines: '#', skip_blanks: true, col_sep: ",", headers: true}
 

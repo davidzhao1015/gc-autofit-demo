@@ -1,0 +1,7 @@
+table border="3" 
+  thead
+    tr border="1" valign="top"
+      - header.each do |e|
+        th = e
+  tbody
+    = render(:partial => 'db_row', :locals => { row: row } )

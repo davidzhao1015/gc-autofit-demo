@@ -5,40 +5,40 @@ h2 Settings
       strong
         | Biofluid: 
       em
-        | #{@submission.display_database}
+        | #{@submission.display_database if @submission }
     .col-sm-6
       strong
         | Internal Standard: 
       em
-        | #{@submission.internal_standard}
+        | #{@submission.internal_standard if @submission }
   .row
     .col-sm-6
       strong
         | Number of Samples: 
       em
-        | #{@submission.samples.count}
+        | #{@submission.samples.count if @submission }
     .col-sm-6
       strong
         | Blank Provided: 
       em
-        = human_boolean(@submission.blank.present?)
+        = human_boolean( @submission && @submission.blank.present? )
   .row
     .col-sm-12
       strong
         | MF Score Cut Off: 
       em
-        | #{@submission.mf_score_threshold}
+        | #{@submission.mf_score_threshold  if @submission }
   .row
     .col-sm-6
       strong
         | Date: 
       em
-        | #{@submission.created_at}
+        | #{@submission.created_at  if @submission}
     .col-sm-6
-      - if @submission.finalized?
+      - if @submission && @submission.finalized?
           strong
             | Runtime: 
           em
-            | #{@submission.display_runtime}
+            | #{@submission.display_runtime }
 
 
