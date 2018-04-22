@@ -5,13 +5,16 @@ class Admin::CsvController  < Admin::AdminController
      attr_accessor :model
   end
   
+  # instance method name as `after` callback parameter
+  # ths method is in config/initializers/monkey_patches.rb
+  method_hook :index, :edit, :update, :new, :create, :destroy, :after => :update_flash
+
   def index
-    which_file = params.key?(:file) ? params[:file] : nil
     @base_file = self.class.model.csv
-    @csv_files = Dir.glob("#{@base_file}*")
-    # reorder files
-    @csv_files = [@csv_files[0]] + @csv_files[1..-1].reverse
-    @file = defined?(which_file) ? which_file : @base_file
+    @file = params.key?(:file) ? params[:file] : @base_file
+    puts 'ooooooooo'
+    puts @base_file
+    @csv_files = self.class.model.get_csf_file_list(@base_file)
     @header = self.class.model.header
     @csv_rows = self.class.model.all_rows(@file)
   end
@@ -19,7 +22,7 @@ class Admin::CsvController  < Admin::AdminController
   def edit
     @file = self.class.model.csv
     @id = params[:id]
-    csvs = self.class.model.all
+    csvs = self.class.model.all_rows(@file)
     @header = self.class.model.header
     @row = {}
     csvs.each do |mdl|
@@ -42,7 +45,7 @@ class Admin::CsvController  < Admin::AdminController
       end
     end
     
-    self.class.model.all.each do |mdl|  
+    self.class.model.all_rows(self.class.model.csv).each do |mdl|  
       if mdl.row['SeqIndex'].to_s == fields['SeqIndex'].to_s
         rows << header.map { |key| fields[key]}
       else
@@ -72,7 +75,7 @@ class Admin::CsvController  < Admin::AdminController
         fields[k] = fields[k].strip
       end
     end
-    self.class.model.all.each do |mdl|  
+    self.class.model.all_rows(self.class.model.csv).each do |mdl|  
         rows << header.map { |key| mdl.row[key] }
     end
     rows << header.map { |key| fields[key]}
@@ -84,7 +87,7 @@ class Admin::CsvController  < Admin::AdminController
     rows = []
     header = self.class.model.header
     rows << header
-    self.class.model.all.each do |mdl|  
+    self.class.model.all_rows(self.class.model.csv).each do |mdl|  
       unless mdl.row['SeqIndex'] == params[:id]
         mdl.row['SeqIndex'] = mdl.row['SeqIndex'].to_i - 1 if mdl.row['SeqIndex'].to_i > params[:id].to_i
         rows << header.map { |key| mdl.row[key] }
@@ -95,7 +98,12 @@ class Admin::CsvController  < Admin::AdminController
   end
 
   def last_index
-      self.class.model.all.last.row['SeqIndex']
+      self.class.model.all_rows(self.class.model.csv).last.row['SeqIndex']
   end
 
+  def update_flash 
+      flash = self.class.model.flash
+  end 
+
+  
 end

@@ -106,5 +106,8 @@ Rails.application.configure do
   
   # APGCMSs' example dir
   config.APGCMS_example_dir = "#{config.APGCMS_root}/example"
+
+  # number of copies of dated csv files of each db
+  config.APGCMS_copy_number = 20
   
 end

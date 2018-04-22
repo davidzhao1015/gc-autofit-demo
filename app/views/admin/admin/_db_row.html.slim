@@ -19,7 +19,7 @@ tr border="1" valign="top"
           -else 
               td == text_field_tag("form_fields[#{key}]",  row[key], :readonly=>"readonly" )
         - else
-          - if which == "index"
+          - if defined?(which) && which == "index"
             td ==  row[key]
           -else  
             td == text_field_tag("form_fields[#{key}]",  row[key] )

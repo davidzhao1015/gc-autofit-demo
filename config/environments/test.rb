@@ -65,4 +65,7 @@ Rails.application.configure do
   config.APGCMS_input_dir = "#{config.APGCMS_root}/JOBS"
   config.APGCMS_output_dir = "#{config.APGCMS_root}/JOBS"
 
+  # number of copies of dated csv files of each db
+  config.APGCMS_copy_number = 20
+
 end
