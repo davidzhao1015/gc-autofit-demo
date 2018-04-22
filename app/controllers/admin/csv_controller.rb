@@ -4,16 +4,10 @@ class Admin::CsvController  < Admin::AdminController
   class << self
      attr_accessor :model
   end
-  
-  # instance method name as `after` callback parameter
-  # ths method is in config/initializers/monkey_patches.rb
-  method_hook :index, :edit, :update, :new, :create, :destroy, :after => :update_flash
 
   def index
     @base_file = self.class.model.csv
     @file = params.key?(:file) ? params[:file] : @base_file
-    puts 'ooooooooo'
-    puts @base_file
     @csv_files = self.class.model.get_csf_file_list(@base_file)
     @header = self.class.model.header
     @csv_rows = self.class.model.all_rows(@file)
@@ -52,8 +46,9 @@ class Admin::CsvController  < Admin::AdminController
         rows << header.map { |key| mdl.row[key] }
       end
     end
-    puts rows.last
     self.class.model.save(rows)
+    flash[:notice] = 'Row upated!'
+    update_flash()
     redirect_to action: "index"
   end
 
@@ -80,6 +75,8 @@ class Admin::CsvController  < Admin::AdminController
     end
     rows << header.map { |key| fields[key]}
     self.class.model.save(rows)
+    flash[:notice] = 'Row generated!'
+    update_flash()
     redirect_to action: "index"
   end
 
@@ -94,6 +91,8 @@ class Admin::CsvController  < Admin::AdminController
       end
     end
     self.class.model.save(rows)
+    flash[:notice] = "Row deleted!"
+    update_flash()
     redirect_to action: "index"
   end
 
@@ -102,8 +101,9 @@ class Admin::CsvController  < Admin::AdminController
   end
 
   def update_flash 
-      flash = self.class.model.flash
+      flash.update(self.class.model.flash)
+      # clean up model flash hash after flash picks up message.
+      self.class.model.flash = {}
   end 
 
-  
 end

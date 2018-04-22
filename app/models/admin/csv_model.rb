@@ -29,18 +29,17 @@ class  Admin::CsvModel
             end
           end
         end
+        msg = "#{today_file} and #{self.csv_file} saved!"
         if self.flash.key?(:success)
-            self.flash[:success] << " #{today_file} and #{self.csv_file} save!"
+            self.flash[:success] << " #{msg}"
         else
-            self.flash[:success] = "#{today_file} and #{self.csv_file} save!"
+            self.flash[:success] = msg
         end
     end
 
 
     def self.all_rows(file)
         items = []
-        puts 'PPPPPPPP'
-        puts file
         CSV.foreach(file, headers: true) do |row|
           items << self.new(row.to_hash)
         end
@@ -89,8 +88,6 @@ class  Admin::CsvModel
     
 
     def self.reorder_by_date(csv_files, base_file)
-        puts 'pppppppp'
-        puts csv_files
       dict = {}
       tmp_list = csv_files.select do |f|
             f != base_file
