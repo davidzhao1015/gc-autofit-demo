@@ -3,9 +3,10 @@ require 'csv'
 class  Admin::CsvModel
     include ActiveModel::Validations
 
-    class << self
-        attr_accessor :csv_file, :flash
-    end
+    include ClassLevelInheritableAttributes  # in /lib
+    inheritable_attributes :flash, :csv_file
+    @flash = {}
+    @csv_file = ''
 
     attr_accessor :row, :mz, :intensity, :compound_name, :slope
     validates :compound_name, presence: true
@@ -69,7 +70,7 @@ class  Admin::CsvModel
           self.flash['error'] ||= msg
         end
       end
-      unless self.flash['error']
+      unless (self.flash.key?('error') && self.flash['error'])
         true 
       else
         false
