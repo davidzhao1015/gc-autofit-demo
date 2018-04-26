@@ -7,9 +7,12 @@ class  Admin::CsvModel
         attr_accessor :csv_file, :flash
     end
 
-    attr_accessor :row, :mz, :intensity, :compound_name
-    validates :compound_name, :mz, :intensity, presence: true
-    validates_format_of :mz, :intensity, with: /\A[\d\s]+\z/i
+    attr_accessor :row, :mz, :intensity, :compound_name, :slope
+    validates :compound_name, presence: true
+    validates :mz, :intensity, presence: true, if: :header_include_mz?
+    validates_format_of :mz, :intensity, with: /\A[\d\s]+\z/i,  if: :header_include_mz?
+    #validates :slope,  presence: true, if: :header_include_slope?
+    #validates_format_of :slope, with: /\A[\d\.]+\z/i,  if: :header_include_slope?
 
     def self.save(row_objs, mode)
         # before save the file to lib. Make a 
@@ -93,6 +96,13 @@ class  Admin::CsvModel
     	self.row = row_dict
     end
 
+    def header_include_mz?
+      self.class.header.include?('MZ')
+    end
+
+    def header_include_slope?
+      self.class.header.include?('Slope')
+    end
      
 
     def self.check_and_keep_copies
