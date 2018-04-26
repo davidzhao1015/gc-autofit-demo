@@ -9,9 +9,11 @@ tr border="1" valign="top"
         - n = row[key].nil? ? 10 : row[key].split(" ").length
         - v = row[key].nil? ? '' : row[key].split(" ").join("\n")
         - if defined?(to_do)
-          td == (text_area_tag("form_fields[#{key}]", v, :cols=>10, :rows=>n, :readonly=>"readonly"))
+          td width="20px" 
+            == (text_area_tag("form_fields[#{key}]", v, :cols=>10, :rows=>n, :readonly=>"readonly"))
         - else
-          td == (text_area_tag("form_fields[#{key}]", v, :cols=>10, :rows=>n ))
+          td width="20px" 
+            == (text_area_tag("form_fields[#{key}]", v, :cols=>10, :rows=>n ))
       - else
         - if defined?(to_do)
           - if defined?(which) && which == "index"

@@ -27,9 +27,7 @@ class Admin::CsvController  < Admin::AdminController
   end
 
   def update
-    rows = []
-    header = self.class.model.header
-    rows << header
+    row_objs = []
     fields = params[:form_fields]
     fields.keys.each do |k|
       unless fields[k].nil?
@@ -39,15 +37,19 @@ class Admin::CsvController  < Admin::AdminController
       end
     end
     
-    self.class.model.all_rows(self.class.model.csv).each do |mdl|  
+    row_objs = self.class.model.all_rows(self.class.model.csv).map do |mdl|  
       if mdl.row['SeqIndex'].to_s == fields['SeqIndex'].to_s
-        rows << header.map { |key| fields[key]}
+        self.class.model.new(fields)
       else
-        rows << header.map { |key| mdl.row[key] }
+        mdl
       end
     end
-    self.class.model.save(rows)
-    flash[:notice] = 'Row upated!'
+    if self.class.model.save(row_objs, 'update')
+      flash[:notice] = 'Row upated!'
+    else
+      flash[:notice] = 'Row NOT upated!'
+    end
+      
     update_flash()
     redirect_to action: "index"
   end
@@ -59,9 +61,7 @@ class Admin::CsvController  < Admin::AdminController
   end
 
   def create
-    rows = []
-    header = self.class.model.header
-    rows << header
+    row_objs = []
     fields = params[:form_fields]
     fields.keys.each do |k|
       unless fields[k].nil?
@@ -70,27 +70,32 @@ class Admin::CsvController  < Admin::AdminController
         fields[k] = fields[k].strip
       end
     end
-    self.class.model.all_rows(self.class.model.csv).each do |mdl|  
-        rows << header.map { |key| mdl.row[key] }
+    row_objs = self.class.model.all_rows(self.class.model.csv)
+    row_objs << self.class.model.new(fields)
+
+    if self.class.model.save(row_objs, 'create')
+      flash[:notice] = 'Row generated!'
+    else
+      flash[:notice] = 'Row NOT generated!'
     end
-    rows << header.map { |key| fields[key]}
-    self.class.model.save(rows)
-    flash[:notice] = 'Row generated!'
+    
     update_flash()
     redirect_to action: "index"
   end
 
   def destroy
-    rows = []
-    header = self.class.model.header
-    rows << header
-    self.class.model.all_rows(self.class.model.csv).each do |mdl|  
+    row_objs = []
+    row_objs = self.class.model.all_rows(self.class.model.csv).map do |mdl|  
       unless mdl.row['SeqIndex'] == params[:id]
+        # all indices which are bigger that param[:id] should sustract 1.
         mdl.row['SeqIndex'] = mdl.row['SeqIndex'].to_i - 1 if mdl.row['SeqIndex'].to_i > params[:id].to_i
-        rows << header.map { |key| mdl.row[key] }
+        mdl
+      else
+        ''
       end
-    end
-    self.class.model.save(rows)
+    end.select { |mdl| mdl != '' }
+
+    self.class.model.save(row_objs, 'delete')
     flash[:notice] = "Row deleted!"
     update_flash()
     redirect_to action: "index"

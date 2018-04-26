@@ -30,5 +30,7 @@ br
               = render( :partial => 'db_row', :locals => {which: 'index', row: mdl.row} )     
       br
       br
+  - else
+      p No header #{header} checked!!!
 - else
   p No urine lib file #{file} defined in admin/urines/index.html.slim.
