@@ -7,7 +7,7 @@ gem 'coffee-rails', '~> 4.1.0'
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 gem 'bootstrap-sass'
-gem 'mysql2'
+gem 'mysql2', '~> 0.3.18'
 gem 'puma'
 gem 'slim-rails'
 gem 'sidekiq'
@@ -19,7 +19,7 @@ gem 'rubyzip'
 gem 'whenever', :require => false
 gem 'google-analytics-rails'
 gem 'systemu'
-
+gem 'jquery-datatables-rails', '~> 1.12.2'
 # Wishart gems
 gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart'
 
