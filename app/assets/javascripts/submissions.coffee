@@ -40,7 +40,7 @@ updateSubmissionStatus = () ->
     $.getScript '/submissions/' + secret_id + '.js', () ->
       window.load_alkane_viewer()
     setTimeout(updateSubmissionStatus, 5000)
-
+  
 updateSamplesStatus = () ->
   if !$('#samples-status').data('finalized')
     secret_id = $('#submission-status').data('secret-id')

@@ -1,17 +1,17 @@
 // Enable tabs
-<% if @submission.samples_any_finalized? %>
+<% if @submission && @submission.samples_any_finalized? %>
   $('#results-tab').removeClass('disabled')
 <% end %>
 
 // Load correct partial and update status
-<% if @submission.profile? %>
+<% if @submission && @submission.profile? %>
   $('#samples-status').data('finalized', '<%= @submission.samples_all_finalized? %>')
   $('#profiling').html("<%= escape_javascript(render partial: 'profiling') %>");
   // TODO: Load first available results if results is blank
 <% else %>
-  $('#submission-status').data('finalized', '<%= @submission.finalized? %>')
+  $('#submission-status').data('finalized', '<%= @submission ? @submission.finalized? : false  %>')
   $('#preprocessing').html("<%= escape_javascript(render partial: 'preprocessing') %>");
 <% end %>
-<% if @submission.samples_all_finalized? %>
+<% if @submission && @submission.samples_all_finalized? %>
   $('.batch-download-results').removeClass('hidden')
 <% end %>

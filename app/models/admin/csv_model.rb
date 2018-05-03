@@ -70,11 +70,13 @@ class  Admin::CsvModel
           self.flash['error'] ||= msg
         end
       end
+
       unless (self.flash.key?('error') && self.flash['error'])
         true 
       else
         false
       end
+
     end
 
     def self.all_rows(file)
@@ -108,11 +110,12 @@ class  Admin::CsvModel
 
     def self.check_and_keep_copies
         file_list = get_csf_file_list(self.csv_file)
-        if file_list.length >= Rails.application.config.APGCMS_copy_number
+        need_number = Rails.application.config.APGCMS_copy_number
+        if file_list.length >= need_number
           deleted_file_list = []
           begin
             # count the dated files, has to ignore the current base file.
-            while (file_list.length - 1> Rails.application.config.APGCMS_copy_number)
+            while (file_list.length - 1> need_number)
                 File.delete(file_list[-1])
                 deleted_file_list << file_list[-1]
                 file_list = file_list[0..-2]
@@ -148,6 +151,10 @@ class  Admin::CsvModel
         dict[k]
       end 
       [base_file] + values
-    end   
+    end 
+
+    def self.last_index
+      self.all_rows(self.csv).last.row['SeqIndex']
+  end  
 
 end

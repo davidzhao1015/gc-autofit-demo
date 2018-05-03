@@ -21,16 +21,22 @@ class SpectrumWorker
     FileUtils.symlink(spectrum.spectrum_data.path, File.join(spectrum.sample_dir, "sample#{suffix}"))
     # FileUtils.symlink(submission.standards.spectrum_data.path, File.join(spectrum.sample_dir, 'Alkstd.mzXML'))
     # FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
+    options = {infiledir: File.join(submission.input_dir),
+              internalstd: submission.internal_standard,
+              process: 'PROFILING',
+              AlkaneRT: submission.alkane_rt.join(','),
+              infoFileDir: submission.preprocessing_dir,
+              outdir: File.join(spectrum.sample_dir),
+              MFscore: submission.mf_score_threshold,
+              log: spectrum.log_file}
 
-    apgcms = APGCMS.new(infiledir: File.join(spectrum.sample_dir),
-                        'lib.internal': submission.database.upcase,
-                        internalstd: submission.internal_standard,
-                        process: 'PROFILING',
-                        AlkaneRT: submission.alkane_rt.join(','),
-                        infoFileDir: submission.preprocessing_dir,
-                        outdir: File.join(spectrum.sample_dir),
-                        MFscore: submission.mf_score_threshold,
-                        log: spectrum.log_file)
+    if submission.database == 'upload'
+      options[:userlib] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_library.csv"
+      options[:usercal] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
+    else
+      options['lib.internal'] = submission.database.upcase
+    end
+    apgcms = APGCMS.new(options)
     if apgcms.success?
       spectrum.status = 'complete'
       # Save JSON results

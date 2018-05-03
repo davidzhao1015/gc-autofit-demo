@@ -152,7 +152,7 @@ class Submission < ActiveRecord::Base
   end
 
   def delete_working_dir
-    FileUtils.rm_r(self.working_dir) if File.exists?(self.working_dir)
+    FileUtils.rm_r(self.working_dir) if File.exist?(self.working_dir)
   end
 
   def to_param
@@ -311,6 +311,16 @@ class Submission < ActiveRecord::Base
   end
 
   def check_internal_standard
+    # Notice there are twice to call this validation method.
+    # First time  profile_file exist. It is the lib csv file of upload.
+    # Second time, profile_file is gone. It is moved to JOB dir. 
+    # Also self.database == upload, it is not upload file path.
+    # It causes failure of validation of the second time. 
+    # First time, record is not be created in mysql, but second time
+    # it does. Here we bypass validation if self.id exist.
+    if self.id 
+      return true
+    end
     if self.internal_standard
       standard = self.internal_standard.downcase
       profile_file = self.profile_library.queued_for_write[:original]

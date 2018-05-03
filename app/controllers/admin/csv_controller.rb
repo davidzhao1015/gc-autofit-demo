@@ -57,7 +57,7 @@ class Admin::CsvController  < Admin::AdminController
   def new
     @file = self.class.model.csv
     @header = self.class.model.header
-    @row = {"SeqIndex" => self.last_index.to_i + 1}
+    @row = {"SeqIndex" => self.class.model.last_index.to_i + 1}
   end
 
   def create
@@ -99,10 +99,6 @@ class Admin::CsvController  < Admin::AdminController
     flash[:notice] = "Row deleted!"
     update_flash()
     redirect_to action: "index"
-  end
-
-  def last_index
-      self.class.model.all_rows(self.class.model.csv).last.row['SeqIndex']
   end
 
   def update_flash 

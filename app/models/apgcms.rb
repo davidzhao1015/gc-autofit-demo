@@ -33,6 +33,13 @@ class APGCMS
     # Create profile matrix with method 'bin' and step 1 ... OK
     @errors += @stderr.strip.split(/\n/).select { |e| e !~ /Create profile matrix with method.*?OK/ }
 
+    # have to handle some files first
+    output_json_file = "#{options[:outdir]}/#{File.basename(options[:outdir])}_spectrum.json"
+    need_json_file = "#{options[:outdir]}/sample_spectrum.json"
+    if not File.exist?(need_json_file) && File.exist?(output_json_file)
+      FileUtils.ln_s(output_json_file, need_json_file)
+    end
+
     if options[:log]
       File.open(options[:log], 'a') do |f|
         f.write("#{'-'*80}\nCOMMAND\n#{'-'*80}\n")
