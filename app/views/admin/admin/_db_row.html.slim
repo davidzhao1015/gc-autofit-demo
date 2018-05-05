@@ -1,29 +1,36 @@
-tr border="1" valign="top"
+tr class='admin-tr'
   - @header.each do |key|
       - if ["SeqIndex"].include?(key)
         - if  defined?(which) && which == "index"
-            td ==  row[key]    
+            td class='admin-td'
+              ==  row[key]    
         - else
-            td == text_field_tag("form_fields[#{key}]",  row[key], :readonly=>"readonly" )
+            td class='admin-td'
+              == text_field_tag("form_fields[#{key}]",  row[key], :readonly=>"readonly" )
       - elsif ['MZ', 'Intensity'].include?(key) 
         - n = row[key].nil? ? 10 : row[key].split(" ").length
         - v = row[key].nil? ? '' : row[key].split(" ").join("\n")
-        - if defined?(to_do)
-          td width="20px" 
+        
+        td class='admin-td admin-width' 
+          - if defined?(to_do)
             == (text_area_tag("form_fields[#{key}]", v, :cols=>10, :rows=>n, :readonly=>"readonly"))
-        - else
-          td width="20px" 
+          - else 
             == (text_area_tag("form_fields[#{key}]", v, :cols=>10, :rows=>n ))
       - else
         - if defined?(to_do)
           - if defined?(which) && which == "index"
-              td ==  row[key]
+              td class='admin-td'
+                ==  row[key]
           -else 
-              td == text_field_tag("form_fields[#{key}]",  row[key], :readonly=>"readonly" )
+              td class='admin-td'
+                == text_field_tag("form_fields[#{key}]",  row[key], :readonly=>"readonly" )
         - else
           - if defined?(which) && which == "index"
-            td ==  row[key]
+            td class='admin-td'
+              ==  row[key]
           -else  
-            td == text_field_tag("form_fields[#{key}]",  row[key] )
+            td class='admin-td'
+              == text_field_tag("form_fields[#{key}]",  row[key] )
   - if defined?(to_do) && ! to_do.nil?
-      td  == to_do
+      td class='admin-td'
+        == to_do

@@ -1,7 +1,7 @@
-p style="font-size: 16px;"
+p class='admin-p-font'
   - csv_files.each do |f|
     - if f == file
-      = link_to(f, send(index_path, file: f), {:style => 'color:red;'})
+      = link_to(f, send(index_path, file: f), {:class => 'admin-red'})
       / class still not work, so temporarily use style in line.
     - else
       = link_to(f, send(index_path, file: f))
@@ -14,13 +14,15 @@ br
   br
   br
   - unless header.empty?
-      table border="3"  style="width: 2000px"
+      table class='admin-table'
         thead 
-          tr border="1" valign="top" 
+          tr class='admin-tr' 
             - header.each do |e|
-              th = e
+              th class='admin-th'
+                = e
             - if file == base_file
-                th  = "To_do"  
+                th class='admin-th'
+                  = "To_do"  
         tbody
           - csv_rows.each do |mdl|
             - to_do = link_to("Edit", send(edit_path, mdl.row['SeqIndex'])) + " "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex']), :method=>:delete, "data-confirm"=>"Are you sure?")
