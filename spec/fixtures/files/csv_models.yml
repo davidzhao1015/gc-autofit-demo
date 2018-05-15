@@ -1,0 +1,64 @@
+---
+csv_model_with_no_MZ:
+  SeqIndex: 1
+  HMDB_ID: 
+  Compound: 'xx'
+  CompoundWithTMS: 
+  RT: ''
+  RI: ''
+  TargetIon: ''
+  QIon: ''
+  IonRatio: ''
+  MZ: ''
+  Intensity: 100
+  Source: ''
+  Note(mixtures): ''
+  To_do: ''
+
+csv_model_with_no_Intensity:
+  SeqIndex: 1
+  HMDB_ID: ''
+  Compound: 'xx'
+  CompoundWithTMS: ''
+  RT: ''
+  RI: ''
+  TargetIon: ''
+  QIon: ''
+  IonRatio: ''
+  MZ: '100'
+  Intensity: ''
+  Source: ''
+  Note(mixtures): ''
+  To_do: ''
+
+csv_model_with_no_Compound_name:
+  SeqIndex: 1
+  HMDB_ID: ''
+  Compound: ''
+  CompoundWithTMS: ''
+  RT: ''
+  RI: ''
+  TargetIon: ''
+  QIon: ''
+  IonRatio: ''
+  MZ: '100'
+  Intensity: '100'
+  Source: ''
+  Note(mixtures): ''
+  To_do: ''
+
+
+csv_model_with_Slope:
+  SeqIndex: 1
+  HMDB_ID: ''
+  Compound: '' 
+  LOQ: ''
+  Intercept: ''
+  Slope: ''
+  rsq: ''
+  adjrsq: ''
+  Src: ''
+  RT: ''
+  RI: ''
+  To_do: ''
+...

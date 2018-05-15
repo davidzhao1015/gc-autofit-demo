@@ -1,5 +1,6 @@
 require 'csv'
 
+
 class  Admin::CsvModel
     include ActiveModel::Validations
 
@@ -155,6 +156,6 @@ class  Admin::CsvModel
 
     def self.last_index
       self.all_rows(self.csv).last.row['SeqIndex']
-  end  
+    end  
 
 end

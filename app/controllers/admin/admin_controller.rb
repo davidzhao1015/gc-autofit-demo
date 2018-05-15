@@ -7,7 +7,8 @@ class Admin::AdminController < ApplicationController
     authenticate_or_request_with_http_basic('Administration') do |username, password|
       md5 = Digest::MD5.new 
       md5 << password
-      username == Rails.application.config.admin_username && md5.hexdigest.to_s == Rails.application.config.admin_password 
+      username == Rails.application.config.admin_username && \
+        md5.hexdigest.to_s == Rails.application.config.admin_password 
     end
   end
 
