@@ -1,0 +1,24 @@
+h1  #{file}
+br
+br
+- if defined? file
+  = render :partial => 'attention' if header.include?('MZ')
+  - unless header.empty?
+    - if domain == 'admin'
+      = form_tag(send(update_path, id, type: type), :method=>"put")
+    - else
+      = form_tag(send(update_path, id, type: type, file: file), :method=>"put")
+    = render(:partial => 'single_row_table', :locals => { row: row, header: header })
+    = submit_tag("Save") 
+      | &nbsp;&nbsp;&nbsp;
+    - if domain == 'admin'
+      = link_to 'Cancel', send(index_path, type: type)
+    - else
+      = link_to 'Cancel', send(index_path, type: type, file: file)
+    br
+    br
+  - else
+    p  
+      | Header is empty!!!
+- else
+  p No urine lib file defined.

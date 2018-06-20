@@ -1,0 +1,27 @@
+h1  #{file}
+br
+br
+- if defined? file
+  = render :partial => 'attention' if header.include?('MZ')
+  - unless header.empty?
+    - if domain == 'admin'
+      = form_tag(send(create_path, type: type), :method=>"POST")
+    - else 
+      = form_tag(send(create_path, type: type, file: file), :method=>"POST")
+    = render(:partial => 'single_row_table', :locals => { row: row, header: header })
+    = submit_tag("Save") 
+      | &nbsp;&nbsp;&nbsp;
+    - if row['SeqIndex'] == 1
+      = link_to 'Cancel', makedb_path
+    - else
+      - if domain == 'admin'
+        = link_to 'Cancel', send(index_path, type: type)
+      - else
+        = link_to 'Cancel', send(index_path, type: type, file: file)
+    br
+    br
+  - else
+    p  
+      | Header is empty!!!
+- else
+  p No urine lib file defined.

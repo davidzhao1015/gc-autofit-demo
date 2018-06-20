@@ -1,0 +1,48 @@
+p class='admin-p-font'
+  - csv_files.each do |f|
+    - if f == file
+      = link_to(f, send(index_path, file: f, type: type), {:class => 'admin-red'})
+      / class still not work, so temporarily use style in line.
+    - else
+      = link_to(f, send(index_path, file: f, type: type))
+    br
+br
+br
+- if defined? file
+  - if file == base_file  && (domain == 'admin' || domain == 'makedb')
+      - if domain == 'admin'
+        = link_to "Add new record", send(new_path, type: type)
+      - else
+        = link_to "Add new record", send(new_path, type: type, file: file)
+  br
+  br
+  - if domain == 'makedb'
+    = link_to "Download this file", send(download_path, type: type, file: file)
+    br
+    br  
+  - unless header.empty?
+      table class='admin-table'
+        thead 
+          tr class='admin-tr' 
+            - header.each do |e|
+              th class='admin-th'
+                = e
+            - if file == base_file && (domain == 'admin' || domain == 'makedb')
+                th class='admin-th'
+                  = "To_do"  
+        tbody
+          - csv_rows.each do |mdl|
+            - if file == base_file && (domain == 'admin' || domain == 'makedb')
+              - if domain == 'admin'
+                - to_do = link_to("Edit", send(edit_path, mdl.row['SeqIndex'], type: type)) + " "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex'], type: type), :method=>:delete, "data-confirm"=>"Are you sure?")
+              - else
+                - to_do = link_to("Edit", send(edit_path, mdl.row['SeqIndex'], type: type, file: file)) + " "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex'], type: type, file: file), :method=>:delete, "data-confirm"=>"Are you sure?")
+              = render( :partial => 'db_row', :locals => {which: 'index', row: mdl.row, to_do: to_do} ) 
+            - else
+              = render( :partial => 'db_row', :locals => {which: 'index', row: mdl.row} )     
+      br
+      br
+  - else
+      p No header #{header} checked!!!
+- else
+  p No urine lib file #{file} defined in admin/urines/index.html.slim.

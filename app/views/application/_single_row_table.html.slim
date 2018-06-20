@@ -1,0 +1,8 @@
+table class='admin-table' 
+  thead
+    tr class='admin-tr' 
+      - header.each do |e|
+        th class='admin-td' 
+          = e
+  tbody
+    = render(:partial => 'db_row', :locals => { row: row } )

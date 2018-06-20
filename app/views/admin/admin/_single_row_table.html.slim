@@ -1,7 +1,0 @@
-table class='admin-table' 
-  thead
-    tr class='admin-tr' 
-      - header.each do |e|
-        th = e
-  tbody
-    = render(:partial => 'db_row', :locals => { row: row } )

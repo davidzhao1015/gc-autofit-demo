@@ -1,0 +1,13 @@
+= render(:partial => 'index', 
+         :locals => {csv_files: @csv_files,
+                   base_file: @base_file,
+                   file: @file,  
+                   header: @header, 
+                   csv_rows: @csv_rows,
+                   type: @type,
+                   index_path: 'makedb_calibration_csv_index_path',
+                   new_path: 'new_makedb_calibration_csv_path', 
+                   edit_path: 'edit_makedb_calibration_csv_path', 
+                   delete_path: 'makedb_calibration_csv_path',
+                   download_path: 'download_makedb_calibration_csv_index_path',
+                   domain: 'makedb'} )

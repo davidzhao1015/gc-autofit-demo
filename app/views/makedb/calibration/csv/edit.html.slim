@@ -1,0 +1,10 @@
+= render(:partial => 'edit',
+         :locals => {file: @file,
+            header: @header,
+            row: @row,
+            type: @type,
+            update_path: 'makedb_calibration_csv_path',
+            index_path: 'makedb_calibration_csv_index_path',
+            id: @id,
+            domain: 'makedb'} )
+

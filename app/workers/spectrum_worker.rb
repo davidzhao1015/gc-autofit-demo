@@ -52,7 +52,7 @@ class SpectrumWorker
 
   rescue StandardError => e
     spectrum.status = "failed"
-    spectrum.error =  "[Rescue] There was a problem running GC-AutoFit. #{e.message}"
+    spectrum.error =  "[Rescue from spectrum worker] There was a problem running GC-AutoFit. #{e.message}"
     spectrum.logger(e.message)
     spectrum.logger(e.backtrace.join("\n"))
   ensure

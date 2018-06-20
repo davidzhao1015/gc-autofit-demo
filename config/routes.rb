@@ -20,14 +20,46 @@ Rails.application.routes.draw do
   
   namespace :admin do
     namespace :db do
-      resources :salivas, :urines, :serums, :alkanes
+      resources :csv
     end
 
     namespace :calibration do
-      resources :salivas, :serums, :urinecholesterols, :urinesuccinicacidd4s, :urinetropicacids
+      resources :csv
     end
     
     get '',  to: 'admin#index'
+  end
+
+  namespace :lib do
+    namespace :db do
+      get '', to: 'csv#index'
+    end
+
+    namespace :calibration do
+      get '', to: 'csv#index'
+    end
+      
+    get '',  to: 'lib#index'
+  end
+
+  namespace :makedb do
+    namespace :db do
+      resources :csv  do
+        collection do
+          get 'download'
+        end
+      end
+    end
+
+    namespace :calibration do
+      resources :csv  do
+        collection do
+          get 'download'
+        end
+      end
+    end
+    
+    get '',  to: 'makedb#index'
   end
 
   mount Wishart::Engine => "/w" , as: 'wishart'

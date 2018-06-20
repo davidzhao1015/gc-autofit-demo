@@ -2,43 +2,48 @@ require 'csv'
 
 
 class  Admin::CsvModel
+  
     include ActiveModel::Validations
-
+    include LibFileHash # in /lib
     include ClassLevelInheritableAttributes  # in /lib
-    inheritable_attributes :flash, :csv_file
+    inheritable_attributes :flash, :csv_file_dir, :category
     @flash = {}
-    @csv_file = ''
+    @csv_file_dir = ''
+    @category = ''
 
     attr_accessor :row, :mz, :intensity, :compound_name, :slope
     validates :compound_name, presence: true
     validates :mz, :intensity, presence: true, if: :header_include_mz?
-    validates_format_of :mz, :intensity, with: /\A[\d\s]+\z/i,  if: :header_include_mz?
+    validates_format_of :mz, :intensity, with: /\A[\d\se\+]+\z/i,  if: :header_include_mz?
     #validates :slope,  presence: true, if: :header_include_slope?
     #validates_format_of :slope, with: /\A[\d\.]+\z/i,  if: :header_include_slope?
 
-    def self.save(row_objs, mode)
+    def self.save(row_objs, file, mode)
         # before save the file to lib. Make a 
         # copy with the current day. All the updates
         # will be made into the current file and the
         # dated file. Keep 20 past dated files for usage
         # Save today's file as copy first
+        # params: row_objs (data structure containing csv data)
+        #         file  (row_objs data is going to save to this file)
+        #         mode  (action)
 
         # check if the number of files is over the limit.
         # If yes, delete the oldest one.
-        today_file = "#{self.csv_file}.#{DateTime.current().strftime('%Y%m%d')}"
+        today_file = "#{file}.#{DateTime.current().strftime('%Y%m%d')}"
         # Bypass validation if in destroy 
         unless mode == 'delete'
           unless self.validate_fields(row_objs)
-            msg = "#{today_file} and #{self.csv_file} NOT saved!"
-            self.flash['error'] += msg
+            msg = "#{today_file} and #{file} NOT saved!"
+            self.flash[:error] << msg
             return false
           end
         end
-        self.check_and_keep_copies()
+        self.check_and_keep_copies(file)
         
         #save today's file and current db file
-        h = self.header
-        [today_file, self.csv_file].each do |f|
+        h = self.header(file)
+        [today_file, file].each do |f|
           CSV.open(f, "wb") do |csv|
             csv << h
             row_objs.each do |row_obj|
@@ -49,11 +54,11 @@ class  Admin::CsvModel
             end
           end
         end
-        msg = "#{today_file} and #{self.csv_file} saved!"
+        msg = "#{today_file} and #{file} saved!"
         if self.flash.key?(:success)
             self.flash[:success] << " #{msg}"
         else
-            self.flash[:success] = msg
+            self.flash[:success] = [msg]
         end
         return true
     end
@@ -66,13 +71,18 @@ class  Admin::CsvModel
           row_obj.intensity = row_obj.row['Intensity']
         end
         unless row_obj.valid?
-          msg = "#{'Filed'.pluralize(row_obj.errors.messages.keys.length)} failed: " + 
-                 row_obj.errors.messages.map{|k,v| "#{k}=#{v}"}.join('&') + ". "
-          self.flash['error'] ||= msg
+          msg = "#{'Field'.pluralize(row_obj.errors.messages.keys.length)} failed: " + 
+                row_obj.row['SeqIndex'] + ' ' +
+                "|#{row_obj.row['Intensity']}| " +
+                row_obj.errors.messages.map{|k,v| "#{k}=#{v}"}.join('&') + ". "
+          if ! self.flash.key?(:error)
+            self.flash[:error] = []
+          end
+          self.flash[:error] << msg
         end
       end
 
-      unless (self.flash.key?('error') && self.flash['error'])
+      if ! self.flash.key?(:error)
         true 
       else
         false
@@ -88,12 +98,21 @@ class  Admin::CsvModel
         items
     end
 
-    def self.header
-        CSV.read(self.csv_file, headers: true).headers()
+    def self.header(file)
+        CSV.read(file, headers: true).headers()
     end
 
-    def self.csv
-        self.csv_file
+    def self.csv_file(type)
+        csv_file_dict = self.get_lib_file_dict(self.csv_file_dir)
+        csv_file_dict = csv_file_dict.with_indifferent_access
+        begin 
+            csv_file_dict[type]
+        rescue Exception => e  
+            self.flash[:error] << e.message 
+            ''
+        else
+            csv_file_dict[type]
+        end
     end 
 
     def initialize(row_dict)
@@ -101,16 +120,16 @@ class  Admin::CsvModel
     end
 
     def header_include_mz?
-      self.class.header.include?('MZ')
+      self.row.keys.include?('MZ')
     end
 
     def header_include_slope?
-      self.class.header.include?('Slope')
+      self.row.keys.include?('Slope')
     end
      
 
-    def self.check_and_keep_copies
-        file_list = get_csf_file_list(self.csv_file)
+    def self.check_and_keep_copies(file)
+        file_list = get_csv_file_list(file)
         need_number = Rails.application.config.APGCMS_copy_number
         if file_list.length >= need_number
           deleted_file_list = []
@@ -129,7 +148,7 @@ class  Admin::CsvModel
         end
     end
 
-    def self.get_csf_file_list(base_file)
+    def self.get_csv_file_list(base_file)
       file_list = Dir.glob("#{base_file}*")
       #reorder file list, the oldest is the last
       self.reorder_by_date(file_list, base_file)
@@ -154,8 +173,8 @@ class  Admin::CsvModel
       [base_file] + values
     end 
 
-    def self.last_index
-      self.all_rows(self.csv).last.row['SeqIndex']
+    def self.last_index(file)
+      self.all_rows(file).last ? self.all_rows(file).last.row['SeqIndex'] : 0
     end  
 
 end
