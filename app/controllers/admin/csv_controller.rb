@@ -5,6 +5,11 @@ class Admin::CsvController  < Admin::AdminController
      attr_accessor :model
   end
 
+  def download
+    file = params[:file]
+    send_file file
+  end
+
   def index
     @type = params.key?(:type) ? params[:type] : nil
     @base_file = self.class.model.csv_file(@type)
@@ -60,9 +65,11 @@ class Admin::CsvController  < Admin::AdminController
 
   def new
     @type = params.key?(:type) ? params[:type] : nil
+    id = params.key?(:id) ? params[:id] : nil
     @file = self.class.model.csv_file(@type)
     @header = self.class.model.header(@file)
-    @row = {"SeqIndex" => self.class.model.last_index(@file).to_i + 1}
+    index = id ? id: self.class.model.last_index(@file).to_i + 1 
+    @row = {"SeqIndex" => index}
   end
 
   def create
@@ -78,7 +85,21 @@ class Admin::CsvController  < Admin::AdminController
     end
     csv_file = self.class.model.csv_file(@type)
     row_objs = self.class.model.all_rows(csv_file)
-    row_objs << self.class.model.new(fields)
+    if fields['SeqIndex'] > row_objs[-1].row['SeqIndex']
+      row_objs << self.class.model.new(fields)
+    else
+      row_objs_tmp = []
+      row_objs.each do |e|
+        if e.row['SeqIndex'] >= fields['SeqIndex']
+          if e.row['SeqIndex'] == fields['SeqIndex']
+            row_objs_tmp << self.class.model.new(fields)
+          end
+          e.row['SeqIndex'] = e.row['SeqIndex'].to_i + 1
+        end
+        row_objs_tmp << e
+      end
+      row_objs = row_objs_tmp
+    end
 
     if self.class.model.save(row_objs, csv_file, 'create')
       flash[:notice] = 'Row generated!'

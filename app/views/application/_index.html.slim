@@ -8,6 +8,11 @@ p class='admin-p-font'
     br
 br
 br
+- if domain == 'makedb'
+  p class='admin-blue' Please bookmark the upper url in url bar for later editing and updating your lib.
+  br
+  br
+
 - if defined? file
   - if file == base_file  && (domain == 'admin' || domain == 'makedb')
       - if domain == 'admin'
@@ -16,7 +21,7 @@ br
         = link_to "Add new record", send(new_path, type: type, file: file)
   br
   br
-  - if domain == 'makedb'
+  - if domain == 'makedb' || domain == 'admin'
     = link_to "Download this file", send(download_path, type: type, file: file)
     br
     br  
@@ -34,9 +39,9 @@ br
           - csv_rows.each do |mdl|
             - if file == base_file && (domain == 'admin' || domain == 'makedb')
               - if domain == 'admin'
-                - to_do = link_to("Edit", send(edit_path, mdl.row['SeqIndex'], type: type)) + " "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex'], type: type), :method=>:delete, "data-confirm"=>"Are you sure?")
+                - to_do = link_to("Insert above", send(new_path, id: mdl.row['SeqIndex'], type: type, file: file)) + ", " + link_to("Edit", send(edit_path, mdl.row['SeqIndex'], type: type)) + ", "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex'], type: type), :method=>:delete, "data-confirm"=>"Are you sure?")
               - else
-                - to_do = link_to("Edit", send(edit_path, mdl.row['SeqIndex'], type: type, file: file)) + " "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex'], type: type, file: file), :method=>:delete, "data-confirm"=>"Are you sure?")
+                - to_do = link_to("Insert above", send(new_path, id: mdl.row['SeqIndex'], type: type, file: file)) + ", " + link_to("Edit", send(edit_path, mdl.row['SeqIndex'], type: type, file: file)) + ", "+ link_to("Destroy", send(delete_path, mdl.row['SeqIndex'], type: type, file: file), :method=>:delete, "data-confirm"=>"Are you sure?")
               = render( :partial => 'db_row', :locals => {which: 'index', row: mdl.row, to_do: to_do} ) 
             - else
               = render( :partial => 'db_row', :locals => {which: 'index', row: mdl.row} )     

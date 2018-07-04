@@ -20,11 +20,19 @@ Rails.application.routes.draw do
   
   namespace :admin do
     namespace :db do
-      resources :csv
+      resources :csv  do
+        collection do
+          get 'download'
+        end
+      end
     end
 
     namespace :calibration do
-      resources :csv
+      resources :csv  do
+        collection do
+          get 'download'
+        end
+      end
     end
     
     get '',  to: 'admin#index'

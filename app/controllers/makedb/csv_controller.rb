@@ -25,10 +25,12 @@ class Makedb::CsvController  < Makedb::MakedbController
   def new
     @type = self.class.model.category
     @file = params.key?(:file) ? params[:file] : self.class.model.template_file
+    id = params.key?(:id) ? params[:id] : nil
     is_template =  @file == self.class.model.template_file ?  true : false
     @header = self.class.model.header()
     last_index = is_template ? 0 : self.class.model.last_index(@file).to_i
-    @row = {"SeqIndex" => last_index + 1}
+    index = id ? id : last_index + 1
+    @row = {"SeqIndex" => index}
   end
 
   def create
@@ -46,13 +48,28 @@ class Makedb::CsvController  < Makedb::MakedbController
     # flash error will be kept to next step.
     flash.delete(:error) if flash.key?(:error)
     
-    if params.key?(:file)
+    if params.key?(:file) && params[:file] !~ /template.csv/
       csv_file = params[:file]
       row_objs = self.class.model.all_rows(csv_file)
+      if fields['SeqIndex'] > row_objs[-1].row['SeqIndex']
+        row_objs << self.class.model.new(fields)
+      else
+        row_objs_tmp = []
+        row_objs.each do |e|
+          if e.row['SeqIndex'] >= fields['SeqIndex']
+            if e.row['SeqIndex'] == fields['SeqIndex']
+              row_objs_tmp << self.class.model.new(fields)
+            end
+            e.row['SeqIndex'] = e.row['SeqIndex'].to_i + 1
+          end
+          row_objs_tmp << e
+        end
+        row_objs = row_objs_tmp
+      end
     else
       csv_file = "#{self.class.model.db_tmp_dir}/#{Time.now.to_i}.csv"
+      row_objs << self.class.model.new(fields)
     end
-    row_objs << self.class.model.new(fields)
     
     if self.class.model.save(row_objs, csv_file, 'create')
       flash[:notice] = 'Row generated!'

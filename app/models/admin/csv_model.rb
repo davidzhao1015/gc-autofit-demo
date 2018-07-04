@@ -11,12 +11,14 @@ class  Admin::CsvModel
     @csv_file_dir = ''
     @category = ''
 
-    attr_accessor :row, :mz, :intensity, :compound_name, :slope
+    attr_accessor :row, :mz, :intensity, :compound_name, :slope, :ri, :rt
     validates :compound_name, presence: true
     validates :mz, :intensity, presence: true, if: :header_include_mz?
     validates_format_of :mz, :intensity, with: /\A[\d\se\+]+\z/i,  if: :header_include_mz?
     #validates :slope,  presence: true, if: :header_include_slope?
     #validates_format_of :slope, with: /\A[\d\.]+\z/i,  if: :header_include_slope?
+    validates :ri, :rt,  presence: true
+    validates_format_of :ri, :rt, with: /\A[\d\.\+\-e]+\z/i
 
     def self.save(row_objs, file, mode)
         # before save the file to lib. Make a 
@@ -70,6 +72,13 @@ class  Admin::CsvModel
           row_obj.mz = row_obj.row['MZ']
           row_obj.intensity = row_obj.row['Intensity']
         end
+        if row_obj.row.key?('Slope')
+          row_obj.slope = row_obj.row['Slope']
+          row_obj.intercept = row_obj.row['Intercept']
+        end
+        row_obj.ri = row_obj.row['RI']
+        row_obj.rt = row_obj.row['RT']
+
         unless row_obj.valid?
           msg = "#{'Field'.pluralize(row_obj.errors.messages.keys.length)} failed: " + 
                 row_obj.row['SeqIndex'] + ' ' +

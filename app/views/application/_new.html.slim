@@ -1,13 +1,12 @@
-h1  #{file}
+h1  
+  - if file !~/template.csv/
+    = file
 br
 br
 - if defined? file
   = render :partial => 'attention' if header.include?('MZ')
   - unless header.empty?
-    - if domain == 'admin'
-      = form_tag(send(create_path, type: type), :method=>"POST")
-    - else 
-      = form_tag(send(create_path, type: type, file: file), :method=>"POST")
+    = form_tag(send(create_path, type: type, file: file), :method=>"POST")
     = render(:partial => 'single_row_table', :locals => { row: row, header: header })
     = submit_tag("Save") 
       | &nbsp;&nbsp;&nbsp;
