@@ -2,7 +2,7 @@ h1  #{file}
 br
 br
 - if defined? file
-  = render :partial => 'attention' if header.include?('MZ')
+  = render(:partial => 'attention', :locals => {domain: domain} ) if header.include?('MZ')
   - unless header.empty?
     - if domain == 'admin'
       = form_tag(send(update_path, id, type: type), :method=>"put")

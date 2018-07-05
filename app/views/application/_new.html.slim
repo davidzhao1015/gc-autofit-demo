@@ -4,7 +4,7 @@ h1
 br
 br
 - if defined? file
-  = render :partial => 'attention' if header.include?('MZ')
+  = render(:partial => 'attention', :locals => {domain: domain} ) if header.include?('MZ')
   - unless header.empty?
     = form_tag(send(create_path, type: type, file: file), :method=>"POST")
     = render(:partial => 'single_row_table', :locals => { row: row, header: header })
