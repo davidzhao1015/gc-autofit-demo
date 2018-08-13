@@ -21,7 +21,7 @@ gem 'google-analytics-rails'
 gem 'systemu'
 gem 'jquery-turbolinks'
 gem 'turbolinks'
-
+gem 'activerecord-session_store'
 # Wishart gems
 gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart'
 

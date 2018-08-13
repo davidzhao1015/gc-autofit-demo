@@ -18,7 +18,7 @@ class  Admin::CsvModel
     #validates :slope,  presence: true, if: :header_include_slope?
     #validates_format_of :slope, with: /\A[\d\.]+\z/i,  if: :header_include_slope?
     validates :ri, :rt,  presence: true
-    validates_format_of :ri, :rt, with: /\A[\d\.\+\-e]+\z/i
+    #validates_format_of :ri, :rt, with: /\A[\d\.\+\-e]+\z/i
 
     def self.save(row_objs, file, mode)
         # before save the file to lib. Make a 
@@ -81,7 +81,7 @@ class  Admin::CsvModel
 
         unless row_obj.valid?
           msg = "#{'Field'.pluralize(row_obj.errors.messages.keys.length)} failed: " + 
-                row_obj.row['SeqIndex'] + ' ' +
+                row_obj.row['SeqIndex'].to_s + ' ' +
                 "|#{row_obj.row['Intensity']}| " +
                 row_obj.errors.messages.map{|k,v| "#{k}=#{v}"}.join('&') + ". "
           if ! self.flash.key?(:error)
