@@ -18,7 +18,7 @@ class  Makedb::CsvModel
     validates_format_of :mz, :intensity, with: /\A[\d\se\+]+\z/i,  if: :header_include_mz?
     validates :slope, :intercept,  presence: true, if: :header_include_slope?
     validates_format_of :slope, :intercept, with: /\A[\d\.\+\-e]+\z/i,  if: :header_include_slope?
-    validates :ri, :rt,  presence: true
+    validates :ri, :rt,  presence: true, if: :header_include_mz?
     validates_format_of :ri, :rt, with: /\A[\d\.\+\-e]+\z/i
 
     def self.all_rows(file)

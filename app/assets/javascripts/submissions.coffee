@@ -7,7 +7,12 @@ $ ->
   $('#profiling').on('click', 'tr.spectrum-active', () ->
     window.location.href = $(this).data('spectrum-link')
   )
-
+  
+  $("[id^=radio-database-]").on 'change', () ->
+    if $(this).prop('checked', true)
+      $('#submission_profile_library').val('')
+      $('#submission_calibration').val('')
+        
   # Handle 'User uploaded database'
   if $('#database-selection :radio:checked').val() != 'upload'
       $('#custom-database-upload').hide()

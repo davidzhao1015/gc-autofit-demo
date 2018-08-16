@@ -11,13 +11,15 @@ class  Admin::CsvModel
     @csv_file_dir = ''
     @category = ''
 
-    attr_accessor :row, :mz, :intensity, :compound_name, :slope, :ri, :rt
+    attr_accessor :row, :mz, :intensity, :compound_name, :slope, :ri, :rt, :intercept
     validates :compound_name, presence: true
     validates :mz, :intensity, presence: true, if: :header_include_mz?
     validates_format_of :mz, :intensity, with: /\A[\d\se\+]+\z/i,  if: :header_include_mz?
     #validates :slope,  presence: true, if: :header_include_slope?
     #validates_format_of :slope, with: /\A[\d\.]+\z/i,  if: :header_include_slope?
-    validates :ri, :rt,  presence: true
+    #validates :intercept,  presence: true, if: :header_include_slope?
+    #validates_format_of :intercept, with: /\A[\d\.]+\z/i,  if: :header_include_slope?
+    validates :ri, :rt,  presence: true, if: :header_include_mz?
     #validates_format_of :ri, :rt, with: /\A[\d\.\+\-e]+\z/i
 
     def self.save(row_objs, file, mode)
@@ -32,11 +34,11 @@ class  Admin::CsvModel
 
         # check if the number of files is over the limit.
         # If yes, delete the oldest one.
-        today_file = "#{file}.#{DateTime.current().strftime('%Y%m%d')}"
+        now_file = "#{file}.#{DateTime.current().strftime('%Y%m%d%H%M%S')}"
         # Bypass validation if in destroy 
         unless mode == 'delete'
           unless self.validate_fields(row_objs)
-            msg = "#{today_file} and #{file} NOT saved!"
+            msg = "#{now_file} and #{file} NOT saved!"
             self.flash[:error] << msg
             return false
           end
@@ -45,7 +47,7 @@ class  Admin::CsvModel
         
         #save today's file and current db file
         h = self.header(file)
-        [today_file, file].each do |f|
+        [now_file, file].each do |f|
           CSV.open(f, "wb") do |csv|
             csv << h
             row_objs.each do |row_obj|
@@ -56,7 +58,7 @@ class  Admin::CsvModel
             end
           end
         end
-        msg = "#{today_file} and #{file} saved!"
+        msg = "#{now_file} and #{file} saved!"
         if self.flash.key?(:success)
             self.flash[:success] << " #{msg}"
         else

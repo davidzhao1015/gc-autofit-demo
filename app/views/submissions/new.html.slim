@@ -132,9 +132,11 @@ h1 GC-AutoFit Analysis
           .col-sm-2.form-input
             = f.text_field :mf_score_threshold, class: "input-sm form-control"
     .button-clear
-
-    .submit-button
-      = f.submit 'Submit', class: 'btn btn-primary btn-submit'
+    div
+      .submit-button
+        = f.submit 'Submit', class: 'btn btn-primary btn-submit btn_margin'
+      .clear-button
+        =< f.submit 'Clear', class: 'btn btn-primary btn-submit btn_margin', type: :reset
 
     .button-clear
 
