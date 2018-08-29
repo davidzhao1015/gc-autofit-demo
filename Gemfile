@@ -23,7 +23,7 @@ gem 'jquery-turbolinks'
 gem 'turbolinks'
 gem 'activerecord-session_store'
 # Wishart gems
-gem 'wishart', git: 'https://github.com/yongjiel/GC-autofit.git'
+gem 'wishart', git: 'https://github.com/yongjiel/wishart.git'
 
 group :development, :test do
   gem 'byebug'
