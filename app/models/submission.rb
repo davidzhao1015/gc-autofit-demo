@@ -223,23 +223,27 @@ class Submission < ActiveRecord::Base
     samples_data = {}
     self.samples.each do |spectrum|
       concentrations = {}
+      area_ratios = {}
       if File.exist?(spectrum.profile_results_path)
         results = File.readlines(spectrum.profile_results_path)
         ids = results[0].split('","').map { |i| i.gsub('"', '') }
         names = results[1].split('","').map { |i| i.gsub('"', '') }
         concs = results[2].split(',').map { |i| i.gsub('"', '') }
+        area_rs = results[3].split(',').map { |i| i.gsub('"', '') }
         ids.shift
         names.shift
         concs.shift
+        area_rs.shift
         ids.each_with_index do |id, i|
           concentrations[id] = { name: names[i], conc: concs[i] }
+          area_ratios[id] = {name: names[i], area_r: area_rs[i] }
         end
       end
-      samples_data[spectrum.name] = concentrations
+      samples_data[spectrum.name] = concentrations, area_ratios
     end
 
     if self.samples.count > 0
-      first_sample_data = samples_data[self.samples.first.name]
+      first_sample_data = samples_data[self.samples.first.name][0]
       hmdb_ids = first_sample_data.keys
       names = hmdb_ids.map { |id| first_sample_data[id][:name] }
       CSV.generate do |output|
@@ -250,12 +254,18 @@ class Submission < ActiveRecord::Base
         output << ['Compound'] + names
         self.samples.each do |sample|
           next if sample.failed?
-          row = [sample.name]
+          row = [sample.name + " Concentration"]
           hmdb_ids.each do |id|
-            row << samples_data[sample.name][id][:conc]
+            row << samples_data[sample.name][0][id][:conc]
           end
           output << row
+          row1 = [sample.name + ' Area_ratio']
+          hmdb_ids.each do |id|
+            row1 << samples_data[sample.name][1][id][:area_r]
+          end
+          output << row1
         end
+
       end
     end
   end
