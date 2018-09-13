@@ -26,12 +26,12 @@ br
     br
     br  
   - unless header.empty?
-      table class='results-table table table-striped table-condensed dataTable no-footer' id='admin-table'
+      table class='results-admin-table table table-striped table-condensed dataTable no-footer'  id='admin-table'
         thead 
           tr class='admin-tr' 
             - header.each do |e|
-              th class='admin-th'
-                = e
+                th  class="admin-th"
+                  = e
             - if file == base_file && (domain == 'admin' || domain == 'makedb')
                 th class='admin-th'
                   = "To_do"  
