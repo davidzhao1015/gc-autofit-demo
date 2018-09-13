@@ -34,7 +34,7 @@ class  Admin::CsvModel
 
         # check if the number of files is over the limit.
         # If yes, delete the oldest one.
-        now_file = "#{file}.#{DateTime.current().strftime('%Y%m%d%H%M%S')}"
+        now_file = "#{file}.#{DateTime.current().strftime('%Y_%m_%d_%H_%M_%S')}"
         # Bypass validation if in destroy 
         unless mode == 'delete'
           unless self.validate_fields(row_objs)
@@ -173,7 +173,7 @@ class  Admin::CsvModel
             f != base_file
       end
       tmp_list.each do |f|
-        if f =~/\.(\d+)$/
+        if f =~/\.([\d_]+)$/
           dict[$1] = f
         end
       end

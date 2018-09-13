@@ -45,7 +45,7 @@ Rails.application.configure do
   config.admin_password = '1d989cc0ce4221aaa7081a43a2877294'
 
   # Root of APGCMS
-  config.APGCMS_root = "/home/centos/APGCMS"
+  config.APGCMS_root = "/apps/gcms/APGCMS"
   # csv lib files for maintenance in admin domain.
   # mz_intensity DBs
   config.APGCMS_mz_intensity_dir = "#{config.APGCMS_root}/DB/mz_intensity"

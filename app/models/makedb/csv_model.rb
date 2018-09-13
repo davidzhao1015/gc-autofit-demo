@@ -68,7 +68,6 @@ class  Makedb::CsvModel
         
         #save file 
         h = self.header()
-        
         CSV.open(file, "wb") do |csv|
             csv << h
             row_objs.each do |row_obj|

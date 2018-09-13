@@ -67,7 +67,7 @@ class Makedb::CsvController  < Makedb::MakedbController
         row_objs = row_objs_tmp
       end
     else
-      csv_file = "#{self.class.model.db_tmp_dir}/#{Time.now.to_i}.csv"
+      csv_file = "#{self.class.model.db_tmp_dir}/#{DateTime.current().strftime('%Y_%m_%d_%H_%M_%S')}.csv"
       row_objs << self.class.model.new(fields)
     end
     
