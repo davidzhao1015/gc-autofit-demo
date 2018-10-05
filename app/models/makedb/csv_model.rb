@@ -17,7 +17,8 @@ class  Makedb::CsvModel
     validates :mz, :intensity, presence: true, if: :header_include_mz?
     validates_format_of :mz, :intensity, with: /\A[\d\se\+]+\z/i,  if: :header_include_mz?
     validates :slope, :intercept,  presence: true, if: :header_include_slope?
-    validates_format_of :slope, :intercept, with: /\A[\d\.\+\-e]+\z/i,  if: :header_include_slope?
+    validates_format_of :slope, :intercept, with: /\A[\d\.\+\-e]+\s*\|\|\s*[\d\.\+\eNA]+\s*\z/i, 
+                   message: 'Format should be [number||(number or NA)].', if: :header_include_slope?
     validates :ri, :rt,  presence: true, if: :header_include_mz?
     validates_format_of :ri, :rt, with: /\A[\d\.\+\-e]+\z/i
 
@@ -94,9 +95,9 @@ class  Makedb::CsvModel
           row_obj.mz = row_obj.row['MZ']
           row_obj.intensity = row_obj.row['Intensity']
         end
-        if row_obj.row.key?('Slope')
-          row_obj.slope = row_obj.row['Slope']
-          row_obj.intercept = row_obj.row['Intercept']
+        if row_obj.row.key?('Slope(High||Low)')
+          row_obj.slope = row_obj.row['Slope(High||Low)']
+          row_obj.intercept = row_obj.row['Intercept(High||Low)']
         end
         row_obj.ri = row_obj.row['RI']
         row_obj.rt = row_obj.row['RT']
@@ -125,7 +126,7 @@ class  Makedb::CsvModel
     end
 
     def header_include_slope?
-      self.row.keys.include?('Slope')
+      self.row.keys.find { |e| /Slope/ =~ e }
     end
 
     def initialize(row_dict)
