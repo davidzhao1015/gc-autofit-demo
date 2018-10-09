@@ -315,6 +315,10 @@ class Submission < ActiveRecord::Base
     unless self.spectra.any? { |s| s.category == 'standards' }
       errors[:base] << "An alkane standards spectrum must be provided"
     end
+    unless self.spectra.any? { |s| s.category == 'blank' }
+      errors[:base] << "A blank standards spectrum must be provided"
+    end
+    
     unless self.spectra.any? { |s| s.category == 'sample' }
       errors[:base] << "At least one sample spectrum must be provided"
     end
