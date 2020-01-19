@@ -41,13 +41,14 @@ h1 GC-AutoFit Analysis
               | GC-AutoFit  works with serum, urine, saliva and your own custom libraries.
           .col-sm-12.form-input#database-selection
             - Submission::DATABASES.each do |key, name|
-              .radio-div
-                = f.radio_button :database, key, id: "radio-database-#{key}"
-                label.radio-label id='label-database-#{key}' for='submission_database_type'
-                  | #{name} 
-                  - if key != 'upload'
-                    a.custom-db-edit href='#{key}'
-                      span.glyphicon.glyphicon-edit
+              - if name == 'Urine'
+                .radio-div
+                  = f.radio_button :database, key, id: "radio-database-#{key}"
+                  label.radio-label id='label-database-#{key}' for='submission_database_type'
+                    | #{name} 
+                    - if key != 'upload'
+                      a.custom-db-edit href='#{key}'
+                        span.glyphicon.glyphicon-edit
         .form-horizontal#custom-database-upload
           .form-group
             .form-label
@@ -107,7 +108,7 @@ h1 GC-AutoFit Analysis
                 .form-label
                   = label :samples, 'Samples', class: 'control-label required col-sm-3'
                 .col-sm-9
-                  = file_field_tag :spectrum_data, multiple: true, name: 'sample_spectra[]'
+                  = file_field_tag :spectrum_data, multiple: false, name: 'sample_spectra[]'
           .tab-pane#zip-file[class="#{'active' if @upload_spectra_format == 'zip'}"]
             .form-help
               | The ZIP file must contain an alkane standards spectrum (e.g. Alkane.mzXML, ALKstd.mzXML),
