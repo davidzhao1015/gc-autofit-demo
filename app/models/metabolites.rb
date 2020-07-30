@@ -5,7 +5,7 @@ class Metabolites
   #   - There should be a header
 
   # Directory where all metabolite related files are located
-  METABOLITES_DIR = Rails.application.config.APGCMS_METABOLITES_DIR
+  METABOLITES_DIR = Rails.application.config.apgcms_metabolite_dir
 
   CSV_OPTIONS = {skip_lines: '#', skip_blanks: true, col_sep: ",", headers: true}
 

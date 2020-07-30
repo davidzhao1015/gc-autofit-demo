@@ -39,8 +39,11 @@ Rails.application.routes.draw do
   end
 
   namespace :lib do
+    get 'mz_db', to: 'csv#mz_db'
+    get 'calibration_db', to: 'csv#calibration_db'
     namespace :db do
-      get '', to: 'csv#index'
+
+      # get '', to: 'csv#index'
     end
 
     namespace :calibration do
@@ -69,8 +72,6 @@ Rails.application.routes.draw do
     
     get '',  to: 'makedb#index'
   end
-
-  mount Wishart::Engine => "/w" , as: 'wishart'
 
   if Rails.env.production?
     Sidekiq::Web.use Rack::Auth::Basic do |username, password|

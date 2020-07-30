@@ -6,13 +6,12 @@ class Submission < ActiveRecord::Base
   # PROCESSED = %w[ processed profiling complete ]
   FINALIZED_STATES = %w[ complete failed ]
 
-  WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.application.config.APGCMS_job_dir
+  WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.application.config.apgcms_job_dir
                                     
   DAYS_TO_KEEP_SUBMISSIONS = 7
   SECRET_ID_LENGTH = 20
 
   DATABASES = {
-    #db      #display
     'serum' => 'Serum',
     'urine' => 'Urine',
     'saliva' => 'Saliva',
@@ -23,9 +22,9 @@ class Submission < ActiveRecord::Base
   INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Tropic\ acid Other ]
 
   has_many :spectra, dependent: :destroy
-  has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
-  has_one :blank,     -> { where category: 'blank'}, class_name: Spectrum
-  has_many :samples,  -> { where category: 'sample'}, class_name: Spectrum
+  has_one :standards, -> { where category: 'standards'}
+  has_one :blank,     -> { where category: 'blank'}
+  has_many :samples,  -> { where category: 'sample'}
 
   accepts_nested_attributes_for :spectra
 

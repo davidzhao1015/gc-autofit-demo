@@ -7,7 +7,7 @@ module SubmissionsHelper
       checked = submission.database_subset.include?(id)
       html << "<tr><td>"
       html << check_box_tag('submission[database_subset][]', id, checked, 'data-checked-state' => checked)
-      html << "</td><td>#{bio_link_out(:hmdb, id)}</td>"
+      html << "</td><td><a target=\"_blank\" href=\"http://www.hmdb.ca/metabolites/#{id}\">#{id}<span class=\"glyphicon glyphicon-new-window\"> </span></a></td>"
       html << "<td>#{name}</td>"
     end
     html << "</tbody></table></div>"
