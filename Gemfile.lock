@@ -1,5 +1,7 @@
-PATH
-  remote: /Users/xuan/Desktop/wishart
+GIT
+  remote: git@bitbucket.org:wishartlab/wishart
+  revision: 48515a1b899ddf35b9df46cc2952c6490d53bbd8
+  branch: rails5.2
   specs:
     wishart (3.6.17)
       autoprefixer-rails

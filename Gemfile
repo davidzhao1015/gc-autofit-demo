@@ -24,8 +24,8 @@ gem 'jquery-turbolinks'
 gem 'turbolinks'
 gem 'activerecord-session_store'
 
-# gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart', branch: 'rails5.2'
-gem 'wishart', path: '/Users/xuan/Desktop/wishart'
+gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart', branch: 'rails5.2'
+# gem 'wishart', path: '/Users/xuan/Desktop/wishart'
 
 
 group :development, :test do
