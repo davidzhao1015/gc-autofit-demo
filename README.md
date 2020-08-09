@@ -199,3 +199,15 @@ Phase II) Profiling
 6. Generate Report (JSON file)
     1. JSON will be used for spectrum viewer and tables
 ```
+
+
+## Run sidekiq:
+```
+bundle exec sidekiq -e development  -C config/sidekiq.yml 
+```
+
+
+## Run Rails:
+```
+bundle exec rails s -e development
+```

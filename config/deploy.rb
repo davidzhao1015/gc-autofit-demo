@@ -8,11 +8,10 @@ set :scm, :git
 set :deploy_to, '/apps/gcms/project'
 set :use_sudo, false
 set :linked_files, %w{config/database.yml}
-set :linked_dirs, %w{public/system log}
+set :linked_dirs, %w{public/system log gcmsjobs}
 
-# set :default_env, { path: "/opt/ruby/bin:$PATH" }
-set :keep_releases, 5
-set :sidekiq_config, "#{current_path}/config/sidekiq.yml"
+set :keep_releases, 3
+set :sidekiq_config, "#{Rails.root}/config/sidekiq.yml"
 set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
 
 namespace :deploy do

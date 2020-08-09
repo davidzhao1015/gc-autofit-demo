@@ -25,7 +25,8 @@ module GcAutofit
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     # config.active_record.raise_in_transactional_callbacks = true
-    config.autoload_paths += %W(#{config.root}/lib) # add this line
-    
+    # config.eager_load_paths += %W(#{config.root}/app/workers) # Required by sidekiq
+    config.autoload_paths += %W(#{config.root}/lib) # add this line    
+
   end
 end

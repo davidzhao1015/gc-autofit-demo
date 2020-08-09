@@ -12,7 +12,6 @@ gem 'mysql2', '~> 0.5.3'
 gem 'puma'
 gem 'slim-rails'
 gem 'sidekiq'
-gem 'sidekiq-status'
 
 gem 'sinatra', :require => false # for sinatra interface
 gem 'paperclip'
@@ -22,10 +21,9 @@ gem 'google-analytics-rails'
 gem 'systemu'
 gem 'jquery-turbolinks'
 gem 'turbolinks'
-gem 'activerecord-session_store'
 
+# Wishart
 gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart', branch: 'rails5.2'
-# gem 'wishart', path: '/Users/xuan/Desktop/wishart'
 
 
 group :development, :test do

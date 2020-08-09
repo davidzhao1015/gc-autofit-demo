@@ -1,8 +1,10 @@
 class SubmissionWorker
   include Sidekiq::Worker
-  sidekiq_options :retry => true
+
+  sidekiq_options :retry => true #, queue: 'default'
 
   def perform(submission_id)
+    puts "submission_id => #{submission_id}"
     start_time = Time.now
     submission = Submission.find(submission_id)
     submission.update!(status: 'processing')
@@ -14,8 +16,8 @@ class SubmissionWorker
               log: submission.log_file}
 
     if submission.database == 'upload'
-      options[:userlib] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_library.csv"
-      options[:usercal] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
+      options[:userlib] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_library.csv"
+      options[:usercal] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
     else
       options['lib.internal'] = submission.database.upcase
     end

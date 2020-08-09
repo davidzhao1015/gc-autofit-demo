@@ -22,9 +22,9 @@ class Submission < ActiveRecord::Base
   INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Tropic\ acid Other ]
 
   has_many :spectra, dependent: :destroy
-  has_one :standards, -> { where category: 'standards'}
-  has_one :blank,     -> { where category: 'blank'}
-  has_many :samples,  -> { where category: 'sample'}
+  has_one :standards, -> { where category: 'standards'}, class_name: "Spectrum"
+  has_one :blank,     -> { where category: 'blank'}, class_name: "Spectrum"
+  has_many :samples,  -> { where category: 'sample'}, class_name: "Spectrum"
 
   accepts_nested_attributes_for :spectra
 
@@ -47,11 +47,8 @@ class Submission < ActiveRecord::Base
   validates_presence_of :internal_standard
   validate :check_required_spectra
   validate :check_internal_standard
-  validate :check_user_library
-  #validate :check_user_calibration
 
   before_validation :generate_secret
-  # after_create      :start_work
   after_destroy     :delete_working_dir
 
   serialize :database_subset, Array
@@ -71,6 +68,7 @@ class Submission < ActiveRecord::Base
   def start_work
     create_working_dir
     self.update!(status: 'queued')
+    puts "self.id => #{self.id}"
     job_id = SubmissionWorker.perform_async(self.id)
     self.update!(job_id: job_id)
   end
@@ -112,10 +110,6 @@ class Submission < ActiveRecord::Base
   def running?
     self.status == 'processing'
   end
-
-  # def processed?
-  #   PROCESSED.include?(self.status)
-  # end
 
   def working_dir
     File.join(WORKING_DIR, self.secret_id)
@@ -352,12 +346,6 @@ class Submission < ActiveRecord::Base
         errors[:base] << "Internal standard must be present in the selected library"
       end
     end
-  end
-
-  def check_user_library
-    # profile_file = self.profile_library.queued_for_write[:original]
-    # if profile_file.path
-    # end
   end
 
 end

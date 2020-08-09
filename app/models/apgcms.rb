@@ -1,5 +1,5 @@
 class APGCMS
-  @@apgcms_path = "#{Rails.application.config.APGCMS_root}/scripts/apgcms_main.R"
+  @@apgcms_path = "#{Rails.application.config.apgcms_root}/scripts/apgcms_main.R"
 
   # The command that was run
   attr_reader :command
@@ -21,8 +21,6 @@ class APGCMS
       @command += "--#{key}='#{value}' "
     end
     
-    # @command = "Rscript #{@@apgcms_path} --infiledir=#{options[:infiledir]} --lib.internal='SERUM' "
-    # @command += "--internalstd='Ribitol' --plotonly=TRUE"
     puts @command if @@debug
     
     

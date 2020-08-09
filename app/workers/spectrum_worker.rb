@@ -1,7 +1,7 @@
 class SpectrumWorker
   include Sidekiq::Worker
   include Rails.application.routes.url_helpers
-  sidekiq_options :retry => true
+  sidekiq_options :retry => true #, queue: 'critical'
 
   def perform(spectrum_id)
     start_time = Time.now
@@ -19,8 +19,6 @@ class SpectrumWorker
       raise StandardError.new("Error: unknown format of sample file #{spectrum.spectrum_data.path}")
     end
     FileUtils.symlink(spectrum.spectrum_data.path, File.join(spectrum.sample_dir, "sample#{suffix}"))
-    # FileUtils.symlink(submission.standards.spectrum_data.path, File.join(spectrum.sample_dir, 'Alkstd.mzXML'))
-    # FileUtils.symlink(submission.blank.spectrum_data.path, File.join(spectrum.sample_dir, 'Blank.mzXML'))
     options = {infiledir: File.join(submission.input_dir),
               internalstd: submission.internal_standard,
               process: 'PROFILING',
@@ -31,8 +29,8 @@ class SpectrumWorker
               log: spectrum.log_file}
 
     if submission.database == 'upload'
-      options[:userlib] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_library.csv"
-      options[:usercal] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
+      options[:userlib] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_library.csv"
+      options[:usercal] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
     else
       options['lib.internal'] = submission.database.upcase
     end

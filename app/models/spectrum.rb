@@ -1,4 +1,5 @@
 class Spectrum < ActiveRecord::Base
+  
   STATES = %w[ validating queued profiling complete failed ]
   FINALIZED_STATES = %w[ complete failed ]
   CATEGORIES = %w[ standards blank sample ]

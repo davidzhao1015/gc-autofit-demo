@@ -43,7 +43,7 @@ class  Admin::CsvModel
             return false
           end
         end
-        self.check_and_keep_copies(file)
+        # self.check_and_keep_copies(file) # set unlimited file saved
         
         #save today's file and current db file
         h = self.header(file)
@@ -141,7 +141,7 @@ class  Admin::CsvModel
 
     def self.check_and_keep_copies(file)
         file_list = get_csv_file_list(file)
-        need_number = Rails.application.config.APGCMS_copy_number
+        need_number = Rails.application.config.apgcms_copy_number
         if file_list.length >= need_number
           deleted_file_list = []
           begin
