@@ -36,19 +36,20 @@ class SpectrumWorker
     end
     apgcms = APGCMS.new(options)
     if apgcms.success?
+      puts "apgcms.success"
       spectrum.status = 'complete'
-      # Save JSON results
-      json_path = File.join(spectrum.sample_dir, 'sample_spectrum.json')
+      json_path = File.join(spectrum.sample_dir, 'sample_spectrum.json')   # Save JSON results
       spectrum.json_results = File.open(json_path)
-      # Remove original JSON file
-      FileUtils.rm(json_path)
+      FileUtils.rm(json_path)                                              # Remove original JSON file
       spectrum.save!
     else
+      puts "apgcms.failed"
       spectrum.status = 'failed'
       spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors} -- <a href=#{submission_spectrum_path(submission, spectrum, 'log')} target=_new>details</a>"
     end
 
   rescue StandardError => e
+    puts "StandardError => #{e.message}"
     spectrum.status = "failed"
     spectrum.error =  "[Rescue from spectrum worker] There was a problem running GC-AutoFit. #{e.message}"
     spectrum.logger(e.message)

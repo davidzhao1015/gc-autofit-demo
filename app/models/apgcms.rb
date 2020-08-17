@@ -10,7 +10,7 @@ class APGCMS
   # An array of error messages
   attr_reader :errors
 
-  @@debug=true
+  @@debug=false
 
   # Create a ShellSession
   def initialize(options = {})
@@ -25,6 +25,13 @@ class APGCMS
     
     
     @status, @stdout, @stderr = systemu(@command)
+    if @@debug
+      puts "@status, @stdout, @stderr"
+      puts @status
+      puts @stdout
+      puts @stderr
+    end
+
     # has to filter some info out from errors since xcms package 
     # has some info put into stderr but actually not errors. Those lines
     # are like this:

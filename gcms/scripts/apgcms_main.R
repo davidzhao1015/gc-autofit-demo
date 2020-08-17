@@ -36,12 +36,7 @@ library(parallel) # for using multiple cores
 ##===========================================================================================
 ## Ref: http://www.r-bloggers.com/parse-arguments-of-an-r-script/
 
-# read arugment from Rails side scripting
-
-# read argument from string
 args <- commandArgs(trailingOnly = FALSE)
-
-
 # args <- commandArgs(TRUE)
 # cat("length(args):", length(args),"\n")
 # cat("argsL:\n"); print(argsL)
@@ -58,10 +53,10 @@ setwd(script.dirname)
 root_path <- dirname(script.dirname)
 #print(root_path)
 
-lib_mz_intensity_dir <- file.path(root_path, "DB/mz_intensity")
-lib_calibration_dir <- file.path(root_path, "DB/calibrations")
+lib_mz_intensity_dir <- file.path(root_path, "gcmsdb/mz_intensity")
+lib_calibration_dir <- file.path(root_path, "gcmsdb/calibrations")
 
-source(file.path(root_path, "envVars.cfg"))  ## loading packages, libraries, and definitions -> load other r scripts
+source(file.path(root_path, "envVars.cfg"))  ## loading packages, libraries, and definitions
 source(file.path(script.dirname, libfunc.SetOpts.file))  ## loading packages, libraries, and definitions
 
 
@@ -86,12 +81,11 @@ cat(file=File.ErrorLog, "## Error Log Details ##\n\n")
 
 if(ISDEBUG) { cat("## dirProfileResult:"); print(dirProfileResult) }
 
+# loading libraries
 
-##################################################################################################
-# Loading library for calibration (profiling)
-##################################################################################################
-if( USE_INTERNAL_LIBRARY == 'NONE') { 
-    ## use user's own library  (need to be tested) 
+# cat("USE_INTERNAL_LIBRARY => ", USE_INTERNAL_LIBRARY, "\n")
+
+if( USE_INTERNAL_LIBRARY == 'NONE') {  ## use user's own library  (need to be tested) 
     lib.peak <- getLibInfo(userLibFile)
     if( !is.null(userCalFile) ) {
         lib.calicurv <- getLibInfo(userCalFile)
@@ -104,8 +98,8 @@ if( USE_INTERNAL_LIBRARY == 'NONE') {
     cat("CalCurveType:", CalCurveType,"\n")
     
     ## load libraries (profiling/identification)
-   # fname.lib.peak <- file.path(file.path(lib_dir, LibFile[SampleType]))
-   fname.lib.peak <- file.path(lib_mz_intensity_dir, LibFile[SampleType])
+    # fname.lib.peak <- file.path(file.path(lib_dir, LibFile[SampleType]))
+    fname.lib.peak <- file.path(lib_mz_intensity_dir, LibFile[SampleType])
     cat("fname.lib.peak:", fname.lib.peak, "\n")
     lib.peak <- getLibInfo(fname.lib.peak)
     
@@ -132,8 +126,6 @@ if( USE_INTERNAL_LIBRARY == 'NONE') {
         }
     }
 }  
-################################################################################################################
-
 
 ## load library for the functions
 #source( file.path(lib_dir, libfunc.file) )  ## loading packages, libraries, and definitions

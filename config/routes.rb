@@ -21,9 +21,9 @@ Rails.application.routes.draw do
   namespace :lib do
     get 'mz_db', to: 'csv#mz_db'
     get 'calibration_db', to: 'csv#calibration_db'
+    
     namespace :db do
-
-      # get '', to: 'csv#index'
+      get '', to: 'csv#index'
     end
 
     namespace :calibration do

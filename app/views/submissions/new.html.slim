@@ -41,14 +41,14 @@ h1 GC-AutoFit Analysis
               | GC-AutoFit  works with serum, urine, saliva and your own custom libraries.
           .col-sm-12.form-input#database-selection
             - Submission::DATABASES.each do |key, name|
-              - if name == 'Urine'
-                .radio-div
-                  = f.radio_button :database, key, id: "radio-database-#{key}"
-                  label.radio-label id='label-database-#{key}' for='submission_database_type'
-                    | #{name} 
-                    - if key != 'upload'
-                      a.custom-db-edit href='#{key}'
-                        span.glyphicon.glyphicon-edit
+              /- if name == 'Urine'
+              .radio-div
+                = f.radio_button :database, key, id: "radio-database-#{key}"
+                label.radio-label id='label-database-#{key}' for='submission_database_type'
+                  | #{name} 
+                  - if key != 'upload'
+                    a.custom-db-edit href='#{key}'
+                      span.glyphicon.glyphicon-edit 
         .form-horizontal#custom-database-upload
           .form-group
             .form-label

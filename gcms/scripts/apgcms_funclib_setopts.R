@@ -290,6 +290,7 @@ getLibInfo <- function(fname.lib)
 {    
     lib.table <- read.csv(file=fname.lib, head=TRUE, sep=",", quote = "\"");
     if(nrow(lib.table) == 0) {
+      cat(fname.lib)
       stopMessage( paste("Cannot load the library",basename(fname.lib)))
     }
     

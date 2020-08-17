@@ -21,6 +21,7 @@ class SubmissionWorker
     else
       options['lib.internal'] = submission.database.upcase
     end
+    # puts "options => #{options.inspect}"
     apgcms = APGCMS.new(options)
     if apgcms.success?
       submission.status = 'complete'
@@ -49,6 +50,7 @@ class SubmissionWorker
     end
 
   rescue StandardError => e
+    # puts "StandardError => #{e.message}"
     submission.status = "failed"
     submission.error =  "[ from spectrum worker] There was a problem running GC-AutoFit. #{e.message}"
     submission.logger(e.message)

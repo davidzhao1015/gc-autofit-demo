@@ -77,7 +77,6 @@ class Submission < ActiveRecord::Base
     if self.complete? && !self.profile?
       self.update!(profile: true)
       self.samples.each do |sample|
-        # SpectrumWorker.new.perform(sample.id)
         sample.start_work
       end
     end
