@@ -22,12 +22,15 @@ Rails.application.routes.draw do
     get 'mz_db', to: 'csv#mz_db'
     get 'calibration_db', to: 'csv#calibration_db'
     
+    # this is the route for showing the entire csv file
     namespace :db do
       get '', to: 'csv#index'
+      get 'download', to: 'csv#download'
     end
-
+    # this is the route for showing the entire csv file
     namespace :calibration do
       get '', to: 'csv#index'
+      get 'download', to: 'csv#download'
     end
       
     get '',  to: 'lib#index'

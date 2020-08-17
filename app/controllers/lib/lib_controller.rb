@@ -5,7 +5,7 @@ class Lib::LibController < ApplicationController
     db_dir = Rails.application.config.apgcms_mz_intensity_dir
     @url_lib_dict = get_lib_url_dict(db_dir, '/lib/db')
     @url_lib_keys = @url_lib_dict.keys.sort()
-    cali_dir = Rails.application.config.apgcms_mz_intensity_dir
+    cali_dir = Rails.application.config.apgcms_calibration_dir
     @url_calibration_dict = get_lib_url_dict(cali_dir, '/lib/calibration')
     @url_calibration_keys = @url_calibration_dict.keys.sort()    
   end
@@ -14,13 +14,15 @@ class Lib::LibController < ApplicationController
   def mz_db
     db_dir = Rails.application.config.apgcms_mz_intensity_dir
     @url_lib_dict = get_lib_url_dict(db_dir, '/lib/db')
+    puts "@url_lib_dict => #{@url_lib_dict.inspect}"
     @url_lib_keys = @url_lib_dict.keys.sort()
 
   end
 
   def calibration_db
-    cali_dir = Rails.application.config.apgcms_mz_intensity_dir
+    cali_dir = Rails.application.config.apgcms_calibration_dir
     @url_calibration_dict = get_lib_url_dict(cali_dir, '/lib/calibration')
+    puts "@url_calibration_dict => #{@url_calibration_dict.inspect}"
     @url_calibration_keys = @url_calibration_dict.keys.sort()
   end
 
