@@ -28,6 +28,9 @@ class SubmissionsController < ApplicationController
       end
       format.html
       format.js
+      # format.log do
+        
+      # end
     end
   end
 
@@ -152,7 +155,7 @@ class SubmissionsController < ApplicationController
       submission.spectra.build(category: 'sample',
                               spectrum_data: File.new(File.join(example_dir, 'C001.mzXML')))
       submission.spectra.build(category: 'sample',
-                              spectrum_data: File.new(File.join(example_dir, 'C002.mzXML')))
+                              spectrum_data: File.new(File.join(example_dir, 'QC1.mzXML')))
     elsif example_num == '3'
       example_dir = File.join(Rails.application.config.apgcms_example_dir, 'saliva')
       submission.database = 'saliva'

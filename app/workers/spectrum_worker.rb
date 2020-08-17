@@ -45,7 +45,7 @@ class SpectrumWorker
     else
       puts "apgcms.failed"
       spectrum.status = 'failed'
-      spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors} -- <a href=#{submission_spectrum_path(submission, spectrum, 'log')} target=_new>details</a>"
+      spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
     end
 
   rescue StandardError => e

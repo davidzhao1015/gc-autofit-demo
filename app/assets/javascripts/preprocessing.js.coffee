@@ -5,7 +5,7 @@ $(window).load ->
   load_alkane_viewer = () ->
     $('#alkane-viewer').each ->
       alkane_sv = new JSV.SpectraViewer('#alkane-viewer', {
-        width: 800,
+        width: 950,
         height: 400,
         # debug: true,
         drag_drop_load: false,

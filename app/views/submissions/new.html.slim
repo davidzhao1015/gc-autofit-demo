@@ -146,15 +146,15 @@ h1 GC-AutoFit Analysis
     
       .example-button
         = link_to 'Serum', example_submissions_path(example_num: 1), class: 'btn btn-info btn-spaced'
-      //.example-button
-      //  = link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
-      // .example-button
-      //  = link_to 'Saliva', example_submissions_path(example_num: 3), class: 'btn btn-info btn-spaced'
+      .example-button
+        = link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
+      / .example-button
+      /   = link_to 'Saliva', example_submissions_path(example_num: 3), class: 'btn btn-info btn-spaced'
 
   - Submission::DATABASES.each do |key, name|
     - next if key == 'upload'
     = render 'custom_db_dialog', database: key
 
 
-h5 latest update: March 11th, 2018
+/ h5 latest update: March 11th, 2018
 

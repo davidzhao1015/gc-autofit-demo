@@ -106,7 +106,7 @@ if (window.JSV === undefined) window.JSV = JSpectraViewer;
     // Delete contents of container and add title
     var header = this.title ? '<h3>' + this.title + '</h3>' : ''
     this.container.html(header)
-      .style('width', this.width + 2 + 'px');
+      // .style('width', this.width + 2 + 'px');
 
     this.sv_wrapper = this.container.append('div')
       .attr('class', 'sv-wrapper')

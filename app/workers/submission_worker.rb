@@ -4,7 +4,6 @@ class SubmissionWorker
   sidekiq_options :retry => true #, queue: 'default'
 
   def perform(submission_id)
-    puts "submission_id => #{submission_id}"
     start_time = Time.now
     submission = Submission.find(submission_id)
     submission.update!(status: 'processing')
