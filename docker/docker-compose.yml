@@ -1,0 +1,63 @@
+version: '3.5'
+
+services:
+
+  nginx:
+    image: nginx
+    ports:
+      - 443:443
+      - 80:80
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    entrypoint: redis-server --appendonly yes
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - backend
+
+  db:
+    image: mariadb
+    environment:
+      MYSQL_DATABASE: gcms
+      MYSQL_USER: gcms
+      MYSQL_PASSWORD: 67WVXHCQ+I1HfvP5pMwY
+      MYSQL_ROOT_PASSWORD: 8C/vZLd3uMr3dScvPaM9
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  nginx:
+    build:
+      context: nginx
+    ports:
+      - 80:80
+      - 443:443
+
+  web:
+    build:
+      context: web  # define where to look for dockerfile to build the image
+    image: gc-autofit    # name the image
+    ports:
+      - 3000:3000
+    depends_on:
+      - redis
+      - db
+    networks:
+      - backend
+
+volumes:
+  db_data: # Will be called 'biotransformer_db_data'. Prefix comes from .env file.
+  redis_data:
+
+networks:
+  backend: # the name of network; rest are the optional configuration for this network (backend)
+    name: gc_autofit_private_network
+    driver: bridge 
