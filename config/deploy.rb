@@ -12,7 +12,7 @@ set :keep_releases, 3
 set :sidekiq_config, "#{Rails.root}/config/sidekiq.yml"
 set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
 
-set :bundle_bins, %w{gem rake rails sidekiq}
+set :rbenv_map_bins, %w{rake gem bundle ruby rails sidekiq sidekiqctl}
 
 set :branch, ENV['BRANCH'] if ENV['BRANCH']
 
