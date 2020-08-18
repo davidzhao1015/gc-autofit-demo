@@ -1,4 +1,4 @@
-set :stage, :production
+# set :stage, :production
 
 # Simple Role Syntax
 # ==================
@@ -15,7 +15,19 @@ set :stage, :production
 # definition into the server list. The second argument
 # something that quacks like a hash can be used to set
 # extended properties on the server.
-server '104.154.69.124', user: 'gcms', roles: %w{web app db}
+# server '34.83.234.160', user: 'gcms', roles: %w{web app db}
 ## new instance created from previous a snapshot
 #server '104.198.157.103', user: 'gcms', roles: %w{web app db}
 
+
+set :stage, :production
+set :rbenv_type, :user
+set :rbenv_ruby, File.read('.ruby-version').strip
+
+set :rbenv_prefix, "RBENV_ROOT=#{fetch(:rbenv_path)} RBENV_VERSION=#{fetch(:rbenv_ruby)} #{fetch(:rbenv_path)}/bin/rbenv exec"
+set :rbenv_map_bins, %w{rake gem bundle ruby rails}
+set :rbenv_roles, :all # default value
+
+role :app, %w{gcms@34.83.234.160}
+role :web, %w{gcms@34.83.234.160}
+role :db,  %w{gcms@34.83.234.160}
