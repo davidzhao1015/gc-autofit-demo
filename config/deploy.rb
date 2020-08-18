@@ -3,16 +3,16 @@
 
 set :application, 'gc-autofit'
 set :repo_url,  "git@bitbucket.org:wishartlab/gc-autofit.git"
-set :branch, 'master'
 set :scm, :git
 set :deploy_to, '/apps/gcms/project'
 set :use_sudo, false
 set :linked_files, %w{config/database.yml}
 set :linked_dirs, %w{public/system log gcmsjobs tmp}
-
 set :keep_releases, 3
 set :sidekiq_config, "#{Rails.root}/config/sidekiq.yml"
 set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
+set :branch, ENV['BRANCH'] if ENV['BRANCH']
+
 
 namespace :deploy do
 
