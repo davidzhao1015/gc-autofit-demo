@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 RUN apt update
 RUN apt -y upgrade
-RUN apt -y install gcc g++ nodejs autoconf bison build-essential libssl-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev git
+RUN apt -y install gcc g++ nodejs autoconf bison build-essential libssl-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev git libmysqlclient-dev
 
 
 ##### Install ruby and rails ######

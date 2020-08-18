@@ -1,5 +1,5 @@
 #require 'puma/capistrano'
-
+require 'rails'
 
 set :application, 'gc-autofit'
 set :repo_url,  "git@bitbucket.org:wishartlab/gc-autofit.git"
@@ -11,6 +11,9 @@ set :linked_dirs, %w{public/system log gcmsjobs tmp}
 set :keep_releases, 3
 set :sidekiq_config, "#{Rails.root}/config/sidekiq.yml"
 set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
+
+set :bundle_bins, %w{gem rake rails sidekiq}
+
 set :branch, ENV['BRANCH'] if ENV['BRANCH']
 
 
