@@ -9,7 +9,6 @@ gem 'jquery-rails'
 gem 'jbuilder', '~> 2.0'
 gem 'bootstrap-sass'
 gem 'mysql2', '~> 0.5.3'
-gem 'puma'
 gem 'slim-rails'
 gem 'sidekiq'
 
@@ -49,6 +48,8 @@ group :development do
 end
 
 group :production do
+  gem 'puma'
+  gem 'puma_worker_killer'
   gem 'execjs'
   # gem 'therubyracer', require: 'v8'
 end
