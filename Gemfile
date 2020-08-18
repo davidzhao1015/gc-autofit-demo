@@ -40,6 +40,7 @@ group :development do
   gem 'capistrano-sidekiq'
   gem 'capistrano-rails'
   gem 'capistrano-rails-console'
+  gem 'capistrano-rbenv'
   gem 'rails_layout'
   gem 'guard-bundler'
   gem 'guard-rails'
