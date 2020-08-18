@@ -88,7 +88,7 @@ Rails.application.configure do
   config.apgcms_root = "#{Rails.root}/gcms"
   # Internal libraries
   config.apgcms_mz_intensity_dir = "#{config.apgcms_root}/gcmsdb/mz_intensity"
-  config.apgcms_METABOLITES_DIR  = "#{config.apgcms_root}/gcmsdb/metabolites"
+  config.apgcms_metabolite_dir  = "#{config.apgcms_root}/gcmsdb/metabolites"
   config.apgcms_calibration_dir  = "#{config.apgcms_root}/gcmsdb/calibrations"
 
   # user defined libraries
