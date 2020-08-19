@@ -69,7 +69,7 @@ namespace :sidekiq do
   task :start do
     on roles(:web) do
       within release_path do
-        execute "script/sidekiq.sh", "start"
+        execute "systemctl", "start", "sidekiq"
       end
     end
   end
