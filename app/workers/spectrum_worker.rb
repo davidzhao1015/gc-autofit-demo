@@ -36,12 +36,13 @@ class SpectrumWorker
     end
     apgcms = APGCMS.new(options)
     if apgcms.success?
-      puts "apgcms.success"
       spectrum.status = 'complete'
+      # puts "spectrum.status => #{spectrum.status}"
       json_path = File.join(spectrum.sample_dir, 'sample_spectrum.json')   # Save JSON results
       spectrum.json_results = File.open(json_path)
       FileUtils.rm(json_path)                                              # Remove original JSON file
       spectrum.save!
+      # puts "spectrum.status => #{spectrum.status}"
     else
       puts "apgcms.failed"
       spectrum.status = 'failed'
@@ -57,6 +58,8 @@ class SpectrumWorker
   ensure
     spectrum.runtime = Time.now - start_time
     spectrum.save!
+    # puts "spectrum => #{spectrum.inspect}"
+
   end
 
 end

@@ -92,8 +92,8 @@ Rails.application.configure do
   config.apgcms_calibration_dir  = "#{config.apgcms_root}/gcmsdb/calibrations"
 
   # user defined libraries
-  # config.apgcms_mz_intensity_tmp_dir = "#{config.apgcms_root}/db_tmp/mz_intensity"
-  # config.apgcms_calibration_tmp_dir = "#{config.apgcms_root}/db_tmp/calibrations"
+  config.apgcms_mz_intensity_tmp_dir = "#{config.apgcms_root}/db_tmp/mz_intensity"
+  config.apgcms_calibration_tmp_dir = "#{config.apgcms_root}/db_tmp/calibrations"
 
   # user cases working dir 
   config.apgcms_job_dir = "#{Rails.root}/gcmsjobs"

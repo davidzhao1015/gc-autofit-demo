@@ -3,6 +3,11 @@ FROM ubuntu:20.04
 RUN apt update
 RUN apt -y upgrade
 RUN apt -y install gcc g++ nodejs autoconf bison build-essential libssl-dev libyaml-dev libreadline-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev git libmysqlclient-dev
+RUN apt -y install libnetcdf-dev libnetcdff-dev
+
+RUN apt -y install libcairo2-dev # for Cario library in R
+RUN apt -y install libxt-dev
+RUN apt -y install libxml2-dev libxml2
 
 
 ##### Install ruby and rails ######

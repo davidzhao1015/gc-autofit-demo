@@ -8,5 +8,5 @@ $ ->
   hash = document.location.hash
   prefix = "tab_"
   if (hash)
-    $('.nav-tabs a[href='+hash.replace(prefix,"")+']').tab('show')
+    $(".nav-tabs a[href='" + hash.replace(prefix,"") + "']").tab('show')
 

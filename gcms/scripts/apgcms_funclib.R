@@ -2126,10 +2126,10 @@ compoundIdentify4 <- function(asample.peakInfo, xset.one, lib.peak, alkaneInfo, 
       }
       
       if(! is.null(identifiedList)) {
-          rownames(identifiedList) <- c(1:nrow(identifiedList))
+        rownames(identifiedList) <- c(1:nrow(identifiedList))
       }
       else {
-	return(NULL)
+        return(NULL)
       }
       
       # no need anymore because the hmdb id is included in the set
