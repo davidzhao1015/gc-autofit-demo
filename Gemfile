@@ -49,8 +49,8 @@ group :development do
 end
 
 group :production do
-  gem 'puma'
-  gem 'puma_worker_killer'
+  gem 'puma', '~> 4.3.5'
+  gem 'puma_worker_killer', '~> 0.2.0'
   gem 'execjs'
   # gem 'therubyracer', require: 'v8'
 end
