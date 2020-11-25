@@ -44,19 +44,23 @@ class Spectrum < ActiveRecord::Base
     when 'standards'
       File.join(self.submission.preprocessing_dir, 'Alkstd_alkanePeakList.csv')
     else
-      File.join(sample_dir, 'sample_profiled.csv')
+      File.join(sample_dir, "#{self.csv_file_name}")
     end
   end
 
   def csv_file_name
+    puts "self.name => #{self.name}"
+
     basename = File.basename(self.name, '.*')
+    puts "basename => #{basename}"
+    puts "sample_name => #{self.sample_name}"
     case self.category
     when 'blank'
       "#{basename}_profiled.csv"
     when 'standards'
       "#{basename}_PeakList.csv"
     else
-      "#{basename}_profiled.csv"
+      "#{self.sample_name}_profiled.csv"
     end
   end
 
