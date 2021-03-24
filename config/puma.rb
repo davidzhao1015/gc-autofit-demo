@@ -1,5 +1,5 @@
 threads 1, 8
-workers 3
+workers 1
 environment 'production'
 stdout_redirect 'log/puma.log', 'log/puma_error.log', true
 preload_app!
@@ -14,7 +14,7 @@ before_fork do
   require 'puma_worker_killer'
 
   PumaWorkerKiller.config do |config|
-    config.ram           = 256 # MB
+    config.ram           = 600 # MB
       # According to Nate Berkopec, https://confreaks.tv/videos/rubyconf2016-halve-your-memory-usage-with-these-12-weird-tricks
       # a Puma worker will typically use ~300 MB of RAM, or 600 MB on the high end. In
       # MolDB at the time PumaWorkerKiller was added, we had very memory-inefficient
