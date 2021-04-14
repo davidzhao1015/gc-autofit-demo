@@ -3,28 +3,23 @@ Description=sidekiq
 After=syslog.target network.target
 
 [Service]
-Type=notify
-WatchdogSec=10
-
+Type=simple
 WorkingDirectory=/apps/gcms/project/current
-
 ExecStart=/bin/bash -lc 'exec /apps/gcms/.rbenv/shims/bundle exec sidekiq -e production'
+ExecReload=/bin/kill -TSTP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+StandardOutput=append:/apps/gcms/project/shared/log/sidekiq.log
+StandardError=append:/apps/gcms/project/shared/log/sidekiq.error.log
 
-User=gcms
-Group=gcms
-UMask=0002
-
+# Greatly reduce Ruby memory fragmentation and heap usage
+# https://www.mikeperham.com/2018/04/25/taming-rails-memory-bloat/
 Environment=MALLOC_ARENA_MAX=2
 
 RestartSec=1
 Restart=on-failure
 
-# output goes to /var/log/syslog (Ubuntu) or /var/log/messages (CentOS)
-StandardOutput=syslog
-StandardError=syslog
-
 # This will default to "bundler" if we don't specify it
 SyslogIdentifier=sidekiq
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

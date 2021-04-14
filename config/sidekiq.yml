@@ -1,3 +1,2 @@
 ---
 :concurrency: 2
-:pidfile: /tmp/gc-autofit.sidekiq.pid

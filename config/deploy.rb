@@ -6,9 +6,10 @@ set :repo_url,  "git@bitbucket.org:wishartlab/gc-autofit.git"
 set :scm, :git
 set :deploy_to, '/apps/gcms/project'
 set :use_sudo, false
-set :linked_files, %w{config/database.yml config/sidekiq.yml}
+set :linked_files, %w{config/database.yml}
 set :linked_dirs, %w{public/system log gcmsjobs tmp}
 set :keep_releases, 3
+
 # set :sidekiq_config, "#{Rails.root}/config/sidekiq.yml"
 # set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
 
@@ -61,56 +62,3 @@ namespace :deploy do
   after :finished, :restart
 
 end
-
-
-
-namespace :sidekiq do
-  desc 'Start sidekiq as daemon'
-  task :start do
-    on roles(:web) do
-      within release_path do
-        execute "systemctl", "start", "sidekiq"
-      end
-    end
-  end
-  
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

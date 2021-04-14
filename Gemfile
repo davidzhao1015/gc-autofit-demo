@@ -37,7 +37,7 @@ group :development do
   gem 'better_errors'
   gem 'capistrano'
   gem 'capistrano-bundler'
-  # gem 'capistrano-sidekiq'
+  gem 'capistrano-sidekiq'
   gem 'capistrano-rails'
   gem 'capistrano-rails-console'
   gem 'capistrano-rbenv'
