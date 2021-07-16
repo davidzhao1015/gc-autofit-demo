@@ -14,7 +14,7 @@ gem 'sidekiq'
 gem 'sidekiq-status'
 
 gem 'sinatra', :require => false # for sinatra interface
-gem 'paperclip'
+gem 'paperclip', git: 'https://github.com/sd/paperclip', branch: 'remove-mimemagic'
 gem 'rubyzip'
 gem 'whenever', :require => false
 gem 'google-analytics-rails'
@@ -23,7 +23,7 @@ gem 'jquery-turbolinks'
 gem 'turbolinks'
 gem 'activerecord-session_store'
 # Wishart gems
-gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart'
+gem 'wishart', path: './wishart'
 
 group :development, :test do
   gem 'byebug'
