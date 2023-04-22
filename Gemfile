@@ -20,6 +20,7 @@ gem 'google-analytics-rails'
 gem 'systemu'
 gem 'jquery-turbolinks'
 gem 'turbolinks'
+gem 'mimemagic', git: 'https://github.com/mimemagicrb/mimemagic.git', ref: '01f92d86d15d85cfd0f20dabd025dcbd36a8a60f'
 
 # Wishart
 gem 'wishart', git: 'git@bitbucket.org:wishartlab/wishart', branch: 'rails5.2'
