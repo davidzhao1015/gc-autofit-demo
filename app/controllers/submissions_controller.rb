@@ -180,7 +180,7 @@ class SubmissionsController < ApplicationController
       submission.database = 'custom'
       submission.internal_standard = 'Tropic acid (ISTD)'
       submission.spectra.build(category: 'standards',
-                               spectrum_data: File.new(File.join(example_dir, 'AlKSTD.CDF')))
+                               spectrum_data: File.new(File.join(example_dir, 'ALKSTD.CDF')))
       submission.spectra.build(category: 'blank',
                                spectrum_data: File.new(File.join(example_dir, 'blk.CDF')))
       submission.spectra.build(category: 'sample',
