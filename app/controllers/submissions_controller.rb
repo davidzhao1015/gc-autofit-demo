@@ -120,7 +120,7 @@ class SubmissionsController < ApplicationController
     # puts "params => #{params.inspect}"
     # params => <ActionController::Parameters {"example_num"=>"1", "controller"=>"submissions", "action"=>"example"} permitted: false>
     @submission = get_example(params[:example_num])
-    if @submission.save
+    if @submission.save!
       @submission.start_work
       redirect_to submission_path(@submission)
     else
@@ -165,6 +165,26 @@ class SubmissionsController < ApplicationController
                                spectrum_data: File.new(File.join(example_dir, 'BLK2.CDF')))
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'S1.CDF')))
+    elsif example_num == '4'
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, 'example_1')
+      submission.database = 'custom'
+      submission.internal_standard = 'Tropic acid (ISTD)'
+      submission.spectra.build(category: 'standards',
+                               spectrum_data: File.new(File.join(example_dir, 'ALKSTD.CDF')))
+      submission.spectra.build(category: 'blank',
+                               spectrum_data: File.new(File.join(example_dir, 'blk.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, '1544.CDF')))
+    elsif example_num == '5'
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, 'example_2')
+      submission.database = 'custom'
+      submission.internal_standard = 'Tropic acid (ISTD)'
+      submission.spectra.build(category: 'standards',
+                               spectrum_data: File.new(File.join(example_dir, 'AlKSTD.CDF')))
+      submission.spectra.build(category: 'blank',
+                               spectrum_data: File.new(File.join(example_dir, 'blk.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, '405.CDF')))
     end
     submission
   end
