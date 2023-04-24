@@ -167,7 +167,7 @@ class SubmissionsController < ApplicationController
                                spectrum_data: File.new(File.join(example_dir, 'S1.CDF')))
     elsif example_num == '4'
       example_dir = File.join(Rails.application.config.apgcms_example_dir, 'example_1')
-      submission.database = 'urine'
+      submission.database = 'custom'
       submission.internal_standard = 'Tropic acid (ISTD)'
       submission.spectra.build(category: 'standards',
                                spectrum_data: File.new(File.join(example_dir, 'ALKSTD.CDF')))
