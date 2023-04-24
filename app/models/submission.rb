@@ -15,7 +15,7 @@ class Submission < ActiveRecord::Base
     'serum' => 'Serum',
     'urine' => 'Urine',
     'saliva' => 'Saliva',
-    # 'upload' => 'Upload Your Library'
+    'custom' => 'Custom Library'
 
   }
 
