@@ -144,12 +144,16 @@ h1 GC-AutoFit Analysis
     .example-section[data-no-turbolink]
       p.clear <br><br>OR, run one of our examples:
     
-      / .example-button
-        = link_to 'Serum', example_submissions_path(example_num: 1), class: 'btn btn-info btn-spaced'
-      .example-button
-        = link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
+      /.example-button
+      /  = link_to 'Serum', example_submissions_path(example_num: 1), class: 'btn btn-info btn-spaced'
+      /.example-button
+      /  = link_to 'Urine', example_submissions_path(example_num: 2), class: 'btn btn-info btn-spaced'
       / .example-button
       /   = link_to 'Saliva', example_submissions_path(example_num: 3), class: 'btn btn-info btn-spaced'
+      .example-button
+        = link_to 'Load Example 1', example_submissions_path(example_num: 4), class: 'btn btn-info btn-spaced'
+      .example-button
+        = link_to 'Load Example 2', example_submissions_path(example_num: 5), class: 'btn btn-info btn-spaced'
 
   - Submission::DATABASES.each do |key, name|
     - next if key == 'upload'
