@@ -52,8 +52,10 @@ class SubmissionWorker
     # puts "StandardError => #{e.message}"
     submission.status = "failed"
     submission.error =  "[ from spectrum worker] There was a problem running GC-AutoFit. #{e.message}"
-    submission.logger(e.message)
-    submission.logger(e.backtrace.join("\n"))
+    Rails.logger.debug(e.message)
+    Rails.logger.debug(e.backtrace.join("\n"))
+    #submission.logger(e.message)
+    #submission.logger(e.backtrace.join("\n"))
   ensure
     submission.runtime = Time.now - start_time
     submission.save!
