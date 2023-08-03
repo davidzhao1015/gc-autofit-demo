@@ -47,6 +47,8 @@ group :development do
   gem 'guard-rails'
   gem 'guard-sidekiq'
   gem 'awesome_print'
+  gem 'ed25519'
+  gem 'bcrypt_pbkdf'
 end
 
 group :production do
