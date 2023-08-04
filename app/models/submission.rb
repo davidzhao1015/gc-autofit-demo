@@ -305,11 +305,14 @@ class Submission < ActiveRecord::Base
   end
 
   def check_required_spectra
-    unless self.spectra.any? { |s| s.category == 'standards' }
-      errors[:base] << "An alkane standards spectrum must be provided"
-    end
-    unless self.spectra.any? { |s| s.category == 'blank' }
-      errors[:base] << "A blank standards spectrum must be provided"
+    Rails.logger.error "update library: #{self.update_library} #{update_library}"
+    unless self.update_library
+      unless self.spectra.any? { |s| s.category == 'standards' }
+        errors[:base] << "An alkane standards spectrum must be provided"
+      end
+      unless self.spectra.any? { |s| s.category == 'blank' }
+        errors[:base] << "A blank standards spectrum must be provided"
+      end
     end
     
     unless self.spectra.any? { |s| s.category == 'sample' }
