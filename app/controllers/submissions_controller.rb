@@ -9,6 +9,15 @@ class SubmissionsController < ApplicationController
     @submissions = Submission.all
   end
 
+  def update_library
+    @submission = Submission.new
+    @submission.database = 'urine'
+    @submission.internal_standard = 'Tropic acid'
+    @submission.mf_score_threshold = 400
+    @submission.update_library = true
+    @upload_spectra_format = 'separate'  # OR 'zip'
+  end
+
   # GET /submissions/1
   # GET /submissions/1.json
   def show
@@ -221,7 +230,7 @@ class SubmissionsController < ApplicationController
       end
 
       params.require(:submission).permit(:database, :internal_standard, :status, :mf_score_threshold,
-                                         :profile_library, :calibration, :input_zip,
+                                         :profile_library, :calibration, :input_zip, :update_library,
                                          database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
