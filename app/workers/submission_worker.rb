@@ -12,7 +12,8 @@ class SubmissionWorker
               process: 'PREPROCESSING',
               outdir: File.join(submission.preprocessing_dir),
               MFscore: submission.mf_score_threshold,
-              log: submission.log_file}
+              log: submission.log_file,
+              configfile: submission.config_file}
 
     if submission.database == 'upload'
       options[:userlib] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_library.csv"

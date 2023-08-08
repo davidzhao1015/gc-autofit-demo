@@ -127,6 +127,10 @@ class Submission < ActiveRecord::Base
     dir
   end
 
+  def config_file
+    update_library ? 'envVarsUpdateLibrary.cfg' : 'envVars.cfg'
+  end
+
   def log_file
     File.join(preprocessing_dir, 'log.txt')
   end

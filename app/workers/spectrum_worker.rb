@@ -26,7 +26,8 @@ class SpectrumWorker
               infoFileDir: submission.preprocessing_dir,
               outdir: File.join(spectrum.sample_dir),
               MFscore: submission.mf_score_threshold,
-              log: spectrum.log_file}
+              log: spectrum.log_file,
+              configfile: submission.config_file}
 
     if submission.database == 'upload'
       options[:userlib] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_library.csv"
