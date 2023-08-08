@@ -24,6 +24,23 @@
 
 #!/usr/bin/Rscript
 
+parseArgsForConfig <- function(x) {
+  strsplit(sub("^--", "", x), "=")
+}
+
+parseConfigFile <- function(args.in)
+{
+  argsDF <- as.data.frame(do.call("rbind", parseArgsForConfig(args.in)))
+  argsL <- as.list(as.character(argsDF$V2))
+  names(argsL) <- argsDF$V1
+
+  if(is.null(argsL$configfile)) {
+    CONFIG_FILE <<- 'envVars.cfg'
+  } else {
+    CONFIG_FILE <<- argsL$configfile
+  }
+}
+
 time1 <- Sys.time()
 options(echo=FALSE) # if you want see commands in output file
 options("width"=120)
@@ -56,10 +73,12 @@ root_path <- dirname(script.dirname)
 lib_mz_intensity_dir <- file.path(root_path, "gcmsdb/mz_intensity")
 lib_calibration_dir <- file.path(root_path, "gcmsdb/calibrations")
 
-source(file.path(root_path, "envVars.cfg"))  ## loading packages, libraries, and definitions
+parseConfigFile(args) # Only parse the Config file variable
+
+source(file.path(root_path, CONFIG_FILE))  ## loading packages, libraries, and definitions
 source(file.path(script.dirname, libfunc.SetOpts.file))  ## loading packages, libraries, and definitions
 
-
+print(CONFIG_FILE)
 showProgramInfo(Version)
 
 if (length(args) == 5) {  args <- c("--help") } 

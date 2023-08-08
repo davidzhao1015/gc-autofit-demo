@@ -30,6 +30,7 @@ helpMessage <- function() {
         --process='PREPROCESSING' or 'PROFILING'  # set a processing mode 
 
       Optional Arguments:
+        --configfile=envVars.cfg # configuration variables file for R script
         --lib.internal=URINE  # SERUM, URINE, SALIVA, ... default=Urine; 
         --selectedCmpd=NULL # List of HMDB IDs (comma separated), default=NULL (which means ALL) 
                             # Selected HMDB IDs should be a subset of the selected internal library
@@ -47,7 +48,7 @@ helpMessage <- function() {
       Example:
       ## Processing
       > Rscript apgcms_main.R --infiledir='./data/sample_sep09' --userlib='user_profiledb.csv' --usercal='user_calibration.csv' 
-               --internalstd='Ribitol' --process='PREPROCESSING' --useblank=TRUE --MFscore=400 --RIoffset=0.03  
+               --internalstd='Ribitol' --process='PREPROCESSING' --useblank=TRUE --MFscore=400 --RIoffset=0.03 --configfile='envVars.cfg'
 
       ## Profiling
       > Rscript apgcms_main.R --infiledir='./data/sample_sep09' 
@@ -55,6 +56,7 @@ helpMessage <- function() {
                --internalstd='Cholesterol' --process='PROFILING'
                --outdir='/Users/gcms/example/output_profiling'
                --useblank=TRUE --MFscore=400 --RIoffset=0.03
+               --configfile='envVars.cfg'
                
       \n\n")
   
