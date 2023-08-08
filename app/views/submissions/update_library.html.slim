@@ -108,12 +108,23 @@ h1 GC-AutoFit Update profile_library
             .form-horizontal
               .form-group
                 .form-label
+                  = label :standards, 'Alkane Standards', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = file_field_tag :standards_spectrum
+              .form-group
+                .form-label
+                  = label :blank, 'Blank', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = file_field_tag :blank_spectrum
+              .form-group
+                .form-label
                   = label :samples, 'Samples', class: 'control-label required col-sm-3'
                 .col-sm-9
                   = file_field_tag :spectrum_data, multiple: false, name: 'sample_spectra[]'
           .tab-pane#zip-file[class="#{'active' if @upload_spectra_format == 'zip'}"]
             .form-help
-              | The ZIP file must contain at least one sample spectrum.
+              | The ZIP file must contain an alkane standards spectrum (e.g. Alkane.mzXML, ALKstd.mzXML),
+                an optional blank spectrum (e.g. Blank.mzXML, Blk.mzXML) and at least one sample spectrum.
                 All the spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
             br
             br
