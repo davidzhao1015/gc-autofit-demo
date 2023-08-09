@@ -119,6 +119,10 @@ class Submission < ActiveRecord::Base
     File.join(self.working_dir, 'input')
   end
 
+  def lib_file_path
+    "#{Rails.application.config.apgcms_mz_intensity_dir}/lib_#{database}.csv"
+  end
+
   def preprocessing_dir
     dir = File.join(self.working_dir, 'preprocessing')
     if not Dir.exist?(dir)

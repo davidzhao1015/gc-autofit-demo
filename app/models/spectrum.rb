@@ -21,6 +21,17 @@ class Spectrum < ActiveRecord::Base
     Rails.root.join(self.submission.profiling_dir, self.sample_name)
   end
 
+  def mzint_for_db_file_path
+    suffix = ''
+    if spectrum_data.path =~/CDF$/i 
+      suffix =  '.CDF'
+    elsif spectrum_data.path =~/mzXML$/i
+      suffix = '.mzXML'
+    end
+
+    File.join(sample_dir, "#{sample_name}#{suffix}-mzint4DB.csv")
+  end
+
   def input_dir
     self.submission.input_dir
   end
