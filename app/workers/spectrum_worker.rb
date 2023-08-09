@@ -65,30 +65,48 @@ class SpectrumWorker
 
   end
 
+  # TODO: Make sure the column headers match with mixture file, mz_int file and lib_file
   def update_library(submission, spectrum)
     if submission.update_library
-      mz_int = spectrum.mzint_for_db_file_path
+      mz_int_file = spectrum.mzint_for_db_file_path
       mixture_file = submission.profile_library.path
       lib_file = submission.lib_file_path
-
-      File.open(mz_int, 'r') do |file|
-        # Read and print each line
-        file.each_line do |line|
-          puts line
-        end
+  
+      # Read the mixture file
+      mixture_data = CSV.read(mixture_file, headers: true)
+  
+      # Read the mzInt4DB file
+      mz_int_data = CSV.read(mz_int_file, headers: true)
+  
+      # Read the library file
+      lib_data = CSV.read(lib_file, headers: true)
+  
+      # Iterate through the mixture data and update the library file
+      mixture_data.each do |row|
+        rt = row['RT']
+        matching_mz_int_row = mz_int_data.find { |r| r['rt'] == rt }
+  
+        # Add the information from the mixture and mzInt4DB files to the library file
+        new_row = {
+          'HMDB_ID' => row['HMDB_ID'],
+          'Compound' => row['Compound name'],
+          'CompoundwithTMS' => row['Compound name with TMS'],
+          'TargetIon' => row['Target Ion'],
+          'QIon' => row['Qualification Ion'],
+          'RT' => rt,
+          'RI' => matching_mz_int_row['RI'],
+          'MZ' => matching_mz_int_row['m/z'],
+          'Intensity' => matching_mz_int_row['Intensity']
+        }
+        lib_data << new_row
       end
-
-      File.open(mixture_file, 'r') do |file|
-        # Read and print each line
-        file.each_line do |line|
-          puts line
-        end
-      end
-
-      File.open(lib_file, 'r') do |file|
-        # Read and print each line
-        file.each_line do |line|
-          puts line
+  
+      # Save the updated library file
+      new_lib_file_path = lib_file.sub('.csv', "_#{Time.now.strftime('%Y%m%d')}.csv")
+      CSV.open(new_lib_file_path, 'w') do |csv|
+        csv << lib_data.headers
+        lib_data.each do |row|
+          csv << row
         end
       end
     end
