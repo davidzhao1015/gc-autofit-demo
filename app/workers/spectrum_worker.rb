@@ -80,36 +80,41 @@ class SpectrumWorker
   
       # Read the library file
       lib_data = CSV.read(lib_file, headers: true)
+      original_headers = lib_data.headers
   
       # Iterate through the mixture data and update the library file
       mixture_data.each do |row|
         rt = row['RT']
         matching_mz_int_row = mz_int_data.find { |r| r['rt'] == rt }
   
-        # Add the information from the mixture and mzInt4DB files to the library file
-        new_row = {
-          'HMDB_ID' => row['HMDB_ID'],
-          'Compound' => row['Compound name'],
-          'CompoundwithTMS' => row['Compound name with TMS'],
-          'TargetIon' => row['Target Ion'],
-          'QIon' => row['Qualification Ion'],
-          'RT' => rt,
-          'RI' => matching_mz_int_row['RI'],
-          'MZ' => matching_mz_int_row['m/z'],
-          'Intensity' => matching_mz_int_row['Intensity']
-        }
+        # Create a new row with the original headers and add the additional information
+        new_row = original_headers.map do |header|
+          case header
+          when 'HMDB_ID' then row['HMDB_ID']
+          when 'Compound' then row['Compound name']
+          when 'CompoundwithTMS' then row['Compound name with TMS']
+          when 'TargetIon' then row['TargetIon']
+          when 'QIon' then row['QIon']
+          when 'RT' then rt
+          when 'RI' then matching_mz_int_row['RI']
+          when 'MZ' then matching_mz_int_row['m/z']
+          when 'Intensity' then matching_mz_int_row['intensity']
+          else nil
+          end
+        end
         lib_data << new_row
       end
   
       # Save the updated library file
       new_lib_file_path = lib_file.sub('.csv', "_#{Time.now.strftime('%Y%m%d')}.csv")
       CSV.open(new_lib_file_path, 'w') do |csv|
-        csv << lib_data.headers
+        csv << original_headers
         lib_data.each do |row|
           csv << row
         end
       end
     end
   end
+  
 
 end
