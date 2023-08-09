@@ -50,6 +50,8 @@ class SpectrumWorker
       spectrum.error = "There was a problem running GC-AutoFit: #{apgcms.errors}"
     end
 
+    update_library(submission, spectrum)
+
   rescue StandardError => e
     puts "StandardError => #{e.message}"
     spectrum.status = "failed"
@@ -61,6 +63,35 @@ class SpectrumWorker
     spectrum.save!
     # puts "spectrum => #{spectrum.inspect}"
 
+  end
+
+  def update_library(submission, spectrum)
+    if submission.update_library
+      mz_int = spectrum.mzint_for_db_file_path
+      mixture_file = submission.profile_library.path
+      lib_file = submission.lib_file_path
+
+      File.open(mz_int, 'r') do |file|
+        # Read and print each line
+        file.each_line do |line|
+          puts line
+        end
+      end
+
+      File.open(mixture_file, 'r') do |file|
+        # Read and print each line
+        file.each_line do |line|
+          puts line
+        end
+      end
+
+      File.open(lib_file, 'r') do |file|
+        # Read and print each line
+        file.each_line do |line|
+          puts line
+        end
+      end
+    end
   end
 
 end
