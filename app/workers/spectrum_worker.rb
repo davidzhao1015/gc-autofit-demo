@@ -71,6 +71,7 @@ class SpectrumWorker
       mz_int_file = spectrum.mzint_for_db_file_path
       mixture_file = submission.profile_library.path
       lib_file = submission.lib_file_path
+      tolerance = 0.1
   
       # Read the mixture file
       mixture_data = CSV.read(mixture_file, headers: true)
@@ -84,20 +85,23 @@ class SpectrumWorker
   
       # Iterate through the mixture data and update the library file
       mixture_data.each do |row|
-        rt = row['RT']
-        matching_mz_int_row = mz_int_data.find { |r| r['rt'] == rt }
+        rt = row['RT'].to_f
+        # Find the matching row based on the tolerance
+        matching_mz_int_row = mz_int_data.find do |r|
+          (r['rt_min'].to_f - rt).abs <= tolerance  # Use absolute value for comparison
+        end
   
         # Create a new row with the original headers and add the additional information
         new_row = original_headers.map do |header|
           case header
           when 'HMDB_ID' then row['HMDB_ID']
-          when 'Compound' then row['Compound name']
-          when 'CompoundwithTMS' then row['Compound name with TMS']
+          when 'Compound' then row['Compound']
+          when 'CompoundwithTMS' then row['CompoundwithTMS']
           when 'TargetIon' then row['TargetIon']
           when 'QIon' then row['QIon']
           when 'RT' then rt
           when 'RI' then matching_mz_int_row['RI']
-          when 'MZ' then matching_mz_int_row['m/z']
+          when 'MZ' then matching_mz_int_row['mz']
           when 'Intensity' then matching_mz_int_row['intensity']
           else nil
           end
@@ -115,6 +119,4 @@ class SpectrumWorker
       end
     end
   end
-  
-
 end
