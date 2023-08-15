@@ -10,6 +10,7 @@ Rails.application.routes.draw do
     resources :spectra
   end
 
+  get 'example_mixture' => 'submissions#download_example_mixture', :as => :download_example_mixture
   get 'update_library' => 'submissions#update_library', :as => :update_library
   get 'instructions' => 'home#instructions', :as => :instructions
   get 'inst_userownlib' => 'home#inst_userownlib', :as => :inst_userownlib

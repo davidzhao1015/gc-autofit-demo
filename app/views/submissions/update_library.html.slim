@@ -154,6 +154,10 @@ h1 GC-AutoFit Update profile_library
 
     .button-clear
 
+    .example-section[data-no-turbolink]
+      p.clear <br><br>Download a sample Mixture.csv template:
+    
+      = link_to 'Mixture Template', download_example_mixture_path, class: 'btn btn-info btn-spaced'
 
   /- Submission::DATABASES.each do |key, name|
   /  - next if key == 'upload'

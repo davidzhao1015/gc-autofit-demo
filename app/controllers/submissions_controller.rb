@@ -137,6 +137,14 @@ class SubmissionsController < ApplicationController
     end
   end
 
+  def download_example_mixture
+    send_file(
+      "#{Rails.root}/public/example_mixture.csv",
+      filename: "example_mixture.csv",
+      type: "text/csv"
+    )
+  end
+
   def get_example(example_num)
     submission = Submission.new
     submission.status = 'validating'
