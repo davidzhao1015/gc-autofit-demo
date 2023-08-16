@@ -65,7 +65,6 @@ class SpectrumWorker
     # puts "spectrum => #{spectrum.inspect}"
   end
 
-  # TODO: Make sure the column headers match with mixture file, mz_int file and lib_file
   def update_library(submission, spectrum)
     if submission.update_library
       mz_int_file = spectrum.mzint_for_db_file_path
@@ -119,8 +118,13 @@ class SpectrumWorker
       end
   
       # Save the updated library file
-      new_lib_file_path = lib_file.sub('.csv', "_#{Time.now.strftime('%Y%m%d')}.csv")
-      CSV.open(new_lib_file_path, 'w') do |csv|
+      timestamp = Time.now.strftime('%Y%m%d%H%M')
+      # Create a backup of the older lib file with the current timestamp
+      backup_lib_file_path = lib_file.sub('.csv', "_#{timestamp}.csv")
+      FileUtils.cp(lib_file, backup_lib_file_path)
+      
+      # Save the updated library file (overwrite the original lib_file)
+      CSV.open(lib_file, 'w') do |csv|
         csv << original_headers
         lib_data.each do |row|
           csv << row
