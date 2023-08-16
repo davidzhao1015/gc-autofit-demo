@@ -54,6 +54,7 @@ class SpectrumWorker
 
   rescue StandardError => e
     puts "StandardError => #{e.message}"
+    puts e.backtrace.join("\n")
     spectrum.status = "failed"
     spectrum.error =  "[Rescue from spectrum worker] There was a problem running GC-AutoFit. #{e.message}"
     spectrum.logger(e.message)
@@ -62,7 +63,6 @@ class SpectrumWorker
     spectrum.runtime = Time.now - start_time
     spectrum.save!
     # puts "spectrum => #{spectrum.inspect}"
-
   end
 
   # TODO: Make sure the column headers match with mixture file, mz_int file and lib_file
@@ -82,6 +82,9 @@ class SpectrumWorker
       # Read the library file
       lib_data = CSV.read(lib_file, headers: true)
       original_headers = lib_data.headers
+
+      # Find the last 'SeqIndex' in the lib_data and initialize a counter
+      last_seq_index = lib_data['SeqIndex'].map(&:to_i).max || 1
   
       # Iterate through the mixture data and update the library file
       mixture_data.each do |row|
@@ -90,10 +93,16 @@ class SpectrumWorker
         matching_mz_int_row = mz_int_data.find do |r|
           (r['rt_min'].to_f - rt).abs <= tolerance  # Use absolute value for comparison
         end
+
+        # If no RT matches between generated csv file and mixture file
+        next if matching_mz_int_row.nil?
+        # Increment the SeqIndex counter for each new row
+        last_seq_index += 1
   
         # Create a new row with the original headers and add the additional information
         new_row = original_headers.map do |header|
           case header
+          when 'SeqIndex' then last_seq_index
           when 'HMDB_ID' then row['HMDB_ID']
           when 'Compound' then row['Compound']
           when 'CompoundwithTMS' then row['CompoundwithTMS']
