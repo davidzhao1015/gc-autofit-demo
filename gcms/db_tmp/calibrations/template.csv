@@ -1,0 +1,2 @@
+SeqIndex,HMDB_ID,Compound,LOQ,a||b||c,Intercept(High||Low),Slope(High||Low),rsq,adjrsq,Src,RT,RI,Concentration_threshold(uM)
+1,HMDB0000023,3-hydroxyisobutyric,40,NA||NA||NA,NA||NA,NA||NA,NA,NA,Apr1116,9.61,1070.66,10

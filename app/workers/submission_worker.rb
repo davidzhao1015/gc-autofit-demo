@@ -1,6 +1,7 @@
 class SubmissionWorker
   include Sidekiq::Worker
-  sidekiq_options :retry => true
+
+  sidekiq_options :retry => true #, queue: 'default'
 
   def perform(submission_id)
     start_time = Time.now
@@ -11,14 +12,16 @@ class SubmissionWorker
               process: 'PREPROCESSING',
               outdir: File.join(submission.preprocessing_dir),
               MFscore: submission.mf_score_threshold,
-              log: submission.log_file}
+              log: submission.log_file,
+              configfile: submission.config_file}
 
     if submission.database == 'upload'
-      options[:userlib] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_library.csv"
-      options[:usercal] = "#{Rails.application.config.APGCMS_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
+      options[:userlib] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_library.csv"
+      options[:usercal] = "#{Rails.application.config.apgcms_job_dir}/#{submission.secret_id}/input/user_calibration.csv"
     else
       options['lib.internal'] = submission.database.upcase
     end
+    # puts "options => #{options.inspect}"
     apgcms = APGCMS.new(options)
     if apgcms.success?
       submission.status = 'complete'
@@ -47,10 +50,13 @@ class SubmissionWorker
     end
 
   rescue StandardError => e
+    # puts "StandardError => #{e.message}"
     submission.status = "failed"
     submission.error =  "[ from spectrum worker] There was a problem running GC-AutoFit. #{e.message}"
-    submission.logger(e.message)
-    submission.logger(e.backtrace.join("\n"))
+    Rails.logger.debug(e.message)
+    Rails.logger.debug(e.backtrace.join("\n"))
+    #submission.logger(e.message)
+    #submission.logger(e.backtrace.join("\n"))
   ensure
     submission.runtime = Time.now - start_time
     submission.save!

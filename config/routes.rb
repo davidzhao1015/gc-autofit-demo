@@ -1,7 +1,7 @@
 require 'sidekiq/web'
-
 Rails.application.routes.draw do
 
+  mount Sidekiq::Web => '/sidekiq'
 
   resources :submissions do
     get 'example', on: :collection
@@ -10,6 +10,8 @@ Rails.application.routes.draw do
     resources :spectra
   end
 
+  get 'example_mixture' => 'submissions#download_example_mixture', :as => :download_example_mixture
+  get 'update_library' => 'submissions#update_library', :as => :update_library
   get 'instructions' => 'home#instructions', :as => :instructions
   get 'inst_userownlib' => 'home#inst_userownlib', :as => :inst_userownlib
 
@@ -18,33 +20,19 @@ Rails.application.routes.draw do
 
   root :to => "submissions#new"
   
-  namespace :admin do
-    namespace :db do
-      resources :csv  do
-        collection do
-          get 'download'
-        end
-      end
-    end
-
-    namespace :calibration do
-      resources :csv  do
-        collection do
-          get 'download'
-        end
-      end
-    end
-    
-    get '',  to: 'admin#index'
-  end
-
   namespace :lib do
+    get 'mz_db', to: 'csv#mz_db'
+    get 'calibration_db', to: 'csv#calibration_db'
+    
+    # this is the route for showing the entire csv file
     namespace :db do
       get '', to: 'csv#index'
+      get 'download', to: 'csv#download'
     end
-
+    # this is the route for showing the entire csv file
     namespace :calibration do
       get '', to: 'csv#index'
+      get 'download', to: 'csv#download'
     end
       
     get '',  to: 'lib#index'
@@ -69,13 +57,5 @@ Rails.application.routes.draw do
     
     get '',  to: 'makedb#index'
   end
-
-  mount Wishart::Engine => "/w" , as: 'wishart'
-
-  if Rails.env.production?
-    Sidekiq::Web.use Rack::Auth::Basic do |username, password|
-      username == 'admin' && password == 'c4odt8gqLWcfwMCH82'
-    end
-  end
-  mount Sidekiq::Web, at: '/sidekiq'
+  
 end

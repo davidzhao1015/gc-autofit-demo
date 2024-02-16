@@ -6,8 +6,8 @@
 # The script will start with config set by $PUMA_CONFIG_FILE by default
 
 PUMA_CONFIG_FILE=config/puma.rb
-PUMA_PID_FILE=/tmp/gcms.puma.pid
-PUMA_SOCKET=/tmp/gcms.puma.sock
+PUMA_PID_FILE=/apps/gcms/project/shared/tmp/pids/puma.pid
+PUMA_SOCKET=/apps/gcms/project/shared/tmp/sockets/puma.sock
 
 # check if puma process is running
 puma_is_running() {
@@ -33,7 +33,6 @@ case "$1" in
     echo "Starting puma..."
     rm -f $PUMA_SOCKET
     bundle exec puma --daemon --bind unix://$PUMA_SOCKET --pidfile $PUMA_PID_FILE --config $PUMA_CONFIG_FILE
- 
     echo "done"
     ;;
  

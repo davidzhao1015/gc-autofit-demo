@@ -1,7 +1,7 @@
 require 'digest'
 
 class Admin::AdminController < ApplicationController
-  before_filter :authenticate
+  before_action :authenticate
 
   def authenticate
     authenticate_or_request_with_http_basic('Administration') do |username, password|
@@ -13,10 +13,10 @@ class Admin::AdminController < ApplicationController
   end
 
   def index
-    db_dir = Rails.application.config.APGCMS_mz_intensity_dir
+    db_dir = Rails.application.config.apgcms_mz_intensity_dir
     @url_lib_dict = get_lib_url_dict(db_dir, '/admin/db/csv')
     @url_lib_keys = @url_lib_dict.keys.sort()
-    cali_dir = Rails.application.config.APGCMS_calibration_dir
+    cali_dir = Rails.application.config.apgcms_calibration_dir
     @url_calibration_dict = get_lib_url_dict(cali_dir, '/admin/calibration/csv')
     @url_calibration_keys = @url_calibration_dict.keys.sort()
   end

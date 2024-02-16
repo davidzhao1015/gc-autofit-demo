@@ -21,7 +21,7 @@ h2 Settings
       strong
         | Blank Provided: 
       em
-        = human_boolean( @submission && @submission.blank.present? )
+        | #{@submission && @submission.blank.present? }
   .row
     .col-sm-12
       strong

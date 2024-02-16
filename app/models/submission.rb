@@ -6,26 +6,26 @@ class Submission < ActiveRecord::Base
   # PROCESSED = %w[ processed profiling complete ]
   FINALIZED_STATES = %w[ complete failed ]
 
-  WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.application.config.APGCMS_job_dir
+  WORKING_DIR = Rails.env.test? ? Rails.root.join('tmp/working') : Rails.application.config.apgcms_job_dir
                                     
   DAYS_TO_KEEP_SUBMISSIONS = 7
   SECRET_ID_LENGTH = 20
 
   DATABASES = {
-    #db      #display
     'serum' => 'Serum',
     'urine' => 'Urine',
     'saliva' => 'Saliva',
-    'upload' => 'Upload Your Library'
+    'custom' => 'Custom Library'
 
   }
 
-  INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Tropic\ acid Other ]
+  # INTERNAL_STANDARDS = %w[ Ribitol Cholesterol Succinate-D4 Tropic\ acid Other ]
+  INTERNAL_STANDARDS = %w[ Tropic\ acid ]
 
   has_many :spectra, dependent: :destroy
-  has_one :standards, -> { where category: 'standards'}, class_name: Spectrum
-  has_one :blank,     -> { where category: 'blank'}, class_name: Spectrum
-  has_many :samples,  -> { where category: 'sample'}, class_name: Spectrum
+  has_one :standards, -> { where category: 'standards'}, class_name: "Spectrum"
+  has_one :blank,     -> { where category: 'blank'}, class_name: "Spectrum"
+  has_many :samples,  -> { where category: 'sample'}, class_name: "Spectrum"
 
   accepts_nested_attributes_for :spectra
 
@@ -48,11 +48,8 @@ class Submission < ActiveRecord::Base
   validates_presence_of :internal_standard
   validate :check_required_spectra
   validate :check_internal_standard
-  validate :check_user_library
-  #validate :check_user_calibration
 
   before_validation :generate_secret
-  # after_create      :start_work
   after_destroy     :delete_working_dir
 
   serialize :database_subset, Array
@@ -72,6 +69,7 @@ class Submission < ActiveRecord::Base
   def start_work
     create_working_dir
     self.update!(status: 'queued')
+    puts "self.id => #{self.id}"
     job_id = SubmissionWorker.perform_async(self.id)
     self.update!(job_id: job_id)
   end
@@ -80,7 +78,6 @@ class Submission < ActiveRecord::Base
     if self.complete? && !self.profile?
       self.update!(profile: true)
       self.samples.each do |sample|
-        # SpectrumWorker.new.perform(sample.id)
         sample.start_work
       end
     end
@@ -114,10 +111,6 @@ class Submission < ActiveRecord::Base
     self.status == 'processing'
   end
 
-  # def processed?
-  #   PROCESSED.include?(self.status)
-  # end
-
   def working_dir
     File.join(WORKING_DIR, self.secret_id)
   end
@@ -126,12 +119,20 @@ class Submission < ActiveRecord::Base
     File.join(self.working_dir, 'input')
   end
 
+  def lib_file_path
+    "#{Rails.application.config.apgcms_mz_intensity_dir}/lib_#{database}.csv"
+  end
+
   def preprocessing_dir
     dir = File.join(self.working_dir, 'preprocessing')
     if not Dir.exist?(dir)
       Dir.mkdir(dir)
     end
     dir
+  end
+
+  def config_file
+    update_library ? 'envVarsUpdateLibrary.cfg' : 'envVars.cfg'
   end
 
   def log_file
@@ -312,11 +313,14 @@ class Submission < ActiveRecord::Base
   end
 
   def check_required_spectra
-    unless self.spectra.any? { |s| s.category == 'standards' }
-      errors[:base] << "An alkane standards spectrum must be provided"
-    end
-    unless self.spectra.any? { |s| s.category == 'blank' }
-      errors[:base] << "A blank standards spectrum must be provided"
+    Rails.logger.error "update library: #{self.update_library} #{update_library}"
+    unless self.update_library
+      unless self.spectra.any? { |s| s.category == 'standards' }
+        errors[:base] << "An alkane standards spectrum must be provided"
+      end
+      unless self.spectra.any? { |s| s.category == 'blank' }
+        errors[:base] << "A blank standards spectrum must be provided"
+      end
     end
     
     unless self.spectra.any? { |s| s.category == 'sample' }
@@ -353,12 +357,6 @@ class Submission < ActiveRecord::Base
         errors[:base] << "Internal standard must be present in the selected library"
       end
     end
-  end
-
-  def check_user_library
-    # profile_file = self.profile_library.queued_for_write[:original]
-    # if profile_file.path
-    # end
   end
 
 end

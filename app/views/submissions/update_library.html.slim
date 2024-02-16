@@ -1,0 +1,168 @@
+h1 Welcome to GC-AutoFit
+
+.well-content.intro
+  p
+    | GC-AutoFit is a web application that automatically identifies and
+      quantifies metabolites using Gas Chromatography Mass Spectrometry (GC-MS)
+      spectra. For optimal GC-AutoFit performance, the query GC-MS spectra should
+      be prepared according to the instructions (How to collect GC-MS Spectra for
+      GC-AutoFit). GC-AutoFit currently accepts .CDF and .mzXML file formats. It
+      uses alkane standards to calculate the retention index (RI) of each peak in
+      the sample. The extracted EI-MS spectra from each peak, along with the RIs,
+      are then compared to reference spectra (RIs and EI-MS) in the specified
+      library to identify and quantify the compounds. The inclusion of blank
+      spectra is optional, however, it is useful for removing noise effects from
+      the query spectra. Extensive testing shows that GC-AutoFit meets or exceeds
+      the performance of highly trained human experts.
+
+
+h1 GC-AutoFit Update profile_library
+
+/ Have to set the enctype manually if using file_field_tags!
+= form_for(@submission, html: {enctype: "multipart/form-data"}) do |f|
+
+  .well-content.intro
+    h2 Instructions
+    p 
+      | To add GC-MS spectra library metabolites with GC-AutoFit you must 
+        provide information on the biofluid being analyzed and the spectral files in
+        <em>.CDF</em> or <em>.mzXML</em> format, and mixture file in csv format
+
+    p.clear  Submit your own mixture:
+
+    = render_form_errors(@submission)
+
+    ol.form-list
+      li
+        .form-group
+          .form-label
+            = f.label :biofluid_type, 'Select Biofluid:', class: "control-label required"
+            span.form-help
+              | GC-AutoFit works with urine and your own custom libraries.
+          .col-sm-12.form-input#database-selection
+            - Submission::DATABASES.each do |key, name|
+              - if name == 'Urine' or key == 'upload'
+                .radio-div
+                  = f.radio_button :database, key, id: "radio-database-#{key}"
+                  label.radio-label id='label-database-#{key}' for='submission_database_type'
+                    | #{name} 
+
+        .form-horizontal#custom-database-upload
+          .form-group
+            .form-label
+              = label :profile_library, 'Profile library file', class: 'control-label required col-sm-3'
+            .col-sm-9
+              = f.file_field :profile_library
+          .form-group
+            .form-label
+              = label :calibration, 'Calibration file', class: 'control-label col-sm-3'
+            .col-sm-9
+              = f.file_field :calibration
+      li
+        .form-group
+          .form-label
+            = f.label :internal_standard, 'Select internal standard:', class: "control-label required"
+            span.form-help
+              | Compound must be present in selected library.
+          .col-sm-9.form-input#internal-standard-selection
+            - Submission::INTERNAL_STANDARDS.each do |standard|
+              .radio-div
+                = f.radio_button :internal_standard, standard
+                = f.label :internal_standard, standard, class: 'radio-label'
+                - if standard == 'Other'
+                  = text_field_tag 'custom_internal_standard',
+                    @custom_internal_standard,
+                    class: "input-sm form-control radio-other",
+                    size: 10
+
+      li
+        .form-group
+          .form-label
+            = f.label :input_file, 'Upload Mixture File:', class: 'control-label required'
+            ul.nav.nav-pills.nav-pills-custom
+              span.form-help
+              | Mixture file must be in CSV format
+      
+          br
+          .col-sm-9
+            = f.file_field :profile_library, multiple: false
+
+        = f.hidden_field :update_library, value: @submission.update_library
+      br    
+      li
+        .form-label
+          = f.label :input_file, 'Upload Mixture Spectra:', class: 'control-label required'
+          ul.nav.nav-pills.nav-pills-custom
+            li[class="#{'active' if @upload_spectra_format == 'separate'}"]
+              a.toggle-upload#toggle-upload-separate[href='#separate-files' data-toggle='tab'] Separate Files
+            li.text-only OR
+            li[class="#{'active' if @upload_spectra_format == 'zip'}"]
+              a.toggle-upload#toggle-upload-zip[href='#zip-file' data-toggle='tab'] Single ZIP File
+        .tab-content
+          = hidden_field_tag :upload_spectra_format, @upload_spectra_format
+          .tab-pane#separate-files[class="#{'active' if @upload_spectra_format == 'separate'}"]
+            .form-help
+              | All spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
+            br
+            br
+            .form-horizontal
+              .form-group
+                .form-label
+                  = label :standards, 'Alkane Standards', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = file_field_tag :standards_spectrum
+              .form-group
+                .form-label
+                  = label :blank, 'Blank', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = file_field_tag :blank_spectrum
+              .form-group
+                .form-label
+                  = label :samples, 'Samples', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = file_field_tag :spectrum_data, multiple: false, name: 'sample_spectra[]'
+          .tab-pane#zip-file[class="#{'active' if @upload_spectra_format == 'zip'}"]
+            .form-help
+              | The ZIP file must contain an alkane standards spectrum (e.g. Alkane.mzXML, ALKstd.mzXML),
+                an optional blank spectrum (e.g. Blank.mzXML, Blk.mzXML) and at least one sample spectrum.
+                All the spectral files must be .CDF or .mzXML. Up to 30 samples can be submitted.
+            br
+            br
+            .form-horizontal
+              .form-group
+                .form-label
+                  = label :input_zip, 'ZIP file', class: 'control-label required col-sm-3'
+                .col-sm-9
+                  = f.file_field :input_zip
+
+      li
+        .form-group
+          .form-label
+            = f.label :mf_score_threshold, 'Provide a MF(Match Factor) Score cutoff:', class: "control-label required"
+            span.form-help
+              | An integer between 0 - 999 but somewhere between 400 - 600 is recommended.
+
+          .col-sm-2.form-input
+            = f.text_field :mf_score_threshold, class: "input-sm form-control"
+
+    .button-clear
+    div
+      .submit-button
+        = f.submit 'Submit', class: 'btn btn-primary btn-submit btn_margin'
+      .clear-button
+        =< f.submit 'Clear', class: 'btn btn-primary btn-submit btn_margin', type: :reset
+
+    .button-clear
+
+    .example-section[data-no-turbolink]
+      p.clear <br><br>Download a sample Mixture.csv template:
+    
+      = link_to 'Mixture Template', download_example_mixture_path, class: 'btn btn-info btn-spaced'
+
+  /- Submission::DATABASES.each do |key, name|
+  /  - next if key == 'upload'
+  /  = render 'custom_db_dialog', database: key
+
+
+/ h5 latest update: March 11th, 2018
+

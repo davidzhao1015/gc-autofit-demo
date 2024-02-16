@@ -1,11 +1,16 @@
 li = link_to 'New Submission', main_app.new_submission_path
+li = link_to 'Update Library', main_app.update_library_path
 li.dropdown
-  a href='#' class='dropdown-toggle' data-toggle='dropdown' Instructions <b class='caret'></b>
-  ul.dropdown-menu
-    li = link_to 'General Instructions', main_app.instructions_path
-    li = link_to 'Use your own library', main_app.inst_userownlib_path
-li = link_to 'Contact Us', wishart.contact_path
-li = link_to 'Internal_lib', main_app.lib_path
-li = link_to 'DB_Maker', main_app.makedb_path
-li = link_to 'Admin', main_app.admin_path
+	a href='#' class='dropdown-toggle' data-toggle='dropdown' Instructions <b class='caret'></b>
+	ul.dropdown-menu
+		li = link_to 'General Instructions', main_app.instructions_path
+		/ li = link_to 'Use your own library', main_app.inst_userownlib_path
+li.dropdown
+	a href='#' class='dropdown-toggle' data-toggle='dropdown' Library <b class='caret'></b>
+	ul.dropdown-menu
+		li = link_to 'm/z intensity library', main_app.lib_mz_db_path
+		li = link_to 'calibration library', main_app.lib_calibration_db_path
+
+/ li = link_to 'Create Database', main_app.makedb_path
+/ li = link_to 'Admin', main_app.admin_path
 

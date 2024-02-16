@@ -1,0 +1,40 @@
+SeqIndex,HMDB_ID,Compound,a||b||c,Intercept(High||Low),Slope(High||Low),date,source,Concentration_threshold(uM)
+1,HMDB0000115,Glycolic acid-2TMS,NA||NA||NA,0.0373||NA,1.1743||NA,"",Serum-Ribitol,0
+2,HMDB0000243,Pyruvic acid-1TMS,NA||NA||NA,-9999||NA,-9999||NA,,No Source,0
+3,HMDB0000190,Lactic acid,NA||NA||NA,0.0313||NA,1.2841||NA,,Serum-Ribitol,0
+4,HMDB0000161,Alanine,NA||NA||NA,0.0333||NA,0.3||NA,,,0
+5,HMDB0000123,Glycine,NA||NA||NA,-0.0404||NA,1.2||NA,,,0
+6,HMDB0000883,Valine,NA||NA||NA,-0.0512||NA,1||NA,,,0
+7,HMDB0000294,Urea,NA||NA||NA,-0.0094||NA,0.4||NA,,,0
+8,HMDB0002142,Phosphoric acid,NA||NA||NA,0.0088||NA,1.1||NA,,,0
+9,HMDB0000172,L-Isoleucine,NA||NA||NA,-0.0145||NA,1.1||NA,,,0
+10,HMDB0001844,2-Methylsuccinic acid-2TMS,NA||NA||NA,-9999||NA,-9999||NA,,No Source,0
+11,HMDB0000162,Proline,NA||NA||NA,-0.0093||NA,0.7||NA,,,0
+13,HMDB0000254,Succinic acid,NA||NA||NA,-0.0173||NA,0.9||NA,,,0
+14,HMDB0001488,Nicotinic acid,NA||NA||NA,-9999||NA,-9999||NA,,No Source,0
+15,HMDB0000300,Uracil,NA||NA||NA,-0.0348||NA,0.8||NA,,,0
+16,HMDB0000187,Serine,NA||NA||NA,-0.0224||NA,1.2||NA,,,0
+17,HMDB0000167,L-Threonine,NA||NA||NA,-0.0052||NA,1.4||NA,,,0
+18,HMDB0000134,Fumaric acid,NA||NA||NA,0.0646||NA,10.55||NA,,Urine-Cholesterol,0
+19,HMDB0000262,"Pyrimidine,NA||NA||NA, 5-methyl (thymine)",-0.044||NA,1||NA,,0,,
+20,HMDB0000744,Malic acid,NA||NA||NA,-0.0039||NA,1.3||NA,,,0
+21,HMDB0000191,Aspartic acid,NA||NA||NA,-0.029||NA,1.4||NA,,,0
+22,HMDB0000148,Glutamine,NA||NA||NA,-0.0053||NA,0.7063||NA,,Serum-Ribitol,0
+23,HMDB0000267,Pyroglutamic acid,NA||NA||NA,-0.0923||NA,3.2598||NA,,,0
+24,HMDB0000020,p-Hydroxyphenylacetic acid-2TMS,NA||NA||NA,0.1738||NA,1.7206||NA,,Urine-Cholesterol,0
+25,HMDB0000500,p-Hydroxybenzoic acid-2TMS,NA||NA||NA,0.0583||NA,3.75051||NA,,Urine-Cholesterol,0
+26,HMDB0000508,Ribitol,NA||NA||NA,||NA,||NA,,,0
+27,HMDB0001414,Putrescine (nacetyl putrescine),NA||NA||NA,-0.037||NA,0.7||NA,,,0
+28,HMDB0000764,Hydrocinnamic acid,NA||NA||NA,0.0845||NA,1.3006||NA,,Urine-Cholesterol,0
+29,HMDB0000214,L-Ornithine,NA||NA||NA,-0.0804||NA,2.5||NA,,,0
+30,HMDB0000182,lysine,NA||NA||NA,-0.152||NA,3.6||NA,,,0
+31,HMDB0000209,Benzeneacetic acid,NA||NA||NA,-0.0117||NA,1.8||NA,,,0
+32,HMDB0000143,Galactose,NA||NA||NA,-0.0318||NA,3.5||NA,,,0
+33,HMDB0000197,1H-Indole-3-acetic acid,NA||NA||NA,-0.00754||NA,0.68563||NA,,Urine-Cholesterol,0
+34,HMDB0000729,alpha-Hydroxyisobutyric acid-2TMS,NA||NA||NA,0.01497||NA,2.33713||NA,,Urine-Cholesterol,0
+35,HMDB0000215,N-Acetyl-D-glucosamine,NA||NA||NA,-0.0755||NA,3.3556||NA,,Urine-Cholesterol,0
+36,HMDB0000211,Myoinositol,NA||NA||NA,-0.2521||NA,7.1||NA,,,0
+37,HMDB0000220,Palmitic acid,NA||NA||NA,-0.0862||NA,2.2333||NA,,Serum-Ribitol,0
+38,HMDB0001257,Spermidine,NA||NA||NA,-0.2287||NA,4||NA,,,0
+39,HMDB0000827,Stearic acid,NA||NA||NA,-0.0068||NA,0.5903||NA,,Serum-Ribitol,0
+40,HMDB0000929,Tryptophan,NA||NA||NA,-0.2826||NA,2.6||NA,,,0

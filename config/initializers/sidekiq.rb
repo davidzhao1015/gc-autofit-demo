@@ -1,16 +1,26 @@
 require 'sidekiq'
-require 'sidekiq-status'
+require 'sidekiq/web'
 
-Sidekiq.configure_client do |config|
-  config.client_middleware do |chain|
-    chain.add Sidekiq::Status::ClientMiddleware
-  end
-  config.redis = { :namespace => 'Test', :url => 'redis://127.0.0.1:6379/4' }
-end
+if Rails.env.development?
+	Sidekiq.configure_server do |config|
+	  config.redis = { url: 'redis://127.0.0.1:6379/2', network_timeout: 5 }
+	end
 
-Sidekiq.configure_server do |config|
-  config.server_middleware do |chain|
-    chain.add Sidekiq::Status::ServerMiddleware, expiration: 30.minutes # default
-  end
-  config.redis = { :namespace => 'Test', :url => 'redis://127.0.0.1:6379/4' }
+	Sidekiq.configure_client do |config|
+	  config.redis = { :url => 'redis://127.0.0.1:6379/2', network_timeout: 5 }
+	end
+
+elsif Rails.env.production?
+	Sidekiq.configure_server do |config|
+	  config.redis = { url: 'redis://127.0.0.1:6379/2', network_timeout: 5 }
+	end
+
+	Sidekiq.configure_client do |config|
+	  config.redis = { :url => 'redis://127.0.0.1:6379/2', network_timeout: 5 }
+	end
+
+	Sidekiq::Web.use(Rack::Auth::Basic) do |user, password|
+	  Rack::Utils.secure_compare(::Digest::SHA256.hexdigest(user), ::Digest::SHA256.hexdigest("wishartlab")) &
+	  Rack::Utils.secure_compare(::Digest::SHA256.hexdigest(password), ::Digest::SHA256.hexdigest("</B/3fbn.zxJGXRxUBA5g2ByR9Xe"))
+	end
 end

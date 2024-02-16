@@ -1,9 +1,10 @@
+= link_to "Download this file", lib_db_download_path(:file => @csv_files)
 = render(:partial => 'index', 
-         :locals => {csv_files: @csv_files,
-                   base_file: @base_file,
-                   file: @file,  
-                   header: @header, 
-                   csv_rows: @csv_rows,
-                   type: @type,
-                   index_path: 'lib_db_path',
-                   domain: 'lib'} )
+			:locals => {csv_files: @csv_files,
+						base_file: @base_file,
+						file: @file,  
+						header: @header, 
+						csv_rows: @csv_rows,
+						type: @type,
+						index_path: 'lib_db_path',
+						domain: 'lib'} )

@@ -1,19 +1,12 @@
-Gc Autofit
-================
-
-This application was generated with the [rails_apps_composer](https://github.com/RailsApps/rails_apps_composer) gem
-provided by the [RailsApps Project](http://railsapps.github.io/).
-
-Rails Composer is open source and supported by subscribers. Please join RailsApps to support development of Rails Composer.
-
+GC-AutoFit
+==========
 
 Server
------------
+------
 ```bash
-
 Hosting: Google Computing Engine
 
-# Server Access
+# Server Access (public version)
 ssh gcms@gc-autofit.wishartlab.com
 
 # as root
@@ -47,27 +40,9 @@ note)	 puma and sidekiq should be only one. If these are more than two, then kil
 add a bunch of settings to the /etc/nginx/conf.d/gcms.conf file
 ```
 
+Sidekiq was configured to use capistrano-sidekiq 2.x with Systemd. See
+[Configure capistrano-sidekiq 2.x](http://wiki.wishartlab.com/wiki/index.php/Configure_capistrano-sidekiq_2.x).
 
-
-Problems? Issues?
------------
-
-Need help? Ask on Stack Overflow with the tag 'railsapps.'
-
-Your application contains diagnostics in the README file. Please provide a copy of the README file when reporting any issues.
-
-If the application doesn't work as expected, please [report an issue](https://github.com/RailsApps/rails_apps_composer/issues)
-and include the diagnostics.
-
-Ruby on Rails
--------------
-
-This application requires:
-
-- Ruby 2.2.2
-- Rails 4.2.1
-
-Learn more about [Installing Rails](http://railsapps.github.io/installing-rails.html).
 
 Getting Started
 ---------------
@@ -198,4 +173,16 @@ Phase II) Profiling
     2. calculate concentration values
 6. Generate Report (JSON file)
     1. JSON will be used for spectrum viewer and tables
+```
+
+
+## Run sidekiq:
+```
+bundle exec sidekiq -e development  -C config/sidekiq.yml 
+```
+
+
+## Run Rails:
+```
+bundle exec rails s -e development
 ```

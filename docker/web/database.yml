@@ -1,0 +1,18 @@
+# production:
+#   adapter: mysql2
+#   encoding: utf8
+#   reconnect: false
+#   database: gcms
+#   pool: 5
+#   username: root
+#   password:
+#   host: localhost
+
+production:
+  adapter: mysql2
+  encoding: utf8
+  host: foodb_db_1  # this is created by docker network; rails web has to use the same docker network to access
+  port: 3306
+  database: gcms
+  username: gcms
+  password: 67WVXHCQ+I1HfvP5pMwY

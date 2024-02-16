@@ -1,5 +1,5 @@
 class APGCMS
-  @@apgcms_path = "#{Rails.application.config.APGCMS_root}/scripts/apgcms_main.R"
+  @@apgcms_path = "#{Rails.application.config.apgcms_root}/scripts/apgcms_main.R"
 
   # The command that was run
   attr_reader :command
@@ -10,7 +10,7 @@ class APGCMS
   # An array of error messages
   attr_reader :errors
 
-  @@debug=true
+  @@debug=false
 
   # Create a ShellSession
   def initialize(options = {})
@@ -21,12 +21,17 @@ class APGCMS
       @command += "--#{key}='#{value}' "
     end
     
-    # @command = "Rscript #{@@apgcms_path} --infiledir=#{options[:infiledir]} --lib.internal='SERUM' "
-    # @command += "--internalstd='Ribitol' --plotonly=TRUE"
     puts @command if @@debug
     
     
     @status, @stdout, @stderr = systemu(@command)
+    if @@debug
+      puts "@status, @stdout, @stderr"
+      puts @status
+      puts @stdout
+      puts @stderr
+    end
+
     # has to filter some info out from errors since xcms package 
     # has some info put into stderr but actually not errors. Those lines
     # are like this:

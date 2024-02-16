@@ -1,19 +1,23 @@
 #require 'puma/capistrano'
-
+require 'rails'
 
 set :application, 'gc-autofit'
 set :repo_url,  "git@bitbucket.org:wishartlab/gc-autofit.git"
-set :branch, 'master'
 set :scm, :git
 set :deploy_to, '/apps/gcms/project'
 set :use_sudo, false
 set :linked_files, %w{config/database.yml}
-set :linked_dirs, %w{public/system log}
+set :linked_dirs, %w{public/system log gcmsjobs tmp gcms}
+set :keep_releases, 3
 
-# set :default_env, { path: "/opt/ruby/bin:$PATH" }
-set :keep_releases, 5
-set :sidekiq_config, "#{current_path}/config/sidekiq.yml"
-set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
+# set :sidekiq_config, "#{Rails.root}/config/sidekiq.yml"
+# set :sidekiq_pid,  File.join('/', 'tmp', 'gc-autofit.sidekiq.pid')
+
+# set :rbenv_map_bins, %w{rake gem bundle ruby rails sidekiq sidekiqctl}
+
+#set :branch, ENV['BRANCH'] if ENV['BRANCH']
+set :branch, 'master'
+
 
 namespace :deploy do
 

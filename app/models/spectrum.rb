@@ -1,4 +1,5 @@
 class Spectrum < ActiveRecord::Base
+  
   STATES = %w[ validating queued profiling complete failed ]
   FINALIZED_STATES = %w[ complete failed ]
   CATEGORIES = %w[ standards blank sample ]
@@ -18,6 +19,17 @@ class Spectrum < ActiveRecord::Base
 
   def sample_dir
     Rails.root.join(self.submission.profiling_dir, self.sample_name)
+  end
+
+  def mzint_for_db_file_path
+    suffix = ''
+    if spectrum_data.path =~/CDF$/i 
+      suffix =  '.CDF'
+    elsif spectrum_data.path =~/mzXML$/i
+      suffix = '.mzXML'
+    end
+
+    File.join(sample_dir, "#{sample_name}#{suffix}-mzint4DB.csv")
   end
 
   def input_dir
@@ -43,19 +55,23 @@ class Spectrum < ActiveRecord::Base
     when 'standards'
       File.join(self.submission.preprocessing_dir, 'Alkstd_alkanePeakList.csv')
     else
-      File.join(sample_dir, 'sample_profiled.csv')
+      File.join(sample_dir, "#{self.csv_file_name}")
     end
   end
 
   def csv_file_name
+    puts "self.name => #{self.name}"
+
     basename = File.basename(self.name, '.*')
+    puts "basename => #{basename}"
+    puts "sample_name => #{self.sample_name}"
     case self.category
     when 'blank'
       "#{basename}_profiled.csv"
     when 'standards'
       "#{basename}_PeakList.csv"
     else
-      "#{basename}_profiled.csv"
+      "#{self.sample_name}_profiled.csv"
     end
   end
 

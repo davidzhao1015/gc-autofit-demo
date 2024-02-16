@@ -9,6 +9,15 @@ class SubmissionsController < ApplicationController
     @submissions = Submission.all
   end
 
+  def update_library
+    @submission = Submission.new
+    @submission.database = 'urine'
+    @submission.internal_standard = 'Tropic acid'
+    @submission.mf_score_threshold = 400
+    @submission.update_library = true
+    @upload_spectra_format = 'separate'  # OR 'zip'
+  end
+
   # GET /submissions/1
   # GET /submissions/1.json
   def show
@@ -28,6 +37,9 @@ class SubmissionsController < ApplicationController
       end
       format.html
       format.js
+      # format.log do
+        
+      # end
     end
   end
 
@@ -114,8 +126,10 @@ class SubmissionsController < ApplicationController
   end
 
   def example
+    # puts "params => #{params.inspect}"
+    # params => <ActionController::Parameters {"example_num"=>"1", "controller"=>"submissions", "action"=>"example"} permitted: false>
     @submission = get_example(params[:example_num])
-    if @submission.save
+    if @submission.save!
       @submission.start_work
       redirect_to submission_path(@submission)
     else
@@ -123,12 +137,20 @@ class SubmissionsController < ApplicationController
     end
   end
 
+  def download_example_mixture
+    send_file(
+      "#{Rails.root}/public/example_mixture.csv",
+      filename: "example_mixture.csv",
+      type: "text/csv"
+    )
+  end
+
   def get_example(example_num)
     submission = Submission.new
     submission.status = 'validating'
     submission.mf_score_threshold = 400
     if example_num == '1'
-      example_dir = File.join(Rails.application.config.APGCMS_example_dir, "serum")
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, "serum")
       submission.database = 'serum'
       submission.internal_standard = 'Ribitol'
       submission.spectra.build(category: 'standards',
@@ -140,7 +162,7 @@ class SubmissionsController < ApplicationController
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'GSS-2R.CDF')))
     elsif example_num == '2'
-      example_dir = File.join(Rails.application.config.APGCMS_example_dir, 'urine')
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, 'urine')
       submission.database = 'urine'
       submission.internal_standard = 'Cholesterol'
       submission.spectra.build(category: 'standards',
@@ -150,9 +172,9 @@ class SubmissionsController < ApplicationController
       submission.spectra.build(category: 'sample',
                               spectrum_data: File.new(File.join(example_dir, 'C001.mzXML')))
       submission.spectra.build(category: 'sample',
-                              spectrum_data: File.new(File.join(example_dir, 'C002.mzXML')))
+                              spectrum_data: File.new(File.join(example_dir, 'QC1.mzXML')))
     elsif example_num == '3'
-      example_dir = File.join(Rails.application.config.APGCMS_example_dir, 'saliva')
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, 'saliva')
       submission.database = 'saliva'
       submission.spectra.build(category: 'standards',
                                spectrum_data: File.new(File.join(example_dir, 'ALKS.CDF')))
@@ -160,6 +182,26 @@ class SubmissionsController < ApplicationController
                                spectrum_data: File.new(File.join(example_dir, 'BLK2.CDF')))
       submission.spectra.build(category: 'sample',
                                spectrum_data: File.new(File.join(example_dir, 'S1.CDF')))
+    elsif example_num == '4'
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, 'example_1')
+      submission.database = 'custom'
+      submission.internal_standard = 'Tropic acid (ISTD)'
+      submission.spectra.build(category: 'standards',
+                               spectrum_data: File.new(File.join(example_dir, 'ALKSTD.CDF')))
+      submission.spectra.build(category: 'blank',
+                               spectrum_data: File.new(File.join(example_dir, 'blk.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, '1544.CDF')))
+    elsif example_num == '5'
+      example_dir = File.join(Rails.application.config.apgcms_example_dir, 'example_2')
+      submission.database = 'custom'
+      submission.internal_standard = 'Tropic acid (ISTD)'
+      submission.spectra.build(category: 'standards',
+                               spectrum_data: File.new(File.join(example_dir, 'ALKSTD.CDF')))
+      submission.spectra.build(category: 'blank',
+                               spectrum_data: File.new(File.join(example_dir, 'blk.CDF')))
+      submission.spectra.build(category: 'sample',
+                               spectrum_data: File.new(File.join(example_dir, '405.CDF')))
     end
     submission
   end
@@ -196,7 +238,7 @@ class SubmissionsController < ApplicationController
       end
 
       params.require(:submission).permit(:database, :internal_standard, :status, :mf_score_threshold,
-                                         :profile_library, :calibration, :input_zip,
+                                         :profile_library, :calibration, :input_zip, :update_library,
                                          database_subset: [],
                                          spectra_attributes: [ :spectrum_data, :category ])
     end
