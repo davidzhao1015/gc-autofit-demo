@@ -24,42 +24,31 @@ namespace :deploy do
   desc 'Start application'
   task :start do
     on roles(:web) do
-      within release_path do
-        execute "script/puma.sh", "start"
-      end
+      invoke('puma:start')
+    end
+  end
+
+  # desc 'Restart application'
+  # task :restart do
+  #   on roles(:web) do
+  #     invoke('puma:phased-restart')
+  #   end
+  # end
+
+  desc 'Hard-restart application'
+  task :restart do
+    on roles(:web) do
+      invoke('puma:restart')
     end
   end
 
   desc 'Stop application'
   task :stop do
     on roles(:web) do
-      within release_path do
-        execute "script/puma.sh", "stop"
-      end
-    end
-  end
-
-  desc 'Restart application'
-  task :restart do
-    on roles(:web) do
-      # Your restart mechanism here, for example:
-      # execute :touch, release_path.join('tmp/restart.txt')
-      within release_path do
-        execute "script/puma.sh", "restart"
-      end
-    end
-  end
-
-  after :restart, :clear_cache do
-    on roles(:web) do
-      # Here we can do anything such as:
-      # within release_path do
-      #   execute :rake, 'cache:clear'
-      # end
+      invoke('puma:stop')
     end
   end
 
   after :finishing, 'deploy:cleanup'
   after :finished, :restart
-
 end
