@@ -1,3 +1,5 @@
+set :rbenv_ruby, '2.7.1'
+
 # Load DSL and Setup Up Stages
 require 'capistrano/setup'
 
@@ -27,6 +29,9 @@ require 'capistrano/rails/migrations'
 require 'capistrano/rbenv'
 require 'capistrano/rails'
 require 'capistrano/rails/console'
+
+require 'capistrano/puma'
+install_plugin Capistrano::Puma
 
 require 'capistrano/sidekiq'
 install_plugin Capistrano::Sidekiq  # Default sidekiq tasks
