@@ -13,7 +13,7 @@ gem 'slim-rails'
 gem 'sidekiq'
 
 gem 'sinatra', :require => false # for sinatra interface
-gem 'paperclip'
+gem 'paperclip', git: 'https://github.com/sd/paperclip', branch: 'remove-mimemagic'
 gem 'rubyzip'
 gem 'whenever', :require => false
 gem 'google-analytics-rails'
